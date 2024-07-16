@@ -1,23 +1,33 @@
 #!/usr/bin/python3
 
 import pandas as pd
-import os
 import argparse
 
-if __name__ == "__main__":
-    ## COMMAND LINE ARGUMENTS ##
-    parser = argparse.ArgumentParser(
-        prog="Stream Identificator",
-        description="Extract the network pattern relative to a specific event.",
-    )
-    # Positional argument: Network trace to search the pattern in
-    parser.add_argument("csv", type=str, help="CSV file you want me to identify stream")
 
-    # Parse arguments
-    args = parser.parse_args()
-    # Load the CSV file into a DataFrame
-    df = pd.read_csv(args.csv)
+def transform_to_dataframe(signature: dict) -> pd.DataFrame:
+    """
+    Transform the given signature into a DataFrame.
+    Use the packet_fields as columns.
+    """
+    return pd.DataFrame(signature, index=[0])
 
+
+def merge_signatures(signatures: list) -> pd.DataFrame:
+    """
+    Merge all signatures into a single DataFrame.
+    """
+    return pd.concat(signatures, ignore_index=True)
+
+
+def group_by_stream(df: pd.DataFrame) -> pd.DataFrame:
+    """Group the packets by stream.
+
+    Args:
+        df (DataFrame): the packets
+
+    Returns:
+        DataFrame: the grouped packets
+    """
     # Create a new column that contains a tuple of the source and destination IP addresses and ports
     df["stream"] = df.apply(
         lambda row: tuple(
@@ -33,6 +43,19 @@ if __name__ == "__main__":
 
     # Group the packets by the stream column
     grouped = df.groupby("stream")
+
+    return grouped
+
+
+def compress_packets(grouped: pd.DataFrame) -> pd.DataFrame:
+    """Compress the packets in each stream.
+
+    Args:
+        grouped (DataFrame): the grouped packets
+
+    Returns:
+        DataFrame: the compressed packets
+    """
 
     # Initialize an empty list to store the compressed packets
     compressed_packets = []
@@ -53,7 +76,6 @@ if __name__ == "__main__":
                 "OtherPort": group["OtherPort"].iloc[0],
                 "TransportProtocol": group["TransportProtocol"].iloc[0],
                 "Protocol": group["Protocol"].iloc[0],
-                "Direction": group["Direction"].iloc[0],
                 "Length": total_length,
                 "ApplicationSpecific": group["ApplicationSpecific"].iloc[0],
                 "nbPacket": len(group),
@@ -63,5 +85,35 @@ if __name__ == "__main__":
     # Convert the list of compressed packets into a DataFrame
     compressed_df = pd.DataFrame(compressed_packets).sort_values("Index")
 
-    # Save the compressed DataFrame to a new CSV file
-    compressed_df.to_csv(args.csv, index=False)
+    return compressed_df
+
+
+def write_to_csv(df: pd.DataFrame, filename: str) -> None:
+    """Write the DataFrame to a CSV file.
+
+    Args:
+        df (DataFrame): the DataFrame to write
+        filename (str): the name of the CSV file
+    """
+    df.to_csv(filename, index=False)
+
+
+if __name__ == "__main__":
+    ## COMMAND LINE ARGUMENTS ##
+    parser = argparse.ArgumentParser(
+        prog="Stream Identificator",
+        description="Extract the network pattern relative to a specific event.",
+    )
+    # Positional argument: Network trace to search the pattern in
+    parser.add_argument("csv", type=str, help="CSV file you want me to identify stream")
+
+    # Parse arguments
+    args = parser.parse_args()
+    # Load the CSV file into a DataFrame
+    df = pd.read_csv(args.csv)
+
+    grouped = group_by_stream(df)  # Group the packets by stream
+    compressed_df = compress_packets(grouped)  # Compress the packets in each stream
+    compressed_df.to_csv(
+        args.csv, index=False
+    )  # Save the compressed packets to a new CSV file
