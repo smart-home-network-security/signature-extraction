@@ -125,7 +125,7 @@ def get_DNS_data(pkt: scapy.Packet) -> str:
     return ""
 
 
-def get_CoAP_data(pkt: scapy.packet) -> str:
+def get_CoAP_data(pkt: scapy.Packet) -> str:
     coap_packet = pkt.getlayer(CoAP)
     type = coap_packet.type
     method = coap_codes[coap_packet.code]
@@ -153,17 +153,20 @@ def get_CoAP_data(pkt: scapy.packet) -> str:
     return f"{type} {method} {uri}"
 
 
-def get_HTTP_data(pkt: scapy.packet) -> str:
+def get_HTTP_data(pkt: scapy.Packet) -> str:
     """
     Get the HTTP data from a HTTP packet.
 
     :param pkt: HTTP packet
     :return: HTTP data
     """
+    data = ""
     if pkt.haslayer(HTTPRequest):
         http = pkt.getlayer(HTTPRequest)
         uri = (http.Host).decode("utf-8") + (http.Path).decode("utf-8")
         method = (http.Method).decode("utf-8")
-        return f"{method} {uri}"
+        data = "{method} {uri}"
     elif pkt.haslayer(HTTPResponse):
-        return f"{pkt.getlayer(HTTPResponse).Status_Code.decode('utf-8')} {pkt.getlayer(HTTPResponse).Reason_Phrase.decode('utf-8')}"
+        data = "{pkt.getlayer(HTTPResponse).Status_Code.decode('utf-8')} {pkt.getlayer(HTTPResponse).Reason_Phrase.decode('utf-8')}"
+
+    return data

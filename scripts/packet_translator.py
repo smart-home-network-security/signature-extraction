@@ -16,7 +16,7 @@ from signature_extractor import (
 import scapy.all as scapy
 
 
-def translate(timeout: int, start: int, packets: scapy.PacketList) -> [dict]:
+def translate(timeout: int, start: int, packets: scapy.PacketList) -> list:
     signatures = []
     # Iterate on all packets after the given start timestamp
     previous_time = start

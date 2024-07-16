@@ -97,5 +97,5 @@ profile = {}
 profile["device-info"] = deviceinfo
 profile["single-policies"] = policies
 print(profile)
-with open('output.yaml', 'w') as f:
+with open("output.yaml", "w") as f:
     yaml.dump(profile, f)
