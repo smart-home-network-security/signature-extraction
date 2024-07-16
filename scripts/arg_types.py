@@ -1,5 +1,6 @@
 from constants import epoch_max
 import argparse
+import os
 
 
 def timestamp(arg: str) -> int:
@@ -15,3 +16,9 @@ def timestamp(arg: str) -> int:
     if timestamp < 0 or timestamp > epoch_max:
         raise argparse.ArgumentTypeError(f"{timestamp} is not a valid Unix timestamp")
     return timestamp
+
+
+def directory(raw_path):
+    if not os.path.isdir(raw_path):
+        raise argparse.ArgumentTypeError(f'"{raw_path}" is not an existing directory')
+    return os.path.abspath(raw_path)
