@@ -1,5 +1,4 @@
 import scapy.all as scapy
-from packet_utils import is_signalling_pkt
 from scapy.layers.tls.all import TLS, TLS_Ext_ServerName
 from scapy.all import IP, IPv6
 from scapy.layers.dns import DNS
@@ -21,10 +20,8 @@ def extract_domain_names(packet_list: scapy.PacketList) -> dict:
 
     # Iterate on all packets
     for pkt in packet_list:
-
         # Check if packet may contain domain names
         if pkt.haslayer(TLS_Ext_ServerName) or pkt.haslayer(DNS):
-
             # Extract domain names from TLS packets
             if (
                 pkt.haslayer(TLS_Ext_ServerName)
