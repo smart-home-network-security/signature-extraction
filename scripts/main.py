@@ -75,6 +75,10 @@ if __name__ == "__main__":
 
     patterns = find_patterns(flows)  # find the patterns in the flows
 
+    print("Patterns found!")
+    for pattern in patterns:
+        print(pattern)
+
     policies = generate_policies(patterns)  # generate the policy from the patterns
 
     policies = write_profile(policies, folder)

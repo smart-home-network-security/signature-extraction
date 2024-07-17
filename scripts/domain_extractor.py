@@ -30,6 +30,7 @@ def extract_domain_names(packet_list: scapy.PacketList) -> dict:
                 pkt.haslayer(TLS_Ext_ServerName)
                 and len(pkt[TLS][TLS_Ext_ServerName].servernames) > 0
             ):
+                ip = None
                 if pkt.haslayer(IPv6):
                     ip = pkt["IPv6"].dst
                 elif pkt.haslayer(IP):
@@ -54,7 +55,12 @@ def extract_domain_names(packet_list: scapy.PacketList) -> dict:
                 if dns.qr == 1:
                     # Extract IP addresses
                     for i in range(dns.ancount):
+                        domain_name = dns.an[i].rrname.decode("utf-8")
                         ip = dns.an[i].rdata
+
+                        if domain_name not in domain_names:
+                            domain_names[domain_name] = []
+
                         if ip not in domain_names[domain_name]:
                             domain_names[domain_name].append(ip)
 

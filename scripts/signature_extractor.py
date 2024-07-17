@@ -71,8 +71,6 @@ def extract_signature(pkt: scapy.Packet) -> dict:
     # Highest-layer protocol
     signature[PacketFields.Protocol.name] = get_last_layer(pkt).name
 
-    # TODO: Packet direction (in or out)
-
     # Packet length
     signature[PacketFields.Length.name] = len(pkt)
 
@@ -126,6 +124,9 @@ def get_DNS_data(pkt: scapy.Packet) -> str:
 
 
 def get_CoAP_data(pkt: scapy.Packet) -> str:
+    """
+    Get the CoAP data from a CoAP packet.
+    """
     coap_packet = pkt.getlayer(CoAP)
     type = coap_packet.type
     method = coap_codes[coap_packet.code]
