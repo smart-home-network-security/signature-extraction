@@ -153,4 +153,27 @@ class Pattern:
             if dst:
                 profile["protocols"]["tcp"] = {"dst-port": dst[0]}
 
+        elif self.protocol == "UDP":
+            src = self.getDevicePort()
+            dst = self.getOtherPort()
+            protoport = 0
+
+            if src:
+                profile["protocols"]["udp"] = {"src-port": src[0]}
+                protoport = src[0]
+            if dst:
+                profile["protocols"]["udp"] = {"dst-port": dst[0]}
+                protoport = dst[0]
+
+            if protoport == 53:
+                query = list(self.application_data["ApplicationSpecific"])[0]
+                # query format = "type domainname"
+                # split query by space
+                query = query.split(" ")
+
+                profile["protocols"]["dns"] = {
+                    "qtype": query[0],
+                    "domain-name": query[1],
+                }
+
         return profile

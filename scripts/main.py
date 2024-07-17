@@ -2,6 +2,7 @@
 
 from domain_extractor import extract_domain_names, replace_ip_with_domain_name
 from packet_translator import translate
+from pattern_detection import find_patterns, generate_policies, write_profile
 
 # from arg_types import PathType
 import scapy.all as scapy
@@ -43,7 +44,10 @@ if __name__ == "__main__":
     # extract the domain names from the packets
     domain_names = extract_domain_names(packets)
 
-    # iterate over all timestamps
+    flows = []
+
+    # -------------------- simplification and flow compression ------------------- #
+
     for timestamp in timestamps:
         # translate the packets to signatures
         signatures = translate(5, int(timestamp), packets)
@@ -60,7 +64,21 @@ if __name__ == "__main__":
         signatures = group_by_stream(signatures)
         signatures = compress_packets(signatures)
 
+        flows.append(signatures)
+
         # write the signatures to a CSV file
         write_to_csv(signatures, folder + f"{timestamp}.csv")
 
-    print("Done!")
+    print("Flows extracted")
+
+    # ---------------------------- pattern extraction ---------------------------- #
+
+    patterns = find_patterns(flows)  # find the patterns in the flows
+
+    policies = generate_policies(patterns)  # generate the policy from the patterns
+
+    policies = write_profile(policies, folder)
+
+    print("Policies generated")
+
+    exit(0)
