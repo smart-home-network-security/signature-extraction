@@ -163,3 +163,8 @@ cython_debug/
 
 # Project related outputs
 *.csv
+
+# Demo related outputs
+demo/*
+output.yaml
+patterns.txt

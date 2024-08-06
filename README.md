@@ -69,6 +69,9 @@ Application Data: {'Length': {9608: 1, 9635: 1}, 'ApplicationSpecific': {'https'
 
 The profile.yaml is generated in the same folder as the pcap file. It contains the extracted signatures but can't also provide incorrect signatures. It is recommended to check the generated profile.yaml file before using it ***and*** match the given information with those given in the terminal after the script execution.
 
+> [!TIP]
+> You can find the output of the script also in the pattern.txt file in the same folder as the pcap file.
+
 ## License
 
 This project is licensed under the GPL-3.0 License - see the [LICENSE](LICENSE) file for details.
