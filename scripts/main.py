@@ -74,6 +74,11 @@ if __name__ == "__main__":
     # ---------------------------- pattern extraction ---------------------------- #
 
     patterns = find_patterns(flows)  # find the patterns in the flows
+    
+    print(f"{len(patterns)} pattern(s) found")
+    
+    for i, pattern in enumerate(patterns):
+        print(f"Pattern {i+1}: {pattern}\n")
 
     policies = generate_policies(patterns)  # generate the policy from the patterns
 
