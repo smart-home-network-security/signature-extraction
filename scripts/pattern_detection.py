@@ -4,6 +4,7 @@ from pattern import Pattern
 from uuid import uuid1 as uuid
 from datetime import datetime
 import yaml
+from ipaddress import IPv4Address
 
 
 def load_csv_files(path: str) -> list:
@@ -24,16 +25,13 @@ def load_csv_files(path: str) -> list:
 
 
 def find_patterns(network_records: list) -> list:
-    """Find patterns in the network records
+    """
+    Find patterns in the network records
 
-    Args:
-        network_records (list): list of dataframes
-
-    Raises:
-        Exception: No matching frame has been found
-
-    Returns:
-        list: list of patterns
+    :param: ipv4 (IPv4Address): device IP
+    :param: network_records (list): list of dataframes
+    :raises Exception: No matching frame has been found
+    :return: list: list of patterns
     """
     already_matched_ports = []
     identified_patterns = []
@@ -92,19 +90,23 @@ def get_policy_id(policy: dict) -> str:
     return id
 
 
-def generate_policies(identified_patterns: list) -> dict:
+def generate_policies(ipv4:IPv4Address, identified_patterns: list) -> dict:
     policies = {}
 
     for pattern in identified_patterns:
-        policy = pattern.profile_extractor()
+        policy = pattern.profile_extractor(ipv4)
         id = get_policy_id(policy)
         policies[id] = policy
 
     return policies
 
 
-def write_profile(policies, path):
-    deviceinfo = {"last-update": datetime.today().strftime("%a %d %b %Y, %I:%M%p")}
+def write_profile(device_name: str, ipv4: IPv4Address, policies: dict, path: str) -> dict:
+    deviceinfo = {
+        "name": device_name,
+        "ipv4": str(ipv4),
+        "last-update": datetime.today().strftime("%a %d %b %Y, %I:%M%p")
+    }
     profile = {"device-info": deviceinfo, "single-policies": policies}
 
     with open(path + "output.yaml", "w") as f:

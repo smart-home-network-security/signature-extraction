@@ -21,7 +21,7 @@ All the scripts can be used as standalone scripts, arguments can be passed to th
 
 ## Installation
 
-**Requirements:** Python 3.10 or higher, pip and git.
+**Requirements:** Python 3.8 or higher, `pip` and `git`.
 
 Clone the repository and install the dependencies using [pip](https://pip.pypa.io/en/stable/).
 

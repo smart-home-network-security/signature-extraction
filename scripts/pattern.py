@@ -1,3 +1,4 @@
+from ipaddress import IPv4Address
 import pandas as pd
 
 
@@ -155,13 +156,19 @@ class Pattern:
         return list(set([mostUsedPort]) & set(ref["OtherPort"]))
 
 
-    def profile_extractor(self):
+    def profile_extractor(self, ipv4: IPv4Address) -> dict:
+        # IP addresses
+        src_ip = self.getDeviceHost()[0]
+        src_ip = "self" if src_ip == str(ipv4) else src_ip
+        dst_ip = self.getOtherHost()[0]
+        dst_ip = "self" if dst_ip == str(ipv4) else dst_ip
         profile = {
             "protocols": {
-                "ipv4": {"src": self.getDeviceHost()[0], "dst": self.getOtherHost()[0]},
+                "ipv4": {"src": src_ip, "dst": dst_ip},
             }
         }
 
+        # Protocols
         if self.protocol == "TCP":
             src = self.getDevicePort()
             dst = self.getOtherPort()

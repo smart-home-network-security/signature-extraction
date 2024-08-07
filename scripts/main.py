@@ -1,5 +1,8 @@
 #!/usr/bin/python3
 
+# Libraries
+from ipaddress import IPv4Address
+# Custom
 from domain_extractor import extract_domain_names, replace_ip_with_domain_name
 from packet_translator import translate
 from pattern_detection import find_patterns, generate_policies, write_profile
@@ -20,17 +23,35 @@ timestamps = []
 
 
 if __name__ == "__main__":
-    # parse the arguments
+    
+    ##### ARGUMENT PARSING #####
     parser = argparse.ArgumentParser(
         prog="Signature Extractor",
         description="Extract signatures from a pcap file.",
-        epilog="Enjoy the program! :)",
+        epilog="Enjoy the program! :)"
     )
+
+    # Directory
     parser.add_argument(
         "folder",
         type=directory,
-        help="The folder containing the pcap file and the act.txt file.",
+        help="The folder containing the pcap file and the act.txt file."
     )
+
+    ## Device metadata
+    # Device name
+    parser.add_argument(
+        "device",
+        type=str,
+        help="The name of the device."
+    )
+    # Device IPv4 address
+    parser.add_argument(
+        "ipv4",
+        type=IPv4Address,
+        help="The IPv4 address of the device."
+    )
+
     args = parser.parse_args()
     folder = str(args.folder) + "/"
 
@@ -90,9 +111,9 @@ if __name__ == "__main__":
             file.write("\n\n")
             
 
-    policies = generate_policies(patterns)  # generate the policy from the patterns
+    policies = generate_policies(args.ipv4, patterns)  # generate the policy from the patterns
 
-    policies = write_profile(policies, folder)
+    policies = write_profile(args.device, args.ipv4, policies, folder)
 
     print("Policies generated")
 
