@@ -78,8 +78,11 @@ class Pattern:
         if value and (value not in self.application_data[data]):
             self.application_data[data][value] = 1
         else:
-            self.application_data[data][value] += 1
-
+            try:
+                self.application_data[data][value] += 1
+            except KeyError:
+                pass
+        
         return self.application_data
 
     # from tabulate import tabulate
@@ -92,7 +95,7 @@ class Pattern:
             self.ports.items(), key=lambda item: item[1]["number"], reverse=True
         )
         output += f"\nPorts: {sorted_ports[:3]}"
-        output += f"\nMost Used Port: {self.mostUsedPort()} -> {self.ports[self.mostUsedPort()]["host"]}"
+        output += f"\nMost Used Port: {self.mostUsedPort()} -> {self.ports[self.mostUsedPort()]['host']}"
         output += f"\nApplication Data: {self.application_data}"
 
         return output
@@ -105,7 +108,7 @@ class Pattern:
             self.ports.items(), key=lambda item: item[1]["number"], reverse=True
         )
         output += f"\nPorts: {sorted_ports[:3]}"
-        output += f"\nMost Used Port: {self.mostUsedPort()} -> {self.ports[self.mostUsedPort()]["host"]}"
+        output += f"\nMost Used Port: {self.mostUsedPort()} -> {self.ports[self.mostUsedPort()]['host']}"
         output += f"\nApplication Data: {self.application_data}"
 
         return output

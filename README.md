@@ -17,11 +17,11 @@ This library is composed of three monolithic scripts that can be used independen
 
 All the scripts can be used as standalone scripts, arguments can be passed to them using the command line.
 
-profile.yaml files generated are the one compatible with the [smart-home-firewall](https://github.com/smart-home-network-security/smart-home-firewall) by @fdekeers. 
+`profile.yaml` files generated are the one compatible with the [smart-home-firewall](https://github.com/smart-home-network-security/smart-home-firewall) by @fdekeers. 
 
 ## Installation
 
-**Requirements:** Python 3.12 or higher, pip and git.
+**Requirements:** Python 3.10 or higher, pip and git.
 
 Clone the repository and install the dependencies using [pip](https://pip.pypa.io/en/stable/).
 
@@ -67,7 +67,7 @@ Application Data: {'Length': {9608: 1, 9635: 1}, 'ApplicationSpecific': {'https'
 
 *Possible improvements: make the output more readable, add more information about the signature.*
 
-The profile.yaml is generated in the same folder as the pcap file. It contains the extracted signatures but can't also provide incorrect signatures. It is recommended to check the generated profile.yaml file before using it ***and*** match the given information with those given in the terminal after the script execution.
+The profile.yaml is generated in the same folder as the pcap file. It contains the extracted signatures but can also provide incorrect signatures. It is recommended to check the generated profile.yaml file before using it ***and*** match the given information with those given in the terminal after the script execution.
 
 > [!TIP]
 > You can find the output of the script also in the pattern.txt file in the same folder as the pcap file.
