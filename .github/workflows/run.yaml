@@ -1,0 +1,18 @@
+name: Test script
+on: [push]
+
+
+jobs:
+
+  test-run:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Python packages
+        run: pip install -r $GITHUB_WORKSPACE/requirements.txt
+
+      - name: Run main script
+        run: python3 $GITHUB_WORKSPACE/scripts/main.py $GITHUB_WORKSPACE/demo
