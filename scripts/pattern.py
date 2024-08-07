@@ -143,6 +143,7 @@ class Pattern:
         mostUsedPort = self.mostUsedPort()
         return list(set([mostUsedPort]) & set(ref["DevicePort"]))
 
+
     def getOtherPort(self) -> int:
         """Get other Port
 
@@ -152,6 +153,7 @@ class Pattern:
         ref = self.raw
         mostUsedPort = self.mostUsedPort()
         return list(set([mostUsedPort]) & set(ref["OtherPort"]))
+
 
     def profile_extractor(self):
         profile = {
@@ -189,7 +191,7 @@ class Pattern:
 
                 profile["protocols"]["dns"] = {
                     "qtype": query[0],
-                    "domain-name": query[1],
+                    "domain-name": query[1][:-1],
                 }
 
         return profile

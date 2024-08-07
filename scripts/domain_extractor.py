@@ -48,7 +48,7 @@ def extract_domain_names(packet_list: scapy.PacketList) -> dict:
                 # Query
                 if dns.qr == 0:
                     # Extract domain name
-                    domain_name = dns.qd.qname.decode("utf-8")[0:-1]
+                    domain_name = dns.qd.qname.decode("utf-8")[:-1]
                     if domain_name not in domain_names:
                         domain_names[domain_name] = []
                 
@@ -56,7 +56,7 @@ def extract_domain_names(packet_list: scapy.PacketList) -> dict:
                 if dns.qr == 1:  # Response
                     # Extract IP addresses
                     for i in range(dns.ancount):
-                        domain_name = dns.an[i].rrname.decode("utf-8")[0:-1]
+                        domain_name = dns.an[i].rrname.decode("utf-8")[:-1]
                         ip = dns.an[i].rdata
 
                         if domain_name not in domain_names:

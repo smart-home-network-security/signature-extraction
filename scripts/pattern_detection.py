@@ -78,13 +78,27 @@ def find_patterns(network_records: list) -> list:
     return identified_patterns
 
 
+def get_policy_id(policy: dict) -> str:
+    """
+    Generate an identifier for a given policy.
+
+    :param: policy (dict): Policy to generate an identifier for.
+    :return: str: Identifier for the given policy.
+    """
+    highest_protocol = list(dict.keys(policy["protocols"]))[-1]
+    id = highest_protocol
+    for field, value in dict.items(policy["protocols"][highest_protocol]):
+        id += f"_{value}"
+    return id
+
+
 def generate_policies(identified_patterns: list) -> dict:
     policies = {}
 
     for pattern in identified_patterns:
-        toadd = pattern.profile_extractor()
-        unique = str(uuid())
-        policies[unique] = toadd
+        policy = pattern.profile_extractor()
+        id = get_policy_id(policy)
+        policies[id] = policy
 
     return policies
 
