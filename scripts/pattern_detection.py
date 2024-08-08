@@ -27,22 +27,33 @@ def find_patterns(network_records: list) -> list:
     """
     Find patterns in the network records
 
-    :param: ipv4 (IPv4Address): device IP
     :param: network_records (list): list of dataframes
     :raises Exception: No matching frame has been found
     :return: list: list of patterns
     """
+    already_parsed_pattern_indices = set()
     already_matched_ports = []
     identified_patterns = []
     network_recording = sorted(network_records, key=len)
     reference_record = network_recording[0]
 
-    for line in reference_record.iterrows():
-        result = pd.DataFrame()
-        pattern = Pattern(line[1])
+    for i, flow in reference_record.iterrows():
 
-        for record in network_recording:
-            result = pd.concat([result, pattern.matchBasicSignature(record)])
+        # Pattern already parsed, skip
+        if i in already_parsed_pattern_indices:
+            continue
+
+        ## Parse pattern
+
+        result = pd.DataFrame()
+        pattern = Pattern(flow)
+        already_parsed_pattern_indices.add(i)
+
+        for j, record in enumerate(network_recording):
+            matched_record = pattern.matchBasicSignature(record)
+            if j == 0:  # Reference record
+                already_parsed_pattern_indices.update(matched_record.index)
+            result = pd.concat([result, matched_record])
 
         if result.empty:
             raise Exception("No matching frame has been found")

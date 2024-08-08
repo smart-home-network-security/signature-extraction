@@ -62,7 +62,7 @@ def compress_packets(grouped: pd.DataFrame) -> pd.DataFrame:
     compressed_packets = []
 
     # Iterate over the groups
-    for name, group in grouped:
+    for _, group in grouped:
         # Calculate the total length of the packets in the group
         total_length = group["Length"].sum()
 
@@ -72,8 +72,8 @@ def compress_packets(grouped: pd.DataFrame) -> pd.DataFrame:
                 "Index": group["Index"].min(),
                 "Timestamp": group["Timestamp"].min(),
                 "DeviceHost": group["DeviceHost"].iloc[0],
-                "OtherHost": group["OtherHost"].iloc[0],
                 "DevicePort": group["DevicePort"].iloc[0],
+                "OtherHost": group["OtherHost"].iloc[0],
                 "OtherPort": group["OtherPort"].iloc[0],
                 "TransportProtocol": group["TransportProtocol"].iloc[0],
                 "Protocol": group["Protocol"].iloc[0],
@@ -84,7 +84,7 @@ def compress_packets(grouped: pd.DataFrame) -> pd.DataFrame:
         )
 
     # Convert the list of compressed packets into a DataFrame
-    compressed_df = pd.DataFrame(compressed_packets).sort_values("Index")
+    compressed_df = pd.DataFrame(compressed_packets).sort_values("Index").reset_index(drop=True)
 
     return compressed_df
 

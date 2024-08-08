@@ -81,9 +81,13 @@ if __name__ == "__main__":
         signatures = merge_signatures(
             [transform_to_dataframe(signature) for signature in signatures]
         )
+        signatures.reset_index(drop=True).to_csv(f"demo/merged-{timestamp}.csv")
         # group the signatures by stream
         signatures = group_by_stream(signatures)
+        signatures.first().reset_index(drop=True).to_csv(f"demo/grouped-{timestamp}.csv")
+        # compress the packets in the stream
         signatures = compress_packets(signatures)
+        signatures.reset_index(drop=True).to_csv(f"demo/compressed-{timestamp}.csv")
 
         flows.append(signatures)
 
