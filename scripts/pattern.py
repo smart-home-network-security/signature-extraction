@@ -95,24 +95,14 @@ class Pattern:
         sorted_ports = sorted(
             self.ports.items(), key=lambda item: item[1]["number"], reverse=True
         )
-        output += f"\nPorts: {sorted_ports[:3]}"
+        output += f"\nPorts: {sorted_ports}"
         output += f"\nMost Used Port: {self.mostUsedPort()} -> {self.ports[self.mostUsedPort()]['host']}"
         output += f"\nApplication Data: {self.application_data}"
 
         return output
     
     def __repr__(self):
-        output = ""
-        output += f"IP Addresses: {self.ip_adresses}"
-        output += f"\nProtocol: {self.protocol}"
-        sorted_ports = sorted(
-            self.ports.items(), key=lambda item: item[1]["number"], reverse=True
-        )
-        output += f"\nPorts: {sorted_ports[:3]}"
-        output += f"\nMost Used Port: {self.mostUsedPort()} -> {self.ports[self.mostUsedPort()]['host']}"
-        output += f"\nApplication Data: {self.application_data}"
-
-        return output
+        return self.__str__()
 
     def getDeviceHost(self) -> str:
         """Get device host ip or domain name
