@@ -64,9 +64,7 @@ def extract_signature(pkt: scapy.Packet) -> dict:
 
         # Application-specific layer
         # WARNING: Might be time-consuming for large packet traces
-        signature[PacketFields.ApplicationSpecific.name] = get_TCP_application_layer(
-            pkt
-        )
+        signature[PacketFields.ApplicationSpecific.name] = get_TCP_application_layer(pkt)
 
     # Highest-layer protocol
     signature[PacketFields.Protocol.name] = get_last_layer(pkt).name
@@ -74,13 +72,26 @@ def extract_signature(pkt: scapy.Packet) -> dict:
     # Packet length
     signature[PacketFields.Length.name] = len(pkt)
 
-    # Protocol-specific fields
+    ## Protocol-specific fields
 
+    # HTTP
+    if pkt.haslayer(HTTP):
+        signature[PacketFields.Protocol.name] = "HTTP"
+        signature[PacketFields.ApplicationSpecific.name] = get_HTTP_data(pkt)
+        return signature
+
+    # HTTPS
+    if signature[PacketFields.ApplicationSpecific.name] == "https":
+        signature[PacketFields.Protocol.name] = "HTTPS"
+        return signature
+
+    # CoAP
     if pkt.haslayer(CoAP):
         signature[PacketFields.Protocol.name] = "CoAP"
         signature[PacketFields.ApplicationSpecific.name] = get_CoAP_data(pkt)
         return signature
 
+    # DHCP
     if pkt.haslayer(DHCP):
         signature[PacketFields.Protocol.name] = "DHCP"
         dhcp = pkt.getlayer(DHCP)
@@ -88,14 +99,10 @@ def extract_signature(pkt: scapy.Packet) -> dict:
         signature[PacketFields.ApplicationSpecific.name] = DHCPTypes[dhcp.options[0][1]]
         return signature
 
+    # DNS
     if pkt.haslayer(DNS):
         signature[PacketFields.Protocol.name] = "DNS"
         signature[PacketFields.ApplicationSpecific.name] = get_DNS_data(pkt)
-        return signature
-
-    if pkt.haslayer(HTTP):
-        signature[PacketFields.Protocol.name] = "HTTP"
-        signature[PacketFields.ApplicationSpecific.name] = get_HTTP_data(pkt)
         return signature
 
     return signature
