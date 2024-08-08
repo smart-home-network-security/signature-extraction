@@ -11,7 +11,7 @@
 This library is composed of three monolithic scripts that can be used independently. The scripts are:
 
 - Read pcap files and extract headers from packets (`packet-translator.py`) ;
-- Merge packets into flows (`stream-identificator.py`) ;
+- Merge packets into flows (`stream-identifier.py`) ;
 - Extract the recurring patterns from the flows (`signature-extractor.py`) ;
 - Generate profile.yaml files containing the extracted signatures (WIP).
 

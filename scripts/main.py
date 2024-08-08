@@ -9,7 +9,7 @@ from pattern_detection import find_patterns, generate_policies, write_profile
 
 # from arg_types import PathType
 import scapy.all as scapy
-from stream_identificator import (
+from stream_identifier import (
     transform_to_dataframe,
     merge_signatures,
     group_by_stream,
@@ -113,8 +113,6 @@ if __name__ == "__main__":
 
     policies = generate_policies(args.ipv4, patterns)  # generate the policy from the patterns
 
-    policies = write_profile(args.device, args.ipv4, policies, folder)
+    write_profile(args.device, args.ipv4, policies, folder)
 
     print("Policies generated")
-
-    exit(0)

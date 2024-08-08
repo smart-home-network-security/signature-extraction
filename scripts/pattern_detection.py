@@ -1,7 +1,6 @@
 import os
 import pandas as pd
 from pattern import Pattern
-from uuid import uuid1 as uuid
 from datetime import datetime
 import yaml
 from ipaddress import IPv4Address
@@ -85,7 +84,7 @@ def get_policy_id(policy: dict) -> str:
     """
     highest_protocol = list(dict.keys(policy["protocols"]))[-1]
     id = highest_protocol
-    for field, value in dict.items(policy["protocols"][highest_protocol]):
+    for _, value in dict.items(policy["protocols"][highest_protocol]):
         id += f"_{value}"
     return id
 
@@ -95,13 +94,14 @@ def generate_policies(ipv4:IPv4Address, identified_patterns: list) -> dict:
 
     for pattern in identified_patterns:
         policy = pattern.profile_extractor(ipv4)
+        policy["bidirectional"] = True
         id = get_policy_id(policy)
         policies[id] = policy
 
     return policies
 
 
-def write_profile(device_name: str, ipv4: IPv4Address, policies: dict, path: str) -> dict:
+def write_profile(device_name: str, ipv4: IPv4Address, policies: dict, path: str) -> None:
     deviceinfo = {
         "name": device_name,
         "ipv4": str(ipv4),
@@ -111,8 +111,6 @@ def write_profile(device_name: str, ipv4: IPv4Address, policies: dict, path: str
 
     with open(path + "output.yaml", "w") as f:
         yaml.dump(profile, f)
-
-    return profile
 
 
 def main():

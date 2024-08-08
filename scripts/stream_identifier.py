@@ -20,13 +20,14 @@ def merge_signatures(signatures: list) -> pd.DataFrame:
 
 
 def group_by_stream(df: pd.DataFrame) -> pd.DataFrame:
-    """Group the packets by stream.
+    """
+    Group the packets by stream.
 
     Args:
-        df (DataFrame): the packets
+        df (pandas.DataFrame): the packets
 
     Returns:
-        DataFrame: the grouped packets
+        pandas.DataFrame: the grouped packets
     """
     # Create a new column that contains a tuple of the source and destination IP addresses and ports
     df["stream"] = df.apply(
@@ -51,10 +52,10 @@ def compress_packets(grouped: pd.DataFrame) -> pd.DataFrame:
     """Compress the packets in each stream.
 
     Args:
-        grouped (DataFrame): the grouped packets
+        grouped (pandas.DataFrame): the grouped packets
 
     Returns:
-        DataFrame: the compressed packets
+        pandas.DataFrame: the compressed packets
     """
 
     # Initialize an empty list to store the compressed packets
@@ -101,7 +102,7 @@ def write_to_csv(df: pd.DataFrame, filename: str) -> None:
 if __name__ == "__main__":
     ## COMMAND LINE ARGUMENTS ##
     parser = argparse.ArgumentParser(
-        prog="Stream Identificator",
+        prog="Stream Identifier",
         description="Extract the network pattern relative to a specific event.",
     )
     # Positional argument: Network trace to search the pattern in
