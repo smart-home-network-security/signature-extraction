@@ -120,7 +120,7 @@ def write_profile(device_name: str, ipv4: IPv4Address, policies: dict, path: str
     }
     profile = {"device-info": deviceinfo, "single-policies": policies}
 
-    with open(path + "output.yaml", "w") as f:
+    with open(path + "profile.yaml", "w") as f:
         yaml.dump(profile, f)
 
 
