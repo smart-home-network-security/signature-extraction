@@ -36,15 +36,13 @@ pip install -r requirements.txt
 The library can be used as a standalone script or as a Python library.
 
 ```bash
-python ./scripts/main.py /path/to/pcap/
+python ./scripts/main.py PCAP TIMESTAMP_FILE -o OUTPUT_DIR
 ```
-The folder `/path/to/pcap/` should contain the pcap file to analyze (name `file.pcap`) and the associated timestamp file (name `act.txt`) like this:
+- `PCAP` is the path to the pcap file to analyze.
+- `TIMESTAMP_FILE` is the path to the file containing the timestamps of the device events.
+- `OUTPUT_DIR` is the path to the output directory.
+  - Optional. By default, the working directory is used.
 
-```
-my_folder_to_analyze/
-├─ act.txt
-├─ file.pcap
-```
 
 This folder will be used to store the extracted signatures and all the intermediate files. It should be readable and writable for the user running the script.
 

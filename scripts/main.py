@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
 # Libraries
+import os
+from pathlib import Path
 from ipaddress import IPv4Address
 # Custom
 from domain_extractor import extract_domain_names, replace_ip_with_domain_name
@@ -17,8 +19,12 @@ from stream_identifier import (
     write_to_csv,
 )
 import argparse
-from arg_types import directory
+from arg_types import file, directory
 
+
+### GLOBAL VARIABLES ###
+script_name = os.path.basename(__file__)
+script_path = Path(os.path.abspath(__file__))
 timestamps = []
 
 
@@ -31,11 +37,20 @@ if __name__ == "__main__":
         epilog="Enjoy the program! :)"
     )
 
-    # Directory
+    ### Positional arguments ###
+
+    ## Input files
+    # PCAP file
     parser.add_argument(
-        "folder",
-        type=directory,
-        help="The folder containing the pcap file and the act.txt file."
+        "pcap",
+        type=file,
+        help="PCAP file containing the device's network traffic."
+    )
+    # Timestamps file
+    parser.add_argument(
+        "timestamp_file",
+        type=file,
+        help="File containing the timestamps of the device events."
     )
 
     ## Device metadata
@@ -43,24 +58,35 @@ if __name__ == "__main__":
     parser.add_argument(
         "device",
         type=str,
-        help="The name of the device."
+        help="Name of the device."
     )
     # Device IPv4 address
     parser.add_argument(
         "ipv4",
         type=IPv4Address,
-        help="The IPv4 address of the device."
+        help="IPv4 address of the device."
+    )
+
+    ### Optional arguments ###
+
+    # Output directory
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=directory,
+        default=script_path,
+        help="Directory where the output files will be saved."
     )
 
     args = parser.parse_args()
-    folder = str(args.folder) + "/"
+
 
     # read the timestamps from the act.txt file
-    with open(folder + "act.txt") as file:
+    with open(args.timestamp_file) as file:
         timestamps = [line.rstrip() for line in file]
 
     # read the packets from the file.pcap file
-    packets = scapy.rdpcap(folder + "file.pcap")
+    packets = scapy.rdpcap(args.pcap)
 
     # extract the domain names from the packets
     domain_names = extract_domain_names(packets)
@@ -89,7 +115,8 @@ if __name__ == "__main__":
         flows.append(signatures)
 
         # write the signatures to a CSV file
-        write_to_csv(signatures, folder + f"{timestamp}.csv")
+        output_signature_file = os.path.join(args.output, f"{timestamp}.csv")
+        write_to_csv(signatures, output_signature_file)
 
     print("Flows extracted")
 
@@ -105,7 +132,8 @@ if __name__ == "__main__":
     print("Patterns found!")
 
     # output the patterns to a file
-    with open(folder + "patterns.txt", "w") as file:
+    patterns_output_file = os.path.join(args.output, "patterns.txt")
+    with open(patterns_output_file, "w") as file:
         for i, pattern in enumerate(patterns):
             file.write("Pattern " + str(i + 1) + ":\n")
             file.write(repr(pattern))
@@ -114,6 +142,7 @@ if __name__ == "__main__":
 
     policies = generate_policies(args.ipv4, patterns)  # generate the policy from the patterns
 
-    write_profile(args.device, args.ipv4, policies, folder)
+    output_profile_file = os.path.join(args.output, "profile.yaml")
+    write_profile(args.device, args.ipv4, policies, output_profile_file)  # write the profile to a file
 
     print("Policies generated")

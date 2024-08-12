@@ -18,14 +18,27 @@ def timestamp(arg: str) -> int:
     return timestamp
 
 
-def directory(raw_path: str) -> str:
+def file(arg: str) -> str:
+    """
+    Argparse type for an existing file path.
+
+    :param arg: given argument
+    :return: absolute path to the file given as argument
+    :raises argparse.ArgumentTypeError: if the given argument is not an existing directory
+    """
+    if not os.path.isfile(arg):
+        raise argparse.ArgumentTypeError(f'"{arg}" is not an existing file')
+    return os.path.abspath(arg)
+
+
+def directory(arg: str) -> str:
     """
     Argparse type for an existing directory path.
 
     :param arg: given argument
-    :return: absolute path to an existing directory
+    :return: absolute path to the directory given as argument
     :raises argparse.ArgumentTypeError: if the given argument is not an existing directory
     """
-    if not os.path.isdir(raw_path):
-        raise argparse.ArgumentTypeError(f'"{raw_path}" is not an existing directory')
-    return os.path.abspath(raw_path)
+    if not os.path.isdir(arg):
+        raise argparse.ArgumentTypeError(f'"{arg}" is not an existing directory')
+    return os.path.abspath(arg)

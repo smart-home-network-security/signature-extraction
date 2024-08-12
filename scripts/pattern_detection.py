@@ -112,7 +112,7 @@ def generate_policies(ipv4:IPv4Address, identified_patterns: list) -> dict:
     return policies
 
 
-def write_profile(device_name: str, ipv4: IPv4Address, policies: dict, path: str) -> None:
+def write_profile(device_name: str, ipv4: IPv4Address, policies: dict, output: str) -> None:
     deviceinfo = {
         "name": device_name,
         "ipv4": str(ipv4),
@@ -120,7 +120,7 @@ def write_profile(device_name: str, ipv4: IPv4Address, policies: dict, path: str
     }
     profile = {"device-info": deviceinfo, "single-policies": policies}
 
-    with open(path + "profile.yaml", "w") as f:
+    with open(output, "w") as f:
         yaml.dump(profile, f)
 
 
