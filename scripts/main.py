@@ -32,7 +32,7 @@ if __name__ == "__main__":
     
     ##### ARGUMENT PARSING #####
     parser = argparse.ArgumentParser(
-        prog="Signature Extractor",
+        prog=script_name,
         description="Extract signatures from a pcap file.",
         epilog="Enjoy the program! :)"
     )
