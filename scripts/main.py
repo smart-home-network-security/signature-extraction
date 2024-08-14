@@ -135,14 +135,15 @@ if __name__ == "__main__":
     patterns_output_file = os.path.join(args.output, "patterns.txt")
     with open(patterns_output_file, "w") as file:
         for i, pattern in enumerate(patterns):
-            file.write("Pattern " + str(i + 1) + ":\n")
+            file.write(f"Pattern {i+1}:\n")
             file.write(repr(pattern))
             file.write("\n\n")
             
 
     policies = generate_policies(args.ipv4, patterns)  # generate the policy from the patterns
 
+    # Generate device profile from the policies
     output_profile_file = os.path.join(args.output, "profile.yaml")
-    write_profile(args.device, args.ipv4, policies, output_profile_file)  # write the profile to a file
+    write_profile(args.device, args.ipv4, policies, output_profile_file)
 
     print("Policies generated")
