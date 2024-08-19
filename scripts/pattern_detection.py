@@ -124,6 +124,8 @@ def write_profile(device_name: str, ipv4: IPv4Address, policies: dict, output: s
         yaml.dump(profile, f)
 
 
+### MAIN ###
+
 def main():
     path = "demo/"
     network_records = load_csv_files(path)

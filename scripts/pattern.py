@@ -3,7 +3,7 @@ import pandas as pd
 
 
 class Pattern:
-    ip_adresses = ()
+    ip_addresses = ()
     ports = {}
     protocol = ""
     application_data = {}
@@ -14,7 +14,7 @@ class Pattern:
         Args:
             frame (pd.DataFrame): Data frame to init with
         """
-        self.ip_adresses = (frame["DeviceHost"], frame["OtherHost"])
+        self.ip_addresses = (frame["DeviceHost"], frame["OtherHost"])
         self.protocol = frame["TransportProtocol"]
         self.ports = self.addPorts(frame)
 
@@ -52,19 +52,20 @@ class Pattern:
 
     def matchBasicSignature(self, record: pd.DataFrame) -> pd.DataFrame:
         return record[
-            (record["DeviceHost"].isin(self.ip_adresses))
-            & (record["OtherHost"].isin(self.ip_adresses))
+            (record["DeviceHost"].isin(self.ip_addresses))
+            & (record["OtherHost"].isin(self.ip_addresses))
             & (record["TransportProtocol"] == self.protocol)
         ]
 
     def mostUsedPort(self) -> int:
-        return list(
+        ports_sorted = list(
             dict(
                 sorted(
                     self.ports.items(), key=lambda item: item[1]["number"], reverse=True
                 )
             )
-        )[0]
+        )
+        return ports_sorted[0]
 
     def getApplicationData(
         self,
@@ -90,7 +91,7 @@ class Pattern:
 
     def __str__(self):
         output = ""
-        output += f"IP Addresses: {self.ip_adresses}"
+        output += f"IP Addresses: {self.ip_addresses}"
         output += f"\nProtocol: {self.protocol}"
         sorted_ports = sorted(
             self.ports.items(), key=lambda item: item[1]["number"], reverse=True
@@ -112,7 +113,7 @@ class Pattern:
         """
         ref = self.raw
 
-        return list(set(self.ip_adresses) & set(ref["DeviceHost"]))
+        return list(set(self.ip_addresses) & set(ref["DeviceHost"]))
 
     def getOtherHost(self) -> str:
         """Get device host ip or domain name
@@ -122,7 +123,7 @@ class Pattern:
         """
         ref = self.raw
 
-        return list(set(self.ip_adresses) & set(ref["OtherHost"]))
+        return list(set(self.ip_addresses) & set(ref["OtherHost"]))
 
     def getDevicePort(self) -> int:
         """Get device Port
