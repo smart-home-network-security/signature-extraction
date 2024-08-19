@@ -170,5 +170,6 @@ cython_debug/
 
 # Demo related outputs
 demo/*
+!demo/*.pcap
 output.yaml
 patterns.txt

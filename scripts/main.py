@@ -29,6 +29,7 @@ script_path = Path(os.path.abspath(__file__))
 # Config variables
 timeout = 5  # seconds
 # Packet loop accumulators
+timestamp     = 0
 pkt_id        = 0
 previous_time = 0
 domain_names  = {}
@@ -46,7 +47,11 @@ def handle_packet(packet: Packet) -> None:
         packet (scapy.Packet): Packet read from the PCAP file.
     """
     ### Preliminary checks
-    global pkt_id, previous_time, domain_names, signatures
+    global timestamp, pkt_id, previous_time, domain_names, signatures
+
+    # If timestamp is not set, set it with the first packet
+    if pkt_id == 0 and timestamp == 0:
+        timestamp = packet.time
 
     # If first packet, set timestamp
     if previous_time == 0:
@@ -137,7 +142,10 @@ if __name__ == "__main__":
     for pcap in args.pcap:
 
         # Event timestamp
-        timestamp = int(os.path.basename(pcap).split(".")[0])
+        try:
+            timestamp = int(os.path.basename(pcap).split(".")[0])
+        except ValueError:
+            timestamp = 0
 
         # Read packets from the PCAP file
         sniff(offline=pcap, prn=handle_packet, store=False)

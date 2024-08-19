@@ -15,4 +15,4 @@ jobs:
         run: pip install -r $GITHUB_WORKSPACE/requirements.txt
 
       - name: Run main script
-        run: python3 $GITHUB_WORKSPACE/scripts/main.py tplink-plug 192.168.1.135 $GITHUB_WORKSPACE/demo/file.pcap -o $GITHUB_WORKSPACE/demo
+        run: python3 $GITHUB_WORKSPACE/scripts/main.py tplink-plug 192.168.1.135 $GITHUB_WORKSPACE/demo/*.pcap -o $GITHUB_WORKSPACE/demo
