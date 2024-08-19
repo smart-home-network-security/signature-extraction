@@ -9,10 +9,10 @@ jobs:
     steps:
 
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Python packages
         run: pip install -r $GITHUB_WORKSPACE/requirements.txt
 
       - name: Run main script
-        run: python3 $GITHUB_WORKSPACE/scripts/main.py $GITHUB_WORKSPACE/demo/file.pcap $GITHUB_WORKSPACE/demo/act.txt tplink-plug 192.168.1.135 -o $GITHUB_WORKSPACE/demo
+        run: python3 $GITHUB_WORKSPACE/scripts/main.py tplink-plug 192.168.1.135 $GITHUB_WORKSPACE/demo/*.pcap -o $GITHUB_WORKSPACE/demo
