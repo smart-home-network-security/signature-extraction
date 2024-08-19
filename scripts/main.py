@@ -3,14 +3,16 @@
 # Libraries
 import os
 from pathlib import Path
+import argparse
 from ipaddress import IPv4Address
-# Custom
-from domain_extractor import extract_domain_names, replace_ip_with_domain_name
-from packet_translator import translate
-from pattern_detection import find_patterns, generate_policies, write_profile
-
-# from arg_types import PathType
 import scapy.all as scapy
+# Custom
+from arg_types import file, directory
+from packet_utils import is_signalling_pkt
+from domain_extractor import extract_domain_names, replace_ip_with_domain_name
+from signature_extractor import extract_signature, PacketFields
+from packet_translator import simplify_pkt
+from pattern_detection import find_patterns, generate_policies, write_profile
 from stream_identifier import (
     transform_to_dataframe,
     merge_signatures,
@@ -18,15 +20,68 @@ from stream_identifier import (
     compress_packets,
     write_to_csv,
 )
-import argparse
-from arg_types import file, directory
 
 
 ### GLOBAL VARIABLES ###
+# Paths
 script_name = os.path.basename(__file__)
 script_path = Path(os.path.abspath(__file__))
-timestamps = []
+# Config variables
+timeout = 5  # seconds
+# Packet loop accumulators
+pkt_id        = 0
+previous_time = 0
+domain_names  = {}
+signatures    = []  # Simpler representations of packets
+flows         = []  # Sequences of packets with the same 5-tuple
 
+
+### FUNCTIONS ###
+
+def handle_packet(packet: scapy.Packet) -> None:
+    """
+    Callback function which handle one packet read from a PCAP file.
+
+    Args:
+        packet (scapy.Packet): Packet read from the PCAP file.
+    """
+    ### Preliminary checks
+    global pkt_id, previous_time, domain_names, signatures
+
+    # If first packet, set timestamp
+    if previous_time == 0:
+        previous_time = packet.time
+
+    # Skip signalling packets (e.g., TCP SYN)
+    if is_signalling_pkt(packet):
+        return
+    
+    # Stop iteration if timeout exceeded w.r.t. previous packet
+    if packet.time > previous_time + timeout:
+        return
+
+    
+    ### Domain name extraction
+    extract_domain_names(packet, domain_names)
+
+
+    ### Packet signature extraction
+    
+    # Extract packet signature
+    signature = extract_signature(packet)
+    signature[PacketFields.Index.name] = pkt_id
+
+    # Replace IP addresses with domain names
+    signature = replace_ip_with_domain_name(domain_names, signature)
+    signatures.append(signature)
+
+    # Update loop variables
+    previous_time = packet.time
+    pkt_id += 1
+
+
+
+### MAIN ###
 
 if __name__ == "__main__":
     
@@ -38,20 +93,6 @@ if __name__ == "__main__":
     )
 
     ### Positional arguments ###
-
-    ## Input files
-    # PCAP file
-    parser.add_argument(
-        "pcap",
-        type=file,
-        help="PCAP file containing the device's network traffic."
-    )
-    # Timestamps file
-    parser.add_argument(
-        "timestamp_file",
-        type=file,
-        help="File containing the timestamps of the device events."
-    )
 
     ## Device metadata
     # Device name
@@ -65,6 +106,15 @@ if __name__ == "__main__":
         "ipv4",
         type=IPv4Address,
         help="IPv4 address of the device."
+    )
+
+    # Input PCAP files
+    parser.add_argument(
+        "pcap",
+        type=file,
+        nargs="+",
+        action="store",
+        help="PCAP files containing the device's network traffic, split per event."
     )
 
     ### Optional arguments ###
@@ -81,35 +131,27 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
 
-    # read the timestamps from the act.txt file
-    with open(args.timestamp_file) as file:
-        timestamps = [line.rstrip() for line in file]
+    ##### MAIN SCRIPT #####
 
-    # read the packets from the file.pcap file
-    packets = scapy.rdpcap(args.pcap)
+    # Iterate over input PCAP files
+    for pcap in args.pcap:
 
-    # extract the domain names from the packets
-    domain_names = extract_domain_names(packets)
+        # Event timestamp
+        timestamp = int(os.path.basename(pcap).split(".")[0])
 
-    flows = []
+        # Read packets from the PCAP file
+        scapy.sniff(offline=pcap, prn=handle_packet, store=False)
 
-    # -------------------- simplification and flow compression ------------------- #
 
-    for timestamp in timestamps:
-        # translate the packets to signatures
-        signatures = translate(5, int(timestamp), packets)
-        # replace the IP addresses with domain names
-        signatures = [
-            replace_ip_with_domain_name(domain_names, signature)
-            for signature in signatures
-        ]
-        # transform all signatures to a data frame
+        # -------------------- Simplification and flow compression ------------------- #
+            
+        # Transform all signatures to a data frame
         signatures = merge_signatures(
             [transform_to_dataframe(signature) for signature in signatures]
         )
-        # group the signatures by stream
+        # Group the signatures by stream
         signatures = group_by_stream(signatures)
-        # compress the packets in the stream
+        # Compress the packets in the stream
         signatures = compress_packets(signatures)
 
         flows.append(signatures)
@@ -118,7 +160,14 @@ if __name__ == "__main__":
         output_signature_file = os.path.join(args.output, f"{timestamp}.csv")
         write_to_csv(signatures, output_signature_file)
 
-    print("Flows extracted")
+        # Reset accumulators
+        pkt_id = 0
+        previous_time = 0
+        domain_names = {}
+        signatures = []
+
+        print("Flows extracted")
+
 
     # ---------------------------- pattern extraction ---------------------------- #
 

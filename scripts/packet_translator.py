@@ -16,26 +16,18 @@ from signature_extractor import (
 import scapy.all as scapy
 
 
-def translate(timeout: int, start: int, packets: scapy.PacketList) -> list:
-    signatures = []
-    # Iterate on all packets after the given start timestamp
-    previous_time = start
-    for i, pkt in (
-        (i, pkt)
-        for i, pkt in enumerate(packets)
-        if pkt.time >= start and pkt.time <= start + timeout
-    ):
-        # Skip packet if it is a signalling packet (e.g., TCP SYN)
-        if is_signalling_pkt(pkt):
-            continue
-        # Stop iteration if timeout exceeded w.r.t. previous packet
-        if i > 0 and pkt.time > previous_time + timeout:
-            break
-        # Extract packet signature
-        signature = extract_signature(pkt)
-        signature[PacketFields.Index.name] = i
-        signatures.append(signature)
-    return signatures
+def simplify_pkt(packet: scapy.Packet, timeout: int, previous_time: int) -> None:
+    # Skip packet if it is a signalling packet (e.g., TCP SYN)
+    if is_signalling_pkt(packet):
+        return
+    
+    # Stop iteration if timeout exceeded w.r.t. previous packet
+    if packet.time > previous_time + timeout:
+        return
+    
+    # Extract packet signature
+    signature = extract_signature(packet)
+    return signature
 
 
 def write(file, signatures, packet_fields) -> None:
@@ -95,7 +87,7 @@ if __name__ == "__main__":
     # Initialize CSV result file
     signature_file_path = os.path.join(pcap_dir, "signature.csv")
 
-    signatures = translate(flow_timeout, args.time, packets)
+    signatures = simplify_pkt(flow_timeout, args.time, packets)
     for signature in signatures:
         replace_ip_with_domain_name(domain_names, signature)
     write(signature_file_path, signatures, packet_fields)
