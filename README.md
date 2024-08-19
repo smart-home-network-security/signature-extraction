@@ -36,12 +36,16 @@ pip install -r requirements.txt
 The library can be used as a standalone script or as a Python library.
 
 ```bash
-python ./scripts/main.py PCAP TIMESTAMP_FILE -o OUTPUT_DIR
+python3 ./scripts/main.py DEVICE IPV4 PCAP [PCAP ...] [-o OUTPUT_DIR] [-h]
 ```
-- `PCAP` is the path to the pcap file to analyze.
-- `TIMESTAMP_FILE` is the path to the file containing the timestamps of the device events.
-- `OUTPUT_DIR` is the path to the output directory.
-  - Optional. By default, the working directory is used.
+- Positional arguments:
+  - `DEVICE`: name of the device to analyze the traffic from.
+  - `IPV4`: IPv4 address of the device.
+  - `PCAP`: path(s) to the PCAP file(s) to analyze.
+- Optional arguments:
+  - `-o OUTPUT_DIR`: path to the output directory.
+    - If not specified, the working directory is used.
+  - `-h`: display the help message.
 
 
 This folder will be used to store the extracted signatures and all the intermediate files. It should be readable and writable for the user running the script.
