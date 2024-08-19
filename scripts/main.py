@@ -1,17 +1,17 @@
 #!/usr/bin/python3
 
+### Imports
 # Libraries
 import os
 from pathlib import Path
 import argparse
 from ipaddress import IPv4Address
-import scapy.all as scapy
+from scapy.all import Packet, sniff
 # Custom
 from arg_types import file, directory
 from packet_utils import is_signalling_pkt
 from domain_extractor import extract_domain_names, replace_ip_with_domain_name
 from signature_extractor import extract_signature, PacketFields
-from packet_translator import simplify_pkt
 from pattern_detection import find_patterns, generate_policies, write_profile
 from stream_identifier import (
     transform_to_dataframe,
@@ -38,7 +38,7 @@ flows         = []  # Sequences of packets with the same 5-tuple
 
 ### FUNCTIONS ###
 
-def handle_packet(packet: scapy.Packet) -> None:
+def handle_packet(packet: Packet) -> None:
     """
     Callback function which handle one packet read from a PCAP file.
 
@@ -140,7 +140,7 @@ if __name__ == "__main__":
         timestamp = int(os.path.basename(pcap).split(".")[0])
 
         # Read packets from the PCAP file
-        scapy.sniff(offline=pcap, prn=handle_packet, store=False)
+        sniff(offline=pcap, prn=handle_packet, store=False)
 
 
         # -------------------- Simplification and flow compression ------------------- #
