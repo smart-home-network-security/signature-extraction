@@ -32,7 +32,11 @@ def is_signalling_pkt(pkt: scapy.Packet) -> bool:
 
     # TCP packet
     if pkt.haslayer(TCP):
-        signal_flags = ["S", "F"]
+        signal_flags = [
+            "S",  # SYN
+            "F",  # FIN
+            "R"   # RST
+        ]
         flags = pkt.getlayer(TCP).flags
         return any(flag in flags for flag in signal_flags)
         # TODO: remove ACK packets only if raw TCP

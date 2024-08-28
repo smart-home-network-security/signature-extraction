@@ -34,7 +34,7 @@ pkt_id        = 0
 previous_time = 0
 domain_names  = {}
 signatures    = []  # Simpler representations of packets
-flows         = []  # Sequences of packets with the same 5-tuple
+flows         = []  
 
 
 ### FUNCTIONS ###

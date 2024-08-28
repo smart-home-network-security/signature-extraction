@@ -32,7 +32,7 @@ def find_patterns(network_records: list) -> list:
     :return: list: list of patterns
     """
     already_parsed_pattern_indices = set()
-    already_matched_ports = []
+    already_matched_ports = set()
     identified_patterns = []
     network_recording = sorted(network_records, key=len)
     reference_record = network_recording[0]
@@ -52,7 +52,8 @@ def find_patterns(network_records: list) -> list:
         for j, record in enumerate(network_recording):
             matched_record = pattern.matchBasicSignature(record)
             if j == 0:  # Reference record
-                already_parsed_pattern_indices.update(matched_record.index)
+                index = matched_record.index[0]
+                already_parsed_pattern_indices.add(index)
             result = pd.concat([result, matched_record])
 
         if result.empty:
@@ -66,7 +67,7 @@ def find_patterns(network_records: list) -> list:
                 pattern.ports.pop(already_matched_port)
 
         base_port = pattern.mostUsedPort()
-        already_matched_ports.append(base_port)
+        already_matched_ports.add(base_port)
 
         result = result[
             (result["DevicePort"] == base_port) | (result["OtherPort"] == base_port)

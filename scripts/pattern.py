@@ -3,10 +3,6 @@ import pandas as pd
 
 
 class Pattern:
-    ip_addresses = ()
-    ports = {}
-    protocol = ""
-    application_data = {}
 
     def __init__(self, frame: pd.DataFrame) -> None:
         """Pattern constructor
@@ -16,21 +12,22 @@ class Pattern:
         """
         self.ip_addresses = (frame["DeviceHost"], frame["OtherHost"])
         self.protocol = frame["TransportProtocol"]
+        self.ports = {}
         self.ports = self.addPorts(frame)
+        self.application_data = {}
+
 
     def clearPorts(self) -> None:
         """Clear ports and application data"""
         self.ports = {}
         self.application_data = {}
 
+
     def addPorts(self, frame: pd.DataFrame) -> None:
         """Add ports from data frame
 
         Args:
             frame (pd.DataFrame): _description_
-
-        Returns:
-            _type_: _description_
         """
         DevicePort = int(frame["DevicePort"])
         DeviceHost = frame["DeviceHost"]
@@ -49,6 +46,7 @@ class Pattern:
             self.ports[OtherPort]["number"] += 1
 
         return self.ports
+
 
     def matchBasicSignature(self, record: pd.DataFrame) -> pd.DataFrame:
         return record[
