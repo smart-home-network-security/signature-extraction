@@ -3,10 +3,10 @@ import pandas as pd
 from packet_utils import is_known_port
 
 
-class Pattern:
+class Fingerprint:
 
     def __init__(self, frame: pd.DataFrame) -> None:
-        """Pattern constructor
+        """Packet fingerprint constructor
 
         Args:
             frame (pd.DataFrame): Data frame to init with
@@ -158,12 +158,12 @@ class Pattern:
 
     def policy_extractor(self, ipv4: IPv4Address) -> dict:
         """
-        Extract a profile-compliant policy from this pattern.
+        Extract a profile-compliant policy from this packet fingerprint.
         
         Args:
             ipv4 (IPv4Address): IP address of the device.
         Returns:
-            dict: Policy extracted from the pattern.
+            dict: Policy extracted from the packet fingerprint.
         """
 
         # IP addresses

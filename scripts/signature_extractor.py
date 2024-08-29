@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-from pattern import Pattern
+from fingerprint import Fingerprint
 from datetime import datetime
 import yaml
 from ipaddress import IPv4Address
@@ -23,68 +23,68 @@ def load_csv_files(path: str) -> list:
     return network_records
 
 
-def find_patterns(network_records: list) -> list:
+def extract_signature(network_records: list) -> list:
     """
-    Find patterns in the network records
+    Find signatures in the network records
 
     :param: network_records (list): list of dataframes
     :raises Exception: No matching frame has been found
-    :return: list: list of patterns
+    :return: list: event signature, i.e. list of network flows
     """
-    already_parsed_pattern_indices = set()
+    already_parsed_flows_indices = set()
     already_matched_ports = set()
-    identified_patterns = []
+    identified_flows = []
     network_recording = sorted(network_records, key=len)
     reference_record = network_recording[0]
 
     for i, flow in reference_record.iterrows():
 
-        # Pattern already parsed, skip
-        if i in already_parsed_pattern_indices:
+        # Flow already parsed, skip
+        if i in already_parsed_flows_indices:
             continue
 
-        ## Parse pattern
+        ## Parse flow
 
         result = pd.DataFrame()
-        pattern = Pattern(flow)
-        already_parsed_pattern_indices.add(i)
+        fingerprint = Fingerprint(flow)
+        already_parsed_flows_indices.add(i)
 
         for j, record in enumerate(network_recording):
-            matched_record = pattern.matchBasicSignature(record)
+            matched_record = fingerprint.matchBasicSignature(record)
             if j == 0:  # Reference record
                 index = matched_record.index[0]
-                already_parsed_pattern_indices.add(index)
+                already_parsed_flows_indices.add(index)
             result = pd.concat([result, matched_record])
 
         if result.empty:
             raise Exception("No matching frame has been found")
 
         for record in result.iterrows():
-            pattern.addPorts(record[1])
+            fingerprint.addPorts(record[1])
 
         for already_matched_port in already_matched_ports:
-            if already_matched_port in list(pattern.ports):
-                pattern.ports.pop(already_matched_port)
+            if already_matched_port in list(fingerprint.ports):
+                fingerprint.ports.pop(already_matched_port)
 
-        base_port = pattern.getFixedPort()
+        base_port = fingerprint.getFixedPort()
         already_matched_ports.add(base_port)
 
         result = result[
             (result["DevicePort"] == base_port) | (result["OtherPort"] == base_port)
         ]
 
-        pattern.clearPorts()
+        fingerprint.clearPorts()
 
         for frame in result.iterrows():
-            pattern.addPorts(frame[1])
-            pattern.getApplicationData(frame[1], "Length")
-            pattern.getApplicationData(frame[1], "ApplicationSpecific")
-            pattern.getApplicationData(frame[1], "nbPacket")
-            pattern.raw = result
+            fingerprint.addPorts(frame[1])
+            fingerprint.getApplicationData(frame[1], "Length")
+            fingerprint.getApplicationData(frame[1], "ApplicationSpecific")
+            fingerprint.getApplicationData(frame[1], "nbPacket")
+            fingerprint.raw = result
 
-        identified_patterns.append(pattern)
+        identified_flows.append(fingerprint)
 
-    return identified_patterns
+    return identified_flows
 
 
 def get_policy_id(policy: dict) -> str:
@@ -101,11 +101,11 @@ def get_policy_id(policy: dict) -> str:
     return id
 
 
-def generate_policies(ipv4:IPv4Address, identified_patterns: list) -> dict:
+def generate_policies(ipv4:IPv4Address, identified_flows: list) -> dict:
     policies = {}
 
-    for pattern in identified_patterns:
-        policy = pattern.policy_extractor(ipv4)
+    for fingerprint in identified_flows:
+        policy = fingerprint.policy_extractor(ipv4)
         policy["bidirectional"] = True
         id = get_policy_id(policy)
         policies[id] = policy
@@ -123,18 +123,3 @@ def write_profile(device_name: str, ipv4: IPv4Address, policies: dict, output: s
 
     with open(output, "w") as f:
         yaml.dump(profile, f)
-
-
-### MAIN ###
-
-def main():
-    path = "demo/"
-    network_records = load_csv_files(path)
-    identified_patterns = find_patterns(network_records)
-    policies = generate_policies(identified_patterns)
-
-    write_profile(policies, path)
-
-
-if __name__ == "__main__":
-    main()

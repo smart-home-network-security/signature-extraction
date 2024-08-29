@@ -12,7 +12,7 @@ from arg_types import file, directory
 from packet_utils import is_signalling_pkt
 from domain_extractor import extract_domain_names, replace_ip_with_domain_name
 from pkt_fingerprint_extractor import extract_pkt_fingerprint, PacketFields
-from pattern_detection import find_patterns, generate_policies, write_profile
+from signature_extractor import extract_signature, generate_policies, write_profile
 from stream_identifier import (
     transform_to_dataframe,
     merge_pkt_fingerprints,
@@ -179,25 +179,23 @@ if __name__ == "__main__":
 
     # ---------------------------- Pattern extraction ---------------------------- #
 
-    patterns = find_patterns(flows)  # find the patterns in the flows
+    signature = extract_signature(flows)  # find the patterns in the flows
 
-    print(f"{len(patterns)} pattern(s) found")
+    print(f"Signature composed of {len(signature)} packet flows found")
 
-    for i, pattern in enumerate(patterns):
-        print(f"Pattern {i+1}: {pattern}\n")
+    for i, flow in enumerate(signature):
+        print(f"Pattern {i+1}: {flow}\n")
 
-    print("Patterns found!")
-
-    # output the patterns to a file
-    patterns_output_file = os.path.join(args.output, "patterns.txt")
-    with open(patterns_output_file, "w") as file:
-        for i, pattern in enumerate(patterns):
+    # output the signature to a file
+    signature_output_file = os.path.join(args.output, "signature.txt")
+    with open(signature_output_file, "w") as file:
+        for i, pattern in enumerate(signature):
             file.write(f"Pattern {i+1}:\n")
             file.write(repr(pattern))
             file.write("\n\n")
             
 
-    policies = generate_policies(args.ipv4, patterns)  # generate the policy from the patterns
+    policies = generate_policies(args.ipv4, signature)  # generate the policy from the signature
 
     # Generate device profile from the policies
     output_profile_file = os.path.join(args.output, "profile.yaml")
