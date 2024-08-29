@@ -2,7 +2,7 @@ import scapy.all as scapy
 from scapy.layers.tls.all import TLS, TLS_Ext_ServerName
 from scapy.all import IP, IPv6
 from scapy.layers.dns import DNS
-from signature_extractor import PacketFields
+from pkt_repr_extractor import PacketFields
 
 
 def extract_domain_names(packet: scapy.Packet, domain_names: dict) -> None:

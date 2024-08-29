@@ -10,7 +10,7 @@ from enum import Enum
 
 class PacketFields(Enum):
     """
-    Enum class for fields describing a packet signature.
+    Enum class for fields describing a packet representation.
     """
 
     Index = 0
@@ -29,83 +29,83 @@ class PacketFields(Enum):
 packet_fields = [field.name for field in PacketFields]
 
 
-def extract_signature(pkt: scapy.Packet) -> dict:
+def extract_pkt_repr(pkt: scapy.Packet) -> dict:
     """
     Extract the relevant fields from the given packet.
 
-    :param pkt: packet to extract the signature from
-    :return: packet signature
+    :param pkt: packet to extract the representation from
+    :return: packet representation
     """
-    # Resulting signature dict
-    signature = {}
+    # Resulting representation dict
+    pkt_repr = {}
 
-    signature[PacketFields.Timestamp.name] = pkt.time
+    pkt_repr[PacketFields.Timestamp.name] = pkt.time
 
     # IP addresses
     if pkt.haslayer(IP):
-        signature[PacketFields.DeviceHost.name] = pkt.getlayer(IP).src
-        signature[PacketFields.OtherHost.name] = pkt.getlayer(IP).dst
+        pkt_repr[PacketFields.DeviceHost.name] = pkt.getlayer(IP).src
+        pkt_repr[PacketFields.OtherHost.name] = pkt.getlayer(IP).dst
     elif pkt.haslayer(IPv6):
-        signature[PacketFields.DeviceHost.name] = pkt.getlayer(IPv6).src
-        signature[PacketFields.OtherHost.name] = pkt.getlayer(IPv6).dst
+        pkt_repr[PacketFields.DeviceHost.name] = pkt.getlayer(IPv6).src
+        pkt_repr[PacketFields.OtherHost.name] = pkt.getlayer(IPv6).dst
 
     # Ports
     if pkt.haslayer(TCP) or pkt.haslayer(UDP):
         if is_known_port(pkt.sport):
-            signature[PacketFields.DevicePort.name] = pkt.sport
+            pkt_repr[PacketFields.DevicePort.name] = pkt.sport
         if is_known_port(pkt.dport):
-            signature[PacketFields.OtherPort.name] = pkt.dport
+            pkt_repr[PacketFields.OtherPort.name] = pkt.dport
 
         # Transport protocol
         if pkt.haslayer(TCP):
-            signature[PacketFields.TransportProtocol.name] = "TCP"
+            pkt_repr[PacketFields.TransportProtocol.name] = "TCP"
         elif pkt.haslayer(UDP):
-            signature[PacketFields.TransportProtocol.name] = "UDP"
+            pkt_repr[PacketFields.TransportProtocol.name] = "UDP"
 
         # Application-specific layer
         # WARNING: Might be time-consuming for large packet traces
-        signature[PacketFields.ApplicationSpecific.name] = get_TCP_application_layer(pkt)
+        pkt_repr[PacketFields.ApplicationSpecific.name] = get_TCP_application_layer(pkt)
 
     # Highest-layer protocol
-    signature[PacketFields.Protocol.name] = get_last_layer(pkt).name
+    pkt_repr[PacketFields.Protocol.name] = get_last_layer(pkt).name
 
     # Packet length
-    signature[PacketFields.Length.name] = len(pkt)
+    pkt_repr[PacketFields.Length.name] = len(pkt)
 
     ## Protocol-specific fields
 
     # HTTP
     if pkt.haslayer(HTTP):
-        signature[PacketFields.Protocol.name] = "HTTP"
-        signature[PacketFields.ApplicationSpecific.name] = get_HTTP_data(pkt)
-        return signature
+        pkt_repr[PacketFields.Protocol.name] = "HTTP"
+        pkt_repr[PacketFields.ApplicationSpecific.name] = get_HTTP_data(pkt)
+        return pkt_repr
 
     # HTTPS
-    if signature[PacketFields.ApplicationSpecific.name] == "https":
-        signature[PacketFields.Protocol.name] = "HTTPS"
-        return signature
+    if pkt_repr[PacketFields.ApplicationSpecific.name] == "https":
+        pkt_repr[PacketFields.Protocol.name] = "HTTPS"
+        return pkt_repr
 
     # CoAP
     if pkt.haslayer(CoAP):
-        signature[PacketFields.Protocol.name] = "CoAP"
-        signature[PacketFields.ApplicationSpecific.name] = get_CoAP_data(pkt)
-        return signature
+        pkt_repr[PacketFields.Protocol.name] = "CoAP"
+        pkt_repr[PacketFields.ApplicationSpecific.name] = get_CoAP_data(pkt)
+        return pkt_repr
 
     # DHCP
     if pkt.haslayer(DHCP):
-        signature[PacketFields.Protocol.name] = "DHCP"
+        pkt_repr[PacketFields.Protocol.name] = "DHCP"
         dhcp = pkt.getlayer(DHCP)
         dhcp.show()
-        signature[PacketFields.ApplicationSpecific.name] = DHCPTypes[dhcp.options[0][1]]
-        return signature
+        pkt_repr[PacketFields.ApplicationSpecific.name] = DHCPTypes[dhcp.options[0][1]]
+        return pkt_repr
 
     # DNS
     if pkt.haslayer(DNS):
-        signature[PacketFields.Protocol.name] = "DNS"
-        signature[PacketFields.ApplicationSpecific.name] = get_DNS_data(pkt)
-        return signature
+        pkt_repr[PacketFields.Protocol.name] = "DNS"
+        pkt_repr[PacketFields.ApplicationSpecific.name] = get_DNS_data(pkt)
+        return pkt_repr
 
-    return signature
+    return pkt_repr
 
 
 def get_DNS_data(pkt: scapy.Packet) -> str:

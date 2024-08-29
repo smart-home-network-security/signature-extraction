@@ -4,19 +4,19 @@ import pandas as pd
 import argparse
 
 
-def transform_to_dataframe(signature: dict) -> pd.DataFrame:
+def transform_to_dataframe(pkt_repr: dict) -> pd.DataFrame:
     """
-    Transform the given signature into a DataFrame.
+    Transform the given packet representation into a DataFrame.
     Use the packet_fields as columns.
     """
-    return pd.DataFrame(signature, index=[0])
+    return pd.DataFrame(pkt_repr, index=[0])
 
 
-def merge_signatures(signatures: list) -> pd.DataFrame:
+def merge_pkt_reprs(pkt_reprs: list) -> pd.DataFrame:
     """
-    Merge all signatures into a single DataFrame.
+    Merge all packet representations into a single DataFrame.
     """
-    return pd.concat(signatures, ignore_index=True)
+    return pd.concat(pkt_reprs, ignore_index=True)
 
 
 def group_by_stream(df: pd.DataFrame) -> pd.DataFrame:
