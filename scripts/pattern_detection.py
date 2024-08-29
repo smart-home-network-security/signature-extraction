@@ -66,7 +66,7 @@ def find_patterns(network_records: list) -> list:
             if already_matched_port in list(pattern.ports):
                 pattern.ports.pop(already_matched_port)
 
-        base_port = pattern.mostUsedPort()
+        base_port = pattern.getFixedPort()
         already_matched_ports.add(base_port)
 
         result = result[

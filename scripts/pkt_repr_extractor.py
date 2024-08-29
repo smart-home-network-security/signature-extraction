@@ -4,7 +4,7 @@ from scapy.contrib.coap import CoAP, coap_codes
 from scapy.layers.dhcp import DHCP, DHCPTypes
 from scapy.layers.dns import DNS, DNSQR, DNSRR, dnstypes, dnsqtypes
 from scapy.layers.http import HTTP, HTTPRequest, HTTPResponse
-from packet_utils import get_last_layer, is_known_port, get_TCP_application_layer
+from packet_utils import get_last_layer, get_TCP_application_layer
 from enum import Enum
 
 
@@ -51,16 +51,10 @@ def extract_pkt_repr(pkt: scapy.Packet) -> dict:
 
     # Ports
     if pkt.haslayer(TCP) or pkt.haslayer(UDP):
-        if is_known_port(pkt.sport):
-            pkt_repr[PacketFields.DevicePort.name] = pkt.sport
-        if is_known_port(pkt.dport):
-            pkt_repr[PacketFields.OtherPort.name] = pkt.dport
-
-        # Transport protocol
-        if pkt.haslayer(TCP):
-            pkt_repr[PacketFields.TransportProtocol.name] = "TCP"
-        elif pkt.haslayer(UDP):
-            pkt_repr[PacketFields.TransportProtocol.name] = "UDP"
+        protocol = pkt.getlayer(2).name
+        pkt_repr[PacketFields.TransportProtocol.name] = protocol
+        pkt_repr[PacketFields.DevicePort.name] = pkt.sport
+        pkt_repr[PacketFields.OtherPort.name] = pkt.dport
 
         # Application-specific layer
         # WARNING: Might be time-consuming for large packet traces

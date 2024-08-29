@@ -3,15 +3,34 @@ from scapy.all import TCP
 from socket import getservbyport
 
 
-def is_known_port(port: int) -> bool:
+# Well-known ports, outside the range 0-1023
+known_ports = {
+    "tcp": [
+        9999  # TP-Link Smart Home protocol port
+    ],
+    "udp": []
+}
+
+
+def is_known_port(port: int, protocol: str = "tcp") -> bool:
     """
     Check if the given port is a well-known transport layer port.
 
     :param port: given port number
     :return: True if the given port number is well-known, False otherwise
     """
-    # return port > 0 and port < 1024
-    return True
+    protocol = protocol.lower()
+    
+    # Check in the known ports list, outside the range 0-1023
+    if port in known_ports[protocol]:
+        return True
+    
+    # Check if port is well-known by the OS
+    try:
+        getservbyport(port, protocol)
+        return True
+    except OSError:
+        return False
 
 
 def is_signalling_pkt(pkt: scapy.Packet) -> bool:

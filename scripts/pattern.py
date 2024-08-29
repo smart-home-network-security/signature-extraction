@@ -1,5 +1,6 @@
 from ipaddress import IPv4Address
 import pandas as pd
+from packet_utils import is_known_port
 
 
 class Pattern:
@@ -55,7 +56,9 @@ class Pattern:
             & (record["TransportProtocol"] == self.protocol)
         ]
 
-    def mostUsedPort(self) -> int:
+
+    def getFixedPort(self) -> int:
+        # Sort port numbers by number of occurences
         ports_sorted = list(
             dict(
                 sorted(
@@ -63,7 +66,15 @@ class Pattern:
                 )
             )
         )
+
+        # If one of the port numbers is well-known, return it
+        for port in ports_sorted:
+            if is_known_port(port, self.protocol):
+                return port
+
+        # Else, return the most used port
         return ports_sorted[0]
+
 
     def getApplicationData(
         self,
@@ -95,7 +106,7 @@ class Pattern:
             self.ports.items(), key=lambda item: item[1]["number"], reverse=True
         )
         output += f"\nPorts: {sorted_ports}"
-        output += f"\nMost Used Port: {self.mostUsedPort()} -> {self.ports[self.mostUsedPort()]['host']}"
+        output += f"\nFixed port: {self.getFixedPort()} -> {self.ports[self.getFixedPort()]['host']}"
         output += f"\nApplication Data: {self.application_data}"
 
         return output
@@ -130,8 +141,8 @@ class Pattern:
             int: device port
         """
         ref = self.raw
-        mostUsedPort = self.mostUsedPort()
-        return list(set([mostUsedPort]) & set(ref["DevicePort"]))
+        fixed_port = self.getFixedPort()
+        return list(set([fixed_port]) & set(ref["DevicePort"]))
 
 
     def getOtherPort(self) -> int:
@@ -141,8 +152,8 @@ class Pattern:
             int: device port
         """
         ref = self.raw
-        mostUsedPort = self.mostUsedPort()
-        return list(set([mostUsedPort]) & set(ref["OtherPort"]))
+        fixed_port = self.getFixedPort()
+        return list(set([fixed_port]) & set(ref["OtherPort"]))
 
 
     def profile_extractor(self, ipv4: IPv4Address) -> dict:

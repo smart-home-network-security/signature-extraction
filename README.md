@@ -56,7 +56,7 @@ This folder will be used to store the extracted signatures and all the intermedi
 Pattern X: IP Addresses: ('hosta.com', 'hostb.com')
 Protocol: TCP
 Ports: [(443, {'number': 2, 'host': ['hostb.com']}), (48597, {'number': 1, 'host': ['hosta.com']}), (54457, {'number': 1, 'host': ['hosta.com']})]
-Most Used Port: 443 -> ['hostb.com']
+Fixed port: 443 -> ['hostb.com']
 Application Data: {'Length': {9608: 1, 9635: 1}, 'ApplicationSpecific': {'https': 2}, 'nbPacket': {22: 1, 24: 1}}
 ```
 
