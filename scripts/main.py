@@ -179,23 +179,25 @@ if __name__ == "__main__":
 
     # ---------------------------- Pattern extraction ---------------------------- #
 
-    signature = extract_signature(flows)  # find the patterns in the flows
+    # Extract event signature from the flows
+    signature = extract_signature(flows)
 
     print(f"Signature composed of {len(signature)} packet flows found")
 
     for i, flow in enumerate(signature):
-        print(f"Pattern {i+1}: {flow}\n")
+        print(f"Flow {i+1}: {flow}\n")
 
-    # output the signature to a file
+    # Write the signature to a file
     signature_output_file = os.path.join(args.output, "signature.txt")
     with open(signature_output_file, "w") as file:
-        for i, pattern in enumerate(signature):
+        for i, fingerprint in enumerate(signature):
             file.write(f"Pattern {i+1}:\n")
-            file.write(repr(pattern))
+            file.write(repr(fingerprint))
             file.write("\n\n")
             
 
-    policies = generate_policies(args.ipv4, signature)  # generate the policy from the signature
+    # Generate policies from the signature
+    policies = generate_policies(args.ipv4, signature)
 
     # Generate device profile from the policies
     output_profile_file = os.path.join(args.output, "profile.yaml")
