@@ -105,7 +105,7 @@ def generate_policies(ipv4:IPv4Address, identified_patterns: list) -> dict:
     policies = {}
 
     for pattern in identified_patterns:
-        policy = pattern.profile_extractor(ipv4)
+        policy = pattern.policy_extractor(ipv4)
         policy["bidirectional"] = True
         id = get_policy_id(policy)
         policies[id] = policy

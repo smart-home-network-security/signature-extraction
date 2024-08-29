@@ -156,7 +156,16 @@ class Pattern:
         return list(set([fixed_port]) & set(ref["OtherPort"]))
 
 
-    def profile_extractor(self, ipv4: IPv4Address) -> dict:
+    def policy_extractor(self, ipv4: IPv4Address) -> dict:
+        """
+        Extract a profile-compliant policy from this pattern.
+        
+        Args:
+            ipv4 (IPv4Address): IP address of the device.
+        Returns:
+            dict: Policy extracted from the pattern.
+        """
+
         # IP addresses
         src_ip = self.getDeviceHost()[0]
         src_ip = "self" if src_ip == str(ipv4) else src_ip

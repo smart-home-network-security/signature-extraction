@@ -11,11 +11,11 @@ from scapy.all import Packet, sniff
 from arg_types import file, directory
 from packet_utils import is_signalling_pkt
 from domain_extractor import extract_domain_names, replace_ip_with_domain_name
-from pkt_repr_extractor import extract_pkt_repr, PacketFields
+from pkt_fingerprint_extractor import extract_pkt_fingerprint, PacketFields
 from pattern_detection import find_patterns, generate_policies, write_profile
 from stream_identifier import (
     transform_to_dataframe,
-    merge_pkt_reprs,
+    merge_pkt_fingerprints,
     group_by_stream,
     compress_packets,
     write_to_csv,
@@ -33,7 +33,7 @@ timestamp     = 0
 pkt_id        = 0
 previous_time = 0
 domain_names  = {}
-pkt_reprs     = []  # Simpler representations of packets
+pkt_fingerprints     = []  # Simpler representations of packets
 flows         = []  # Network flows (sequences of packets)
 
 
@@ -47,7 +47,7 @@ def handle_packet(packet: Packet) -> None:
         packet (scapy.Packet): Packet read from the PCAP file.
     """
     ### Preliminary checks
-    global timestamp, pkt_id, previous_time, domain_names, pkt_reprs
+    global timestamp, pkt_id, previous_time, domain_names, pkt_fingerprints
 
     # If timestamp is not set, set it with the first packet
     if pkt_id == 0 and timestamp == 0:
@@ -70,15 +70,15 @@ def handle_packet(packet: Packet) -> None:
     extract_domain_names(packet, domain_names)
 
 
-    ### Packet representation extraction
+    ### Packet fingerprint extraction
     
-    # Extract packet representation
-    pkt_repr = extract_pkt_repr(packet)
-    pkt_repr[PacketFields.Index.name] = pkt_id
+    # Extract packet fingerprint
+    pkt_fingerprint = extract_pkt_fingerprint(packet)
+    pkt_fingerprint[PacketFields.Index.name] = pkt_id
 
     # Replace IP addresses with domain names
-    pkt_repr = replace_ip_with_domain_name(domain_names, pkt_repr)
-    pkt_reprs.append(pkt_repr)
+    pkt_fingerprint = replace_ip_with_domain_name(domain_names, pkt_fingerprint)
+    pkt_fingerprints.append(pkt_fingerprint)
 
     # Update loop variables
     previous_time = packet.time
@@ -153,26 +153,26 @@ if __name__ == "__main__":
 
         # -------------------- Simplification and flow compression ------------------- #
             
-        # Transform all packet representations to a data frame
-        pkt_reprs = merge_pkt_reprs(
-            [transform_to_dataframe(pkt_repr) for pkt_repr in pkt_reprs]
+        # Transform all packet fingerprints to a data frame
+        pkt_fingerprints = merge_pkt_fingerprints(
+            [transform_to_dataframe(pkt_fingerprint) for pkt_fingerprint in pkt_fingerprints]
         )
-        # Group the representations by stream
-        pkt_reprs = group_by_stream(pkt_reprs)
+        # Group the fingerprints by stream
+        pkt_fingerprints = group_by_stream(pkt_fingerprints)
         # Compress the packets in the stream
-        pkt_reprs = compress_packets(pkt_reprs)
+        pkt_fingerprints = compress_packets(pkt_fingerprints)
 
-        flows.append(pkt_reprs)
+        flows.append(pkt_fingerprints)
 
-        # Write the packet representations to a CSV file
-        output_repr_file = os.path.join(args.output, f"{timestamp}.csv")
-        write_to_csv(pkt_reprs, output_repr_file)
+        # Write the packet fingerprints to a CSV file
+        output_fingerprint_file = os.path.join(args.output, f"{timestamp}.csv")
+        write_to_csv(pkt_fingerprints, output_fingerprint_file)
 
         # Reset accumulators
         pkt_id = 0
         previous_time = 0
         domain_names = {}
-        pkt_reprs = []
+        pkt_fingerprints = []
 
         print("Flows extracted")
 

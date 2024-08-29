@@ -10,7 +10,7 @@ from enum import Enum
 
 class PacketFields(Enum):
     """
-    Enum class for fields describing a packet representation.
+    Enum class for fields describing a packet fingerprint.
     """
 
     Index = 0
@@ -29,77 +29,77 @@ class PacketFields(Enum):
 packet_fields = [field.name for field in PacketFields]
 
 
-def extract_pkt_repr(pkt: scapy.Packet) -> dict:
+def extract_pkt_fingerprint(pkt: scapy.Packet) -> dict:
     """
     Extract the relevant fields from the given packet.
 
-    :param pkt: packet to extract the representation from
-    :return: packet representation
+    :param pkt: packet to extract the fingerprint from
+    :return: packet fingerprint
     """
-    # Resulting representation dict
-    pkt_repr = {}
+    # Resulting fingerprint dict
+    pkt_fingerprint = {}
 
-    pkt_repr[PacketFields.Timestamp.name] = pkt.time
+    pkt_fingerprint[PacketFields.Timestamp.name] = pkt.time
 
     # IP addresses
     if pkt.haslayer(IP):
-        pkt_repr[PacketFields.DeviceHost.name] = pkt.getlayer(IP).src
-        pkt_repr[PacketFields.OtherHost.name] = pkt.getlayer(IP).dst
+        pkt_fingerprint[PacketFields.DeviceHost.name] = pkt.getlayer(IP).src
+        pkt_fingerprint[PacketFields.OtherHost.name] = pkt.getlayer(IP).dst
     elif pkt.haslayer(IPv6):
-        pkt_repr[PacketFields.DeviceHost.name] = pkt.getlayer(IPv6).src
-        pkt_repr[PacketFields.OtherHost.name] = pkt.getlayer(IPv6).dst
+        pkt_fingerprint[PacketFields.DeviceHost.name] = pkt.getlayer(IPv6).src
+        pkt_fingerprint[PacketFields.OtherHost.name] = pkt.getlayer(IPv6).dst
 
     # Ports
     if pkt.haslayer(TCP) or pkt.haslayer(UDP):
         protocol = pkt.getlayer(2).name
-        pkt_repr[PacketFields.TransportProtocol.name] = protocol
-        pkt_repr[PacketFields.DevicePort.name] = pkt.sport
-        pkt_repr[PacketFields.OtherPort.name] = pkt.dport
+        pkt_fingerprint[PacketFields.TransportProtocol.name] = protocol
+        pkt_fingerprint[PacketFields.DevicePort.name] = pkt.sport
+        pkt_fingerprint[PacketFields.OtherPort.name] = pkt.dport
 
         # Application-specific layer
         # WARNING: Might be time-consuming for large packet traces
-        pkt_repr[PacketFields.ApplicationSpecific.name] = get_TCP_application_layer(pkt)
+        pkt_fingerprint[PacketFields.ApplicationSpecific.name] = get_TCP_application_layer(pkt)
 
     # Highest-layer protocol
-    pkt_repr[PacketFields.Protocol.name] = get_last_layer(pkt).name
+    pkt_fingerprint[PacketFields.Protocol.name] = get_last_layer(pkt).name
 
     # Packet length
-    pkt_repr[PacketFields.Length.name] = len(pkt)
+    pkt_fingerprint[PacketFields.Length.name] = len(pkt)
 
     ## Protocol-specific fields
 
     # HTTP
     if pkt.haslayer(HTTP):
-        pkt_repr[PacketFields.Protocol.name] = "HTTP"
-        pkt_repr[PacketFields.ApplicationSpecific.name] = get_HTTP_data(pkt)
-        return pkt_repr
+        pkt_fingerprint[PacketFields.Protocol.name] = "HTTP"
+        pkt_fingerprint[PacketFields.ApplicationSpecific.name] = get_HTTP_data(pkt)
+        return pkt_fingerprint
 
     # HTTPS
-    if pkt_repr[PacketFields.ApplicationSpecific.name] == "https":
-        pkt_repr[PacketFields.Protocol.name] = "HTTPS"
-        return pkt_repr
+    if pkt_fingerprint[PacketFields.ApplicationSpecific.name] == "https":
+        pkt_fingerprint[PacketFields.Protocol.name] = "HTTPS"
+        return pkt_fingerprint
 
     # CoAP
     if pkt.haslayer(CoAP):
-        pkt_repr[PacketFields.Protocol.name] = "CoAP"
-        pkt_repr[PacketFields.ApplicationSpecific.name] = get_CoAP_data(pkt)
-        return pkt_repr
+        pkt_fingerprint[PacketFields.Protocol.name] = "CoAP"
+        pkt_fingerprint[PacketFields.ApplicationSpecific.name] = get_CoAP_data(pkt)
+        return pkt_fingerprint
 
     # DHCP
     if pkt.haslayer(DHCP):
-        pkt_repr[PacketFields.Protocol.name] = "DHCP"
+        pkt_fingerprint[PacketFields.Protocol.name] = "DHCP"
         dhcp = pkt.getlayer(DHCP)
         dhcp.show()
-        pkt_repr[PacketFields.ApplicationSpecific.name] = DHCPTypes[dhcp.options[0][1]]
-        return pkt_repr
+        pkt_fingerprint[PacketFields.ApplicationSpecific.name] = DHCPTypes[dhcp.options[0][1]]
+        return pkt_fingerprint
 
     # DNS
     if pkt.haslayer(DNS):
-        pkt_repr[PacketFields.Protocol.name] = "DNS"
-        pkt_repr[PacketFields.ApplicationSpecific.name] = get_DNS_data(pkt)
-        return pkt_repr
+        pkt_fingerprint[PacketFields.Protocol.name] = "DNS"
+        pkt_fingerprint[PacketFields.ApplicationSpecific.name] = get_DNS_data(pkt)
+        return pkt_fingerprint
 
-    return pkt_repr
+    return pkt_fingerprint
 
 
 def get_DNS_data(pkt: scapy.Packet) -> str:

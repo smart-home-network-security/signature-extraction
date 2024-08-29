@@ -4,19 +4,19 @@ import pandas as pd
 import argparse
 
 
-def transform_to_dataframe(pkt_repr: dict) -> pd.DataFrame:
+def transform_to_dataframe(pkt_fingerprint: dict) -> pd.DataFrame:
     """
-    Transform the given packet representation into a DataFrame.
+    Transform the given packet fingerprint into a DataFrame.
     Use the packet_fields as columns.
     """
-    return pd.DataFrame(pkt_repr, index=[0])
+    return pd.DataFrame(pkt_fingerprint, index=[0])
 
 
-def merge_pkt_reprs(pkt_reprs: list) -> pd.DataFrame:
+def merge_pkt_fingerprints(pkt_fingerprints: list) -> pd.DataFrame:
     """
-    Merge all packet representations into a single DataFrame.
+    Merge all packet fingerprints into a single DataFrame.
     """
-    return pd.concat(pkt_reprs, ignore_index=True)
+    return pd.concat(pkt_fingerprints, ignore_index=True)
 
 
 def group_by_stream(df: pd.DataFrame) -> pd.DataFrame:
