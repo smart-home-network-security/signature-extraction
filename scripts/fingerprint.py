@@ -1,6 +1,18 @@
+## Imports
+# Libraries
+import os
+from pathlib import Path
 from ipaddress import IPv4Address
 import pandas as pd
+import jinja2
+# Custom
 from packet_utils import is_known_port
+
+
+# Paths
+this_path = Path(os.path.abspath(__file__))
+this_dir = this_path.parents[0]
+base_dir = this_path.parents[1]
 
 
 class Fingerprint:
@@ -16,6 +28,25 @@ class Fingerprint:
         self.ports = {}
         self.ports = self.addPorts(frame)
         self.application_data = {}
+        self.bidirectional = True
+
+    
+    def __str__(self):
+        output = ""
+        output += f"IP Addresses: {self.ip_addresses}"
+        output += f"\nProtocol: {self.protocol}"
+        sorted_ports = sorted(
+            self.ports.items(), key=lambda item: item[1]["number"], reverse=True
+        )
+        output += f"\nPorts: {sorted_ports}"
+        output += f"\nFixed port: {self.getFixedPort()} -> {self.ports[self.getFixedPort()]['host']}"
+        output += f"\nApplication Data: {self.application_data}"
+
+        return output
+
+
+    def __repr__(self):
+        return self.__str__()
 
 
     def clearPorts(self) -> None:
@@ -95,24 +126,7 @@ class Fingerprint:
                 pass
         
         return self.application_data
-
-    # from tabulate import tabulate
-
-    def __str__(self):
-        output = ""
-        output += f"IP Addresses: {self.ip_addresses}"
-        output += f"\nProtocol: {self.protocol}"
-        sorted_ports = sorted(
-            self.ports.items(), key=lambda item: item[1]["number"], reverse=True
-        )
-        output += f"\nPorts: {sorted_ports}"
-        output += f"\nFixed port: {self.getFixedPort()} -> {self.ports[self.getFixedPort()]['host']}"
-        output += f"\nApplication Data: {self.application_data}"
-
-        return output
     
-    def __repr__(self):
-        return self.__str__()
 
     def getDeviceHost(self) -> str:
         """Get device host ip or domain name
@@ -156,7 +170,7 @@ class Fingerprint:
         return list(set([fixed_port]) & set(ref["OtherPort"]))
 
 
-    def policy_extractor(self, ipv4: IPv4Address) -> dict:
+    def extract_policy(self, ipv4: IPv4Address) -> dict:
         """
         Extract a profile-compliant policy from this packet fingerprint.
         
@@ -165,13 +179,12 @@ class Fingerprint:
         Returns:
             dict: Policy extracted from the packet fingerprint.
         """
-
         # IP addresses
         src_ip = self.getDeviceHost()[0]
         src_ip = "self" if src_ip == str(ipv4) else src_ip
         dst_ip = self.getOtherHost()[0]
         dst_ip = "self" if dst_ip == str(ipv4) else dst_ip
-        profile = {
+        policy = {
             "protocols": {
                 "ipv4": {"src": src_ip, "dst": dst_ip},
             }
@@ -183,9 +196,9 @@ class Fingerprint:
             dst = self.getOtherPort()
 
             if src:
-                profile["protocols"]["tcp"] = {"src-port": src[0]}
+                policy["protocols"]["tcp"] = {"src-port": src[0]}
             if dst:
-                profile["protocols"]["tcp"] = {"dst-port": dst[0]}
+                policy["protocols"]["tcp"] = {"dst-port": dst[0]}
 
         elif self.protocol == "UDP":
             src = self.getDevicePort()
@@ -193,10 +206,10 @@ class Fingerprint:
             protoport = 0
 
             if src:
-                profile["protocols"]["udp"] = {"src-port": src[0]}
+                policy["protocols"]["udp"] = {"src-port": src[0]}
                 protoport = src[0]
             if dst:
-                profile["protocols"]["udp"] = {"dst-port": dst[0]}
+                policy["protocols"]["udp"] = {"dst-port": dst[0]}
                 protoport = dst[0]
 
             if protoport == 53:
@@ -205,9 +218,37 @@ class Fingerprint:
                 # split query by space
                 query = query.split(" ")
 
-                profile["protocols"]["dns"] = {
+                policy["protocols"]["dns"] = {
                     "qtype": query[0],
                     "domain-name": query[1][:-1],
                 }
+        
+        policy["bidirectional"] = self.bidirectional
 
-        return profile
+        return policy
+    
+
+    def translate_to_firewall(self, device_name: str, ipv4: IPv4Address, output: str) -> None:
+        """
+        Translate this fingerprint to NFTables/NFQueue firewall files.
+
+        Args:
+            device_name (str): Name of the device.
+            ipv4 (IPv4Address): IP address of the device.
+        """
+        # Jinja2 loader
+        templates_dir = os.path.join(base_dir, "firewall", "src", "translator", "templates")
+        loader = jinja2.FileSystemLoader(searchpath=templates_dir)
+        env = jinja2.Environment(loader=loader, trim_blocks=True, lstrip_blocks=True)
+
+        # Build policy
+        
+
+        # NFTables script
+        nft_dict = {
+            "device": device_name
+        }
+        env.get_template("firewall.nft.j2").stream(nft_dict).dump(os.path.join(output, "firewall.nft"))
+
+        # If needed, create NFQueue-related files
+

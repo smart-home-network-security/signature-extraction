@@ -105,8 +105,7 @@ def generate_policies(ipv4:IPv4Address, identified_flows: list) -> dict:
     policies = {}
 
     for fingerprint in identified_flows:
-        policy = fingerprint.policy_extractor(ipv4)
-        policy["bidirectional"] = True
+        policy = fingerprint.extract_policy(ipv4)
         id = get_policy_id(policy)
         policies[id] = policy
 
