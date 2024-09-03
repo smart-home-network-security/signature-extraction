@@ -11,6 +11,26 @@ known_ports = {
     "udp": []
 }
 
+# Application layer ports
+application_protocols = {
+    "tcp": {
+        20:   "ftp",
+        80:   "http",
+        443:  "https",
+        5000: "ssdp",
+        5683: "coap"
+    },
+    "udp": {
+        53:   "dns",
+        67:   "dhcp",
+        68:   "dhcp",
+        123:  "ntp",
+        1900: "ssdp",
+        5353: "mdns",
+        5683: "coap"
+    }
+}
+
 
 def is_known_port(port: int, protocol: str = "tcp") -> bool:
     """
@@ -22,7 +42,7 @@ def is_known_port(port: int, protocol: str = "tcp") -> bool:
     protocol = protocol.lower()
     
     # Check in the known ports list, outside the range 0-1023
-    if port in known_ports[protocol]:
+    if port in known_ports[protocol] or port in application_protocols[protocol]:
         return True
     
     # Check if port is well-known by the OS

@@ -6,7 +6,8 @@ from ipaddress import IPv4Address
 import pandas as pd
 import jinja2
 # Custom
-from packet_utils import is_known_port
+from packet_utils import application_protocols, is_known_port
+from ..firewall.src.translator.Policy import Policy
 
 
 # Paths
@@ -135,8 +136,8 @@ class Fingerprint:
             str: ip address or domain name
         """
         ref = self.raw
-
         return list(set(self.ip_addresses) & set(ref["DeviceHost"]))
+
 
     def getOtherHost(self) -> str:
         """Get device host ip or domain name
@@ -145,8 +146,8 @@ class Fingerprint:
             str: ip address or domain name
         """
         ref = self.raw
-
         return list(set(self.ip_addresses) & set(ref["OtherHost"]))
+
 
     def getDevicePort(self) -> int:
         """Get device Port
@@ -168,6 +169,22 @@ class Fingerprint:
         ref = self.raw
         fixed_port = self.getFixedPort()
         return list(set([fixed_port]) & set(ref["OtherPort"]))
+    
+
+    def get_application_protocol(self) -> str:
+        """
+        Retrieve the application layer protocol from the packet fingerprint.
+
+        Returns:
+            str: Application layer protocol.
+        """
+        protocol = self.protocol.lower()
+        src_port = self.getDevicePort()
+        dst_port = self.getOtherPort()
+        if src_port:
+            return application_protocols[protocol].get(src_port[0], None)
+        elif dst_port:
+            return application_protocols[protocol].get(dst_port[0], None)
 
 
     def extract_policy(self, ipv4: IPv4Address) -> dict:
@@ -191,37 +208,28 @@ class Fingerprint:
         }
 
         # Protocols
-        if self.protocol == "TCP":
-            src = self.getDevicePort()
-            dst = self.getOtherPort()
+        src_port = self.getDevicePort()
+        dst_port = self.getOtherPort()
+        protocol = self.protocol.lower()
+        if src_port:
+            policy["protocols"][protocol] = {"src-port": src_port[0]}
+            protocol_port = src_port[0]
+        if dst_port:
+            policy["protocols"][protocol] = {"dst-port": dst_port[0]}
+            protocol_port = dst_port[0]
 
-            if src:
-                policy["protocols"]["tcp"] = {"src-port": src[0]}
-            if dst:
-                policy["protocols"]["tcp"] = {"dst-port": dst[0]}
+        # Application layer protocol
+        application_protocol = self.get_application_protocol()
+        if application_protocol == "dns":
+            query = list(self.application_data["ApplicationSpecific"])[0]
+            # query format = "type domainname"
+            # split query by space
+            query = query.split(" ")
 
-        elif self.protocol == "UDP":
-            src = self.getDevicePort()
-            dst = self.getOtherPort()
-            protoport = 0
-
-            if src:
-                policy["protocols"]["udp"] = {"src-port": src[0]}
-                protoport = src[0]
-            if dst:
-                policy["protocols"]["udp"] = {"dst-port": dst[0]}
-                protoport = dst[0]
-
-            if protoport == 53:
-                query = list(self.application_data["ApplicationSpecific"])[0]
-                # query format = "type domainname"
-                # split query by space
-                query = query.split(" ")
-
-                policy["protocols"]["dns"] = {
-                    "qtype": query[0],
-                    "domain-name": query[1][:-1],
-                }
+            policy["protocols"]["dns"] = {
+                "qtype": query[0],
+                "domain-name": query[1][:-1],
+            }
         
         policy["bidirectional"] = self.bidirectional
 
@@ -241,8 +249,15 @@ class Fingerprint:
         loader = jinja2.FileSystemLoader(searchpath=templates_dir)
         env = jinja2.Environment(loader=loader, trim_blocks=True, lstrip_blocks=True)
 
+        # Device metadata
+        device = {
+            "device-name": device_name,
+            "ipv4": str(ipv4)
+        }
+
         # Build policy
-        
+        policy_data = self.extract_policy(ipv4)
+        policy = Policy(policy_data, device)
 
         # NFTables script
         nft_dict = {
