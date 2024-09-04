@@ -29,12 +29,12 @@ script_path = Path(os.path.abspath(__file__))
 # Config variables
 timeout = 5  # seconds
 # Packet loop accumulators
-timestamp     = 0
-pkt_id        = 0
-previous_time = 0
-domain_names  = {}
-pkt_fingerprints     = []  # Simpler representations of packets
-flows         = []  # Network flows (sequences of packets)
+timestamp        = 0
+pkt_id           = 0
+previous_time    = 0
+domain_names     = {}
+pkt_fingerprints = []  # Simpler representations of packets
+flows            = []  # Network flows (sequences of packets)
 
 
 ### FUNCTIONS ###
