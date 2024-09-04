@@ -1,11 +1,11 @@
 ## Imports
 # Libraries
+from __future__ import annotations
 from typing import Tuple
 import os
 from pathlib import Path
 from ipaddress import IPv4Address
 import pandas as pd
-import jinja2
 # Custom
 from packet_utils import application_protocols, is_known_port
 from profile_translator_blocklist import translate_policy
@@ -63,6 +63,25 @@ class Fingerprint:
 
         # Add protocol and application data
         return f"{device} -> {other} [{self.protocol}]: {self.application_data}"
+    
+
+    def __eq__(self, other: Fingerprint) -> bool:
+        """
+        Compare two Fingerprint objects for equality.
+
+        Args:
+            other (Fingerprint): Fingerprint to compare with.
+        Returns:
+            bool: True if the Fingerprint objects are equal, False otherwise.
+        """
+        if not isinstance(other, Fingerprint):
+            return False
+        
+        return (
+            self.ip_addresses == other.ip_addresses and
+            self.protocol == other.protocol and
+            self.fixed_port == other.fixed_port
+        )
 
 
     def clearPorts(self) -> None:
