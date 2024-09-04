@@ -7,7 +7,7 @@ import pandas as pd
 import jinja2
 # Custom
 from packet_utils import application_protocols, is_known_port
-from ..firewall.src.translator.Policy import Policy
+from profile_translator_blocklist import translate_policy
 
 
 # Paths
@@ -236,18 +236,19 @@ class Fingerprint:
         return policy
     
 
-    def translate_to_firewall(self, device_name: str, ipv4: IPv4Address, output: str) -> None:
+    def translate_to_firewall(self, device_name: str, ipv4: IPv4Address, output_dir: str = os.getcwd()) -> None:
         """
         Translate this fingerprint to NFTables/NFQueue firewall files.
 
         Args:
             device_name (str): Name of the device.
             ipv4 (IPv4Address): IP address of the device.
+            output_dir (str): Output directory. Optional, defaults to the current working directory.
         """
-        # Jinja2 loader
-        templates_dir = os.path.join(base_dir, "firewall", "src", "translator", "templates")
-        loader = jinja2.FileSystemLoader(searchpath=templates_dir)
-        env = jinja2.Environment(loader=loader, trim_blocks=True, lstrip_blocks=True)
+        # Validate output directory
+        if not os.path.isdir(output_dir):
+            print(f"Output directory {output_dir} does not exist. Using current directory.")
+            output_dir = os.getcwd()
 
         # Device metadata
         device = {
@@ -255,15 +256,6 @@ class Fingerprint:
             "ipv4": str(ipv4)
         }
 
-        # Build policy
-        policy_data = self.extract_policy(ipv4)
-        policy = Policy(policy_data, device)
-
-        # NFTables script
-        nft_dict = {
-            "device": device_name
-        }
-        env.get_template("firewall.nft.j2").stream(nft_dict).dump(os.path.join(output, "firewall.nft"))
-
-        # If needed, create NFQueue-related files
-
+        # Extract policy
+        policy_dict = self.extract_policy(ipv4)
+        translate_policy(device, policy_dict, output_dir=output_dir)
