@@ -66,7 +66,7 @@ def extract_signature(network_records: list) -> list:
             if already_matched_port in list(fingerprint.ports):
                 fingerprint.ports.pop(already_matched_port)
 
-        base_port = fingerprint.getFixedPort()
+        base_port = fingerprint.get_fixed_port()[0]
         already_matched_ports.add(base_port)
 
         result = result[
@@ -80,7 +80,6 @@ def extract_signature(network_records: list) -> list:
             fingerprint.getApplicationData(frame[1], "Length")
             fingerprint.getApplicationData(frame[1], "ApplicationSpecific")
             fingerprint.getApplicationData(frame[1], "nbPacket")
-            fingerprint.raw = result
 
         identified_flows.append(fingerprint)
 

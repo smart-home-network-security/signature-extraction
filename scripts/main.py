@@ -182,17 +182,18 @@ if __name__ == "__main__":
     # Extract event signature from the flows
     signature = extract_signature(flows)
 
-    print(f"Signature composed of {len(signature)} packet flows found")
+    print(f"Signature composed of {len(signature)} packet flows found\n")
 
     for i, flow in enumerate(signature):
-        print(f"Flow {i+1}: {flow}\n")
+        print(f"Flow {i+1}:")
+        print(f"{str(flow)}\n")
 
     # Write the signature to a file
     signature_output_file = os.path.join(args.output, "signature.txt")
     with open(signature_output_file, "w") as file:
         for i, fingerprint in enumerate(signature):
-            file.write(f"Pattern {i+1}:\n")
-            file.write(repr(fingerprint))
+            file.write(f"Flow {i+1}:\n")
+            file.write(str(fingerprint))
             file.write("\n\n")
             
 

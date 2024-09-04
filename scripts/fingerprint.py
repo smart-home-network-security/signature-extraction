@@ -1,5 +1,6 @@
 ## Imports
 # Libraries
+from typing import Tuple
 import os
 from pathlib import Path
 from ipaddress import IPv4Address
@@ -27,7 +28,8 @@ class Fingerprint:
         self.ip_addresses = (frame["DeviceHost"], frame["OtherHost"])
         self.protocol = frame["TransportProtocol"]
         self.ports = {}
-        self.ports = self.addPorts(frame)
+        self.addPorts(frame)
+        self.fixed_port = self.get_fixed_port()
         self.application_data = {}
         self.bidirectional = True
 
@@ -40,14 +42,27 @@ class Fingerprint:
             self.ports.items(), key=lambda item: item[1]["number"], reverse=True
         )
         output += f"\nPorts: {sorted_ports}"
-        output += f"\nFixed port: {self.getFixedPort()} -> {self.ports[self.getFixedPort()]['host']}"
+        output += f"\nFixed port: {self.fixed_port}"
         output += f"\nApplication Data: {self.application_data}"
 
         return output
 
 
     def __repr__(self):
-        return self.__str__()
+        # Device host and port
+        device = self.get_device_host()
+        device_port = self.get_device_port()
+        if device_port is not None:
+            device += f":{device_port}"
+        
+        # Other host and port
+        other = self.get_other_host()
+        other_port = self.get_other_port()
+        if other_port is not None:
+            other += f":{other_port}"
+
+        # Add protocol and application data
+        return f"{device} -> {other} [{self.protocol}]: {self.application_data}"
 
 
     def clearPorts(self) -> None:
@@ -69,12 +84,12 @@ class Fingerprint:
         OtherHost = frame["OtherHost"]
 
         if DevicePort and (DevicePort not in self.ports):
-            self.ports[DevicePort] = {"number": 1, "host": [DeviceHost]}
+            self.ports[DevicePort] = {"number": 1, "host": DeviceHost}
         else:
             self.ports[DevicePort]["number"] += 1
 
         if OtherPort and (OtherPort not in self.ports):
-            self.ports[OtherPort] = {"number": 1, "host": [OtherHost]}
+            self.ports[OtherPort] = {"number": 1, "host": OtherHost}
         else:
             self.ports[OtherPort]["number"] += 1
 
@@ -89,23 +104,17 @@ class Fingerprint:
         ]
 
 
-    def getFixedPort(self) -> int:
+    def get_fixed_port(self) -> Tuple[int, str]:
         # Sort port numbers by number of occurences
-        ports_sorted = list(
-            dict(
-                sorted(
-                    self.ports.items(), key=lambda item: item[1]["number"], reverse=True
-                )
-            )
-        )
+        ports_sorted = sorted(self.ports.items(), key=lambda item: item[1]["number"], reverse=True)
 
         # If one of the port numbers is well-known, return it
-        for port in ports_sorted:
+        for port, data in ports_sorted:
             if is_known_port(port, self.protocol):
-                return port
+                return port, data["host"]
 
         # Else, return the most used port
-        return ports_sorted[0]
+        return ports_sorted[0][0], ports_sorted[0][1]["host"]
 
 
     def getApplicationData(
@@ -129,46 +138,48 @@ class Fingerprint:
         return self.application_data
     
 
-    def getDeviceHost(self) -> str:
+    def get_device_host(self) -> str:
         """Get device host ip or domain name
 
         Returns:
             str: ip address or domain name
         """
-        ref = self.raw
-        return list(set(self.ip_addresses) & set(ref["DeviceHost"]))
+        return self.ip_addresses[0]
 
 
-    def getOtherHost(self) -> str:
-        """Get device host ip or domain name
+    def get_other_host(self) -> str:
+        """Get other host ip or domain name
 
         Returns:
             str: ip address or domain name
         """
-        ref = self.raw
-        return list(set(self.ip_addresses) & set(ref["OtherHost"]))
+        return self.ip_addresses[1]
 
 
-    def getDevicePort(self) -> int:
+    def get_device_port(self) -> int:
         """Get device Port
 
         Returns:
             int: device port
         """
-        ref = self.raw
-        fixed_port = self.getFixedPort()
-        return list(set([fixed_port]) & set(ref["DevicePort"]))
+        device_host = self.get_device_host()
+        if self.fixed_port[1] == device_host:
+            return self.fixed_port[0]
+        else:
+            return None
 
 
-    def getOtherPort(self) -> int:
+    def get_other_port(self) -> int:
         """Get other Port
 
         Returns:
             int: device port
         """
-        ref = self.raw
-        fixed_port = self.getFixedPort()
-        return list(set([fixed_port]) & set(ref["OtherPort"]))
+        other_host = self.get_other_host()
+        if self.fixed_port[1] == other_host:
+            return self.fixed_port[0]
+        else:
+            return None
     
 
     def get_application_protocol(self) -> str:
@@ -179,12 +190,12 @@ class Fingerprint:
             str: Application layer protocol.
         """
         protocol = self.protocol.lower()
-        src_port = self.getDevicePort()
-        dst_port = self.getOtherPort()
+        src_port = self.get_device_port()
+        dst_port = self.get_other_port()
         if src_port:
-            return application_protocols[protocol].get(src_port[0], None)
+            return application_protocols[protocol].get(src_port, None)
         elif dst_port:
-            return application_protocols[protocol].get(dst_port[0], None)
+            return application_protocols[protocol].get(dst_port, None)
 
 
     def extract_policy(self, ipv4: IPv4Address) -> dict:
@@ -197,9 +208,9 @@ class Fingerprint:
             dict: Policy extracted from the packet fingerprint.
         """
         # IP addresses
-        src_ip = self.getDeviceHost()[0]
+        src_ip = self.get_device_host()
         src_ip = "self" if src_ip == str(ipv4) else src_ip
-        dst_ip = self.getOtherHost()[0]
+        dst_ip = self.get_other_host()
         dst_ip = "self" if dst_ip == str(ipv4) else dst_ip
         policy = {
             "protocols": {
@@ -208,15 +219,15 @@ class Fingerprint:
         }
 
         # Protocols
-        src_port = self.getDevicePort()
-        dst_port = self.getOtherPort()
+        src_port = self.get_device_port()
+        dst_port = self.get_other_port()
         protocol = self.protocol.lower()
         if src_port:
-            policy["protocols"][protocol] = {"src-port": src_port[0]}
-            protocol_port = src_port[0]
+            policy["protocols"][protocol] = {"src-port": src_port}
+            protocol_port = src_port
         if dst_port:
-            policy["protocols"][protocol] = {"dst-port": dst_port[0]}
-            protocol_port = dst_port[0]
+            policy["protocols"][protocol] = {"dst-port": dst_port}
+            protocol_port = dst_port
 
         # Application layer protocol
         application_protocol = self.get_application_protocol()
