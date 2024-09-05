@@ -28,7 +28,7 @@ def test_pkts_csv_to_flows_csv(tmp_path):
     # Variables
     pcap_file = "demo/1724059939.pcap"
     pkts_csv_path = os.path.join(tmp_path, "pkts.csv")
-    pkt_fingerprint_extraction.pcaps_to_csv(pcap_file, pkts_csv_path)
+    pkt_fingerprint_extraction.pcap_to_csv(pcap_file, pkts_csv_path)
     flows_csv_path = os.path.join(tmp_path, "flows.csv")
 
     # Execution

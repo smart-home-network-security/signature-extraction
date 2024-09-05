@@ -63,26 +63,6 @@ def pcap_to_pkts(pcap_file: str) -> List[Packet]:
     return pkts
 
 
-def pcaps_to_pkts(pcap_files: Union[str, List[str]]) -> List[PacketFingerprint]:
-    """
-    Convert one or multiple PCAP file(s) to a list of PacketFingerprint objects.
-
-    Args:
-        pcap_files (str | List[str]): (list of) PCAP file(s).
-    Returns:
-        List[PacketFingerprint]: List of packet fingerprints.
-    """
-    global pkts
-    
-    if isinstance(pcap_files, list):
-        for pcap in pcap_files:
-            pcap_to_pkts(pcap)
-    else:
-        pcap_to_pkts(pcap_files)
-    
-    return pkts
-
-
 def pkts_to_df(pkts: List[PacketFingerprint]) -> pd.DataFrame:
     """
     Convert a list of packets to a DataFrame.
@@ -107,14 +87,14 @@ def save_pkts_to_csv(pkts: List[PacketFingerprint], output_file: str) -> None:
     df.to_csv(output_file, index=False)
 
 
-def pcaps_to_csv(pcap_files: Union[str, List[str]], output_file: str) -> None:
+def pcap_to_csv(pcap_file: str, output_file: str) -> None:
     """
-    Convert one or multiple PCAP file(s) to a list of PacketSignatures,
+    Convert a PCAP file to a list of PacketSignatures,
     and save it to a CSV file.
 
     Args:
-        pcap_files (Union[str, List[str]]): (list of) PCAP file(s).
+        pcap_file (str): PCAP file.
         output_file (str): Output file.
     """
-    pkts = pcaps_to_pkts(pcap_files)
+    pkts = pcap_to_pkts(pcap_file)
     save_pkts_to_csv(pkts, output_file)

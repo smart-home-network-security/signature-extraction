@@ -31,7 +31,8 @@ class FlowFingerprint:
         self.application_protocol = pkt["application_protocol"]
         self.timestamp            = pkt["timestamp"]
 
-        # Compute flow length
+        # Compute flow statistics
+        self.count  = len(pkts)
         self.length = sum(pkt["length"] for pkt in pkts)
 
 
@@ -76,7 +77,7 @@ class FlowFingerprint:
     def str_base(self) -> str:
         """
         String representation of the base flow fingerprint attributes,
-        without timestamp and length.
+        without metadata and statistics.
 
         Returns:
             str: String representation of the base flow fingerprint attributes.
@@ -104,7 +105,8 @@ class FlowFingerprint:
         s = f"{self.timestamp}: "
         # Base attributes
         s += self.str_base()
-        # Length
+        # Statistics
+        s += f" - {self.count} packets,"
         s += f" {self.length} bytes"
 
         return s
