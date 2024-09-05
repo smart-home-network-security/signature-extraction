@@ -63,7 +63,10 @@ class PacketFingerprint:
 
         # Transport layer: protocol & ports
         if pkt.haslayer(TCP) or pkt.haslayer(UDP):
-            pkt_dict["transport_protocol"] = pkt.getlayer(2).name
+            if pkt.haslayer(TCP):
+                pkt_dict["transport_protocol"] = "TCP"
+            elif pkt.haslayer(UDP):
+                pkt_dict["transport_protocol"] = "UDP"
             pkt_dict["sport"] = pkt.sport
             pkt_dict["dport"] = pkt.dport
 

@@ -1,6 +1,5 @@
 from __future__ import annotations
 from typing import List, Iterator
-import pandas as pd
 from .PacketFingerprint import PacketFingerprint
 
 
@@ -48,7 +47,7 @@ class FlowFingerprint:
         Returns:
             FlowFingerprint: Flow fingerprint.
         """
-        return cls(pkt.to_dict())
+        return cls([dict(pkt)])
     
 
     def __eq__(self, other: FlowFingerprint) -> bool:
