@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import List, Iterator
+import pandas as pd
 from .PacketFingerprint import PacketFingerprint
 
 
@@ -72,6 +73,44 @@ class FlowFingerprint:
             and self.dport == other.dport
             and self.application_protocol == other.application_protocol
         )
+    
+
+    def match_host(self, other: FlowFingerprint) -> bool:
+        """
+        Match flow fingerprints based on source and destination hosts,
+        regardless of the direction.
+
+        Args:
+            other (FlowFingerprint): Flow fingerprint to match with.
+        Returns:
+            bool: True if the flow fingerprints match, False otherwise.
+        """
+        # If other object is not a FlowFingerprint, return False
+        if not isinstance(other, FlowFingerprint):
+            return False
+        
+        return (
+            (self.src == other.src and self.dst == other.dst) or
+            (self.src == other.dst and self.dst == other.src)
+        )
+    
+
+    def match_basic(self, other: FlowFingerprint) -> bool:
+        """
+        Basic match between two flow fingerprints,
+        i.e. match based on source, destination, and transport protocol,
+        regardless of the direction.
+
+        Args:
+            other (FlowFingerprint): Flow fingerprint to match with.
+        Returns:
+            bool: True if the flow fingerprints match, False otherwise.
+        """
+        # If other object is not a FlowFingerprint, return False
+        if not isinstance(other, FlowFingerprint):
+            return False
+        
+        return self.transport_protocol == other.transport_protocol and self.match_host(other)
     
 
     def str_base(self) -> str:

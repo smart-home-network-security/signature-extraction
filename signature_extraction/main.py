@@ -174,20 +174,19 @@ if __name__ == "__main__":
         domain_names = {}
         pkt_fingerprints = []
 
-        print("Flows extracted")
+        #print("Flows extracted")
 
 
     # ---------------------------- Pattern extraction ---------------------------- #
 
     # Extract event signature from the flows
-    print(flows)
     signature = extract_signature(flows)
 
     print(f"Signature composed of {len(signature)} packet flows found\n")
 
-    for i, flow in enumerate(signature):
-        print(f"Flow {i+1}:")
-        print(f"{str(flow)}\n")
+    # for i, flow in enumerate(signature):
+    #     print(f"Flow {i+1}:")
+    #     print(f"{str(flow)}\n")
 
     # Write the signature to a file
     signature_output_file = os.path.join(args.output, "signature.txt")
@@ -205,4 +204,4 @@ if __name__ == "__main__":
     output_profile_file = os.path.join(args.output, "profile.yaml")
     write_profile(args.device, args.ipv4, policies, output_profile_file)
 
-    print("Policies generated")
+    #print("Policies generated")

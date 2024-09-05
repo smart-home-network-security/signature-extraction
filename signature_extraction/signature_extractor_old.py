@@ -82,9 +82,12 @@ def extract_signature(network_records: list) -> list:
         already_parsed_flows_indices.add(i)
 
         for j, record in enumerate(network_recording):
+            # Find matching flow in given network record
             matched_record = fingerprint.matchBasicSignature(record)
             if j == 0:  # Reference record
                 index = matched_record.index[0]
+                print(matched_record)
+                print(index)
                 already_parsed_flows_indices.add(index)
             result = pd.concat([result, matched_record])
 
