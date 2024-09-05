@@ -4,7 +4,7 @@ from typing import List
 import pandas as pd
 # Package
 from .classes import PacketFingerprint, FlowFingerprint
-from .pkt_fingerprint_extractor import pkts_to_df
+from .pkt_fingerprint_extraction import pkts_to_df
 
 
 def group_pkts_per_flow(pkts: List[PacketFingerprint]) -> List[FlowFingerprint]:

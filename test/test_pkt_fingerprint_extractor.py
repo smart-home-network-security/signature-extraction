@@ -1,6 +1,6 @@
 ## Imports
 # Package
-import signature_extraction.pkt_fingerprint_extractor as pkt_fingerprint_extractor
+import signature_extraction.pkt_fingerprint_extraction as pkt_fingerprint_extraction
 
 
 ### Variables
@@ -19,10 +19,10 @@ def test_pcap_to_pkts():
     pcap_file = "demo/1724059939.pcap"
 
     # Execution
-    pkts = pkt_fingerprint_extractor.pcap_to_pkts(pcap_file)
+    pkts = pkt_fingerprint_extraction.pcap_to_pkts(pcap_file)
 
     # Validation
-    assert all([type(pkt) == pkt_fingerprint_extractor.PacketFingerprint for pkt in pkts])
+    assert all([type(pkt) == pkt_fingerprint_extraction.PacketFingerprint for pkt in pkts])
 
 
 def test_pcaps_to_pkts():
@@ -30,10 +30,10 @@ def test_pcaps_to_pkts():
     Test the function `pcaps_to_pkts`.
     """
     # Execution
-    pkts = pkt_fingerprint_extractor.pcaps_to_pkts(pcap_files)
+    pkts = pkt_fingerprint_extraction.pcaps_to_pkts(pcap_files)
 
     # Validation
-    assert all([type(pkt) == pkt_fingerprint_extractor.PacketFingerprint for pkt in pkts])
+    assert all([type(pkt) == pkt_fingerprint_extraction.PacketFingerprint for pkt in pkts])
 
 
 def test_pkts_to_df():
@@ -41,8 +41,8 @@ def test_pkts_to_df():
     Test the function `pkts_to_df`.
     """
     # Execution
-    pkts = pkt_fingerprint_extractor.pcaps_to_pkts(pcap_files)
-    df = pkt_fingerprint_extractor.pkts_to_df(pkts)
+    pkts = pkt_fingerprint_extraction.pcaps_to_pkts(pcap_files)
+    df = pkt_fingerprint_extraction.pkts_to_df(pkts)
 
     # Validation
     assert df.shape[0] == len(pkts)
@@ -56,7 +56,7 @@ def test_pcaps_to_csv():
     output_file = "demo/pkts.csv"
 
     # Execution
-    pkt_fingerprint_extractor.pcaps_to_csv(pcap_files, output_file)
+    pkt_fingerprint_extraction.pcaps_to_csv(pcap_files, output_file)
 
     # Validation
     pass

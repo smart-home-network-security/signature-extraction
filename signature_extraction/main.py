@@ -12,7 +12,7 @@ from arg_types import file, directory
 from packet_utils import is_signalling_pkt
 from domain_extractor import extract_domain_names, replace_ip_with_domain_name
 from pkt_fingerprint_extractor_old import extract_pkt_fingerprint, PacketFields
-from signature_extractor import extract_signature, generate_policies, write_profile
+from signature_extraction.signature_extractor_old import extract_signature, generate_policies, write_profile
 from stream_identifier import (
     transform_to_dataframe,
     merge_pkt_fingerprints,

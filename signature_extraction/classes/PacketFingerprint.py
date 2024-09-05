@@ -10,7 +10,13 @@ from signature_extraction.utils.packet_utils import get_last_layer
 
 class PacketFingerprint:
     """
-    Packet fingeprint.
+    Summary of a packet, containing the following attributes:
+        - Timestamp
+        - Source & destination hosts
+        - Transport protocol
+        - Source & destination ports
+        - Application protocol
+        - Length
     """
     id = 0
 
@@ -72,6 +78,30 @@ class PacketFingerprint:
 
         # Create PacketFingerprint object
         return cls(pkt_dict)
+    
+
+    def __eq__(self, other: PacketFingerprint) -> bool:
+        """
+        Compare two PacketFingerprint objects.
+
+        Args:
+            other (PacketFingerprint): Packet fingerprint to compare with.
+        Returns:
+            bool: True if the flow fingerprints are equal, False otherwise.
+        """
+        # If other object is not a PacketFingerprint, return False
+        if not isinstance(other, PacketFingerprint):
+            return False
+        
+        # If other object is a PacketFingerprint, compare attributes
+        return (
+            self.src == other.src
+            and self.dst == other.dst
+            and self.transport_protocol == other.transport_protocol
+            and self.sport == other.sport
+            and self.dport == other.dport
+            and self.application_protocol == other.application_protocol
+        )
 
     
     def __repr__(self) -> str:

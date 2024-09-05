@@ -4,6 +4,15 @@ from .PacketFingerprint import PacketFingerprint
 
 
 class FlowFingerprint:
+    """
+    Summary of a network flow, containing the following attributes:
+        - Timestamp
+        - Source & destination hosts
+        - Transport protocol
+        - Source & destination ports
+        - Application protocol
+        - Length
+    """
 
     def __init__(self, pkts: List[dict]) -> None:
         """
@@ -40,6 +49,50 @@ class FlowFingerprint:
         return cls(pkt.to_dict())
     
 
+    def __eq__(self, other: FlowFingerprint) -> bool:
+        """
+        Compare two FlowFingerprint objects.
+
+        Args:
+            other (FlowFingerprint): Flow fingerprint to compare with.
+        Returns:
+            bool: True if the flow fingerprints are equal, False otherwise.
+        """
+        # If other object is not a FlowFingerprint, return False
+        if not isinstance(other, FlowFingerprint):
+            return False
+        
+        # If other object is a FlowFingerprint, compare attributes
+        return (
+            self.src == other.src
+            and self.dst == other.dst
+            and self.transport_protocol == other.transport_protocol
+            and self.sport == other.sport
+            and self.dport == other.dport
+            and self.application_protocol == other.application_protocol
+        )
+    
+
+    def str_base(self) -> str:
+        """
+        String representation of the base flow fingerprint attributes,
+        without timestamp and length.
+
+        Returns:
+            str: String representation of the base flow fingerprint attributes.
+        """
+        # Source: host & port
+        s = f"{self.src}:{self.sport} ->"
+        # Destination: host & port
+        s += f" {self.dst}:{self.dport}"
+        # Transport protocol
+        s += f" [{self.transport_protocol}]"
+        # Application data
+        s += f" ({self.application_protocol})"
+
+        return s
+
+
     def __repr__(self) -> str:
         """
         String representation of a FlowFingerprint object.
@@ -48,15 +101,9 @@ class FlowFingerprint:
             str: String representation of a FlowFingerprint object.
         """
         # Timestamp
-        s = f"{self.timestamp}:"
-        # Source: host & port
-        s += f" {self.src}:{self.sport} ->"
-        # Destination: host & port
-        s += f" {self.dst}:{self.dport}"
-        # Transport protocol
-        s += f" [{self.transport_protocol}]"
-        # Application data
-        s += f" ({self.application_protocol})"
+        s = f"{self.timestamp}: "
+        # Base attributes
+        s += self.str_base()
         # Length
         s += f" {self.length} bytes"
 
