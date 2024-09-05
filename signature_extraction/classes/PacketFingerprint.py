@@ -1,5 +1,6 @@
 ## Imports
 # Libraries
+from __future__ import annotations
 from typing import Iterator
 import scapy.all as scapy
 from scapy.all import IP, IPv6, TCP, UDP
@@ -14,38 +15,63 @@ class PacketFingerprint:
     id = 0
 
 
-    def __init__(self, pkt: scapy.Packet) -> None:
+    def __init__(self, pkt: dict) -> None:
         """
-        Packet fingerprint constructor.
+        Flow fingerprint constructor.
 
         Args:
-            pkt (scapy.Packet): Packet to initialize with.
+            pkt (dict): dictionary containing the packet fingerprint attributes.
         """
         self.id = PacketFingerprint.id
         PacketFingerprint.id += 1
+        self.src                  = pkt["src"]
+        self.dst                  = pkt["dst"]
+        self.transport_protocol   = pkt["transport_protocol"]
+        self.sport                = pkt["sport"]
+        self.dport                = pkt["dport"]
+        self.application_protocol = pkt["application_protocol"]
+        self.timestamp            = pkt["timestamp"]
+        self.length               = pkt["length"]
+
+
+    @classmethod
+    def build_from_packet(cls, pkt: scapy.Packet) -> PacketFingerprint:
+        """
+        Build a PacketFingerprint object from a scapy packet.
+
+        Args:
+            pkt (scapy.Packet): Packet to initialize with.
+        Returns:
+            PacketFingerprint: Packet fingerprint.
+        """
+        # Initialize packet dictionary
+        pkt_dict = {}
 
         # Network layer: hosts (src & dst)
         if pkt.haslayer(IP):
-            self.src = pkt.getlayer(IP).src
-            self.dst = pkt.getlayer(IP).dst
+            pkt_dict["src"] = pkt.getlayer(IP).src
+            pkt_dict["dst"] = pkt.getlayer(IP).dst
         elif pkt.haslayer(IPv6):
-            self.src = pkt.getlayer(IPv6).src
-            self.dst = pkt.getlayer(IPv6).dst
+            pkt_dict["src"] = pkt.getlayer(IPv6).src
+            pkt_dict["dst"] = pkt.getlayer(IPv6).dst
 
         # Transport layer: protocol & ports
         if pkt.haslayer(TCP) or pkt.haslayer(UDP):
-            self.transport_protocol = pkt.getlayer(2).name
-            self.sport = pkt.sport
-            self.dport = pkt.dport
+            pkt_dict["transport_protocol"] = pkt.getlayer(2).name
+            pkt_dict["sport"] = pkt.sport
+            pkt_dict["dport"] = pkt.dport
 
         # Application layer
-        self.application_protocol = get_last_layer(pkt).name
+        pkt_dict["application_protocol"] = get_last_layer(pkt).name
         # TODO: application-specific data
-        #self.application_data = get_application_data(pkt)
+        #pkt_dict["application_data"] = get_application_data(pkt)
 
         # Metadata
-        self.length = len(pkt)
-        self.timestamp = pkt.time
+        pkt_dict["length"] = len(pkt)
+        pkt_dict["timestamp"] = pkt.time
+
+        # Create PacketFingerprint object
+        return cls(pkt_dict)
 
     
     def __repr__(self) -> str:

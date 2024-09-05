@@ -72,3 +72,22 @@ def flows_to_csv(flows: List[FlowFingerprint], output_file: str) -> None:
     """
     df = flows_to_df(flows)
     df.to_csv(output_file, index=False)
+
+
+def pkts_csv_to_flows_csv(pkts_file: str, flows_file: str) -> None:
+    """
+    Read a CSV file containing packet fingerprints,
+    group packets per flow,
+    and save the resulting flow fingerprints to a CSV file.
+
+    Args:
+        pkts_file (str): CSV file containing packet fingerprints.
+        flows_file (str): Output CSV file containing flow fingerprints.
+    """
+    # Read packet fingerprints
+    pkts_df = pd.read_csv(pkts_file)
+    pkts = [PacketFingerprint(dict(row)) for _, row in pkts_df.iterrows()]
+    # Convert packet fingerprints to flow fingerprints
+    flows = group_pkts_per_flow(pkts)
+    # Save flow fingerprints to CSV
+    flows_to_csv(flows, flows_file)
