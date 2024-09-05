@@ -1,0 +1,21 @@
+name: test-package
+on: [push]
+
+
+jobs:
+
+  test-package:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Python dependencies
+        run: pip3 install -r $GITHUB_WORKSPACE/requirements.txt
+
+      - name: Install pytest
+        run: pip3 install pytest
+
+      - name: Run tests
+        run: pytest $GITHUB_WORKSPACE/test/

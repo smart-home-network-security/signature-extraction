@@ -1,5 +1,6 @@
-# Test script
+# Test scripts
 test.sh
+test.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
