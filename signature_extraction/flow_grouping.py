@@ -1,6 +1,7 @@
 ## Imports
 # Libraries
 from typing import List
+import pandas as pd
 # Package
 from .classes import PacketFingerprint, FlowFingerprint
 from .pkt_fingerprint_extractor import pkts_to_df
@@ -47,3 +48,27 @@ def group_pkts_per_flow(pkts: List[PacketFingerprint]) -> List[FlowFingerprint]:
         flows.append(flow)
     
     return flows
+
+
+def flows_to_df(flows: List[FlowFingerprint]) -> pd.DataFrame:
+    """
+    Convert a list of FlowFingerprint objects to a DataFrame.
+
+    Args:
+        flows (List[FlowFingerprint]): List of flow fingerprints.
+    Returns:
+        pd.DataFrame: DataFrame containing the flow fingerprints.
+    """
+    return pd.DataFrame([dict(flow) for flow in flows])
+
+
+def flows_to_csv(flows: List[FlowFingerprint], output_file: str) -> None:
+    """
+    Save a list of flow fingerprints to a CSV file.
+
+    Args:
+        flows (List[FlowFingerprint]): List of flow fingerprints.
+        output_file (str): Output file.
+    """
+    df = flows_to_df(flows)
+    df.to_csv(output_file, index=False)
