@@ -78,6 +78,18 @@ def pcaps_to_pkts(pcap_files: List[str]) -> List[Packet]:
     return pkts
 
 
+def pkts_to_df(pkts: List[Packet]) -> pd.DataFrame:
+    """
+    Convert a list of packets to a DataFrame.
+
+    Args:
+        pkts (List[Packet]): List of packet fingerprints.
+    Returns:
+        pd.DataFrame: DataFrame of packet fingerprints.
+    """
+    return pd.DataFrame([dict(pkt) for pkt in pkts])
+
+
 def save_pkts_to_csv(pkts: List[Packet], output_file: str) -> None:
     """
     Save a list of packets to a CSV file.
@@ -86,7 +98,7 @@ def save_pkts_to_csv(pkts: List[Packet], output_file: str) -> None:
         pkts (List[Packet]): List of packet fingerprints.
         output_file (str): Output file.
     """
-    df = pd.DataFrame([pkt.to_dict() for pkt in pkts])
+    df = pkts_to_df(pkts)
     df.to_csv(output_file, index=False)
 
 

@@ -1,8 +1,14 @@
-## Import
-# Libraries
-import pytest
+## Imports
 # Package
 import signature_extraction.pkt_fingerprint_extractor as pkt_fingerprint_extractor
+
+
+### Variables
+pcap_files = [
+    "demo/1724059939.pcap",
+    "demo/1724060053.pcap",
+    "demo/1724060140.pcap"
+]
 
 
 def test_pcap_to_pkts():
@@ -23,13 +29,6 @@ def test_pcaps_to_pkts():
     """
     Test the function `pcaps_to_pkts`.
     """
-    # Variables
-    pcap_files = [
-        "demo/1724059939.pcap",
-        "demo/1724060053.pcap",
-        "demo/1724060140.pcap"
-    ]
-
     # Execution
     pkts = pkt_fingerprint_extractor.pcaps_to_pkts(pcap_files)
 
@@ -37,16 +36,23 @@ def test_pcaps_to_pkts():
     assert all([type(pkt) == pkt_fingerprint_extractor.PacketFingerprint for pkt in pkts])
 
 
+def test_pkts_to_df():
+    """
+    Test the function `pkts_to_df`.
+    """
+    # Execution
+    pkts = pkt_fingerprint_extractor.pcaps_to_pkts(pcap_files)
+    df = pkt_fingerprint_extractor.pkts_to_df(pkts)
+
+    # Validation
+    assert df.shape[0] == len(pkts)
+
+
 def test_pcaps_to_csv():
     """
     Test the function `pcaps_to_csv`.
     """
     # Variables
-    pcap_files = [
-        "demo/1724059939.pcap",
-        "demo/1724060053.pcap",
-        "demo/1724060140.pcap"
-    ]
     output_file = "demo/pkts.csv"
 
     # Execution

@@ -1,8 +1,9 @@
 from .PacketFingerprint import PacketFingerprint
-#from .Flow import Flow
+from .FlowFingerprint import FlowFingerprint
 #from .EventSignature import EventSignature
 
 
 __all__ = [
-    "PacketFingerprint"
+    "PacketFingerprint",
+    "FlowFingerprint",
 ]

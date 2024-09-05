@@ -1,5 +1,6 @@
 ## Imports
 # Libraries
+from typing import Iterator
 import scapy.all as scapy
 from scapy.all import IP, IPv6, TCP, UDP
 # Custom
@@ -42,24 +43,46 @@ class PacketFingerprint:
         # TODO: application-specific data
         #self.application_data = get_application_data(pkt)
 
-        # Packet length
+        # Metadata
         self.length = len(pkt)
+        self.timestamp = pkt.time
 
     
-    def to_dict(self) -> dict:
+    def __repr__(self) -> str:
         """
-        Convert the packet fingerprint to a dictionary.
+        String representation of a PacketFingerprint object.
 
         Returns:
-            dict: contains the PacketFingerprint attributes.
+            str: String representation of a PacketFingerprint object.
         """
-        return {
-            "id":                   self.id,
-            "src":                  self.src,
-            "dst":                  self.dst,
-            "transport_protocol":   self.transport_protocol,
-            "sport":                self.sport,
-            "dport":                self.dport,
-            "application_protocol": self.application_protocol,
-            "length":               self.length
-        }
+        # ID
+        s = f"[{self.id}] "
+        # Timestamp
+        s = f"{self.timestamp}:"
+        # Source: host & port
+        s += f" {self.src}:{self.sport} ->"
+        # Destination: host & port
+        s += f" {self.dst}:{self.dport}"
+        # Transport protocol
+        s += f" [{self.transport_protocol}]"
+        # Application data
+        s += f" ({self.application_protocol})"
+        # Length
+        s += f" {self.length} bytes"
+
+        return s
+
+    
+    def __iter__(self) -> Iterator:
+        """
+        Iterate over the packet fingerprint attributes.
+        """
+        yield "id", self.id
+        yield "timestamp", self.timestamp
+        yield "src", self.src
+        yield "dst", self.dst
+        yield "transport_protocol", self.transport_protocol
+        yield "sport", self.sport
+        yield "dport", self.dport
+        yield "application_protocol", self.application_protocol
+        yield "length", self.length
