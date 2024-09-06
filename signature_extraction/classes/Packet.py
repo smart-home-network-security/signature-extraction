@@ -145,3 +145,26 @@ class Packet:
         yield "dport", self.dport
         yield "application_protocol", self.application_protocol
         yield "length", self.length
+
+    
+    def set_domain_names(self, domain_names: dict) -> None:
+        """
+        Replace IP addresses with domain names in the Packet.
+
+        Args:
+            domain_names (dict): dictionary of domain names associated with IP addresses.
+        """
+        src_replaced = False
+        dst_replaced = False
+
+        for domain_name, ip_addresses in domain_names.items():            
+            if self.src in ip_addresses:
+                self.src = domain_name
+                src_replaced = True
+            if self.dst in ip_addresses:
+                self.dst = domain_name
+                dst_replaced = True
+            
+            # Early stopping
+            if src_replaced and dst_replaced:
+                return

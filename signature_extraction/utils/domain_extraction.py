@@ -1,11 +1,9 @@
-import scapy.all as scapy
+from scapy.all import Packet, IP, IPv6
 from scapy.layers.tls.all import TLS, TLS_Ext_ServerName
-from scapy.all import IP, IPv6
 from scapy.layers.dns import DNS
-from pkt_fingerprint_extractor_old import PacketFields
 
 
-def extract_domain_names(packet: scapy.Packet, domain_names: dict) -> None:
+def extract_domain_names(packet: Packet, domain_names: dict) -> None:
     """
     Extract domain name from a scapy packet.
 
@@ -57,22 +55,3 @@ def extract_domain_names(packet: scapy.Packet, domain_names: dict) -> None:
 
                     if ip not in domain_names[domain_name]:
                         domain_names[domain_name].append(ip)
-
-
-
-def replace_ip_with_domain_name(domain_names: dict, signature: dict) -> dict:
-    """
-    Replace IP addresses with domain names in a packet signature.
-    """
-
-    for domain_name, ip_addresses in domain_names.items():
-        for ip_address in ip_addresses:
-            try:
-                if signature[PacketFields.DeviceHost.name] == ip_address:
-                    signature[PacketFields.DeviceHost.name] = domain_name
-                if signature[PacketFields.OtherHost.name] == ip_address:
-                    signature[PacketFields.OtherHost.name] = domain_name
-            except KeyError:
-                pass
-
-    return signature

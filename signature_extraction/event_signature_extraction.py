@@ -1,5 +1,7 @@
+## Imports
+# Libraries
 from typing import List, Union
-import pandas as pd
+# Package
 from .classes import FlowFingerprint, NetworkPattern
 from .pkt_extraction import pcap_to_pkts
 from .flow_grouping import group_pkts_per_flow

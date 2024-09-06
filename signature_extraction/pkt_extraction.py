@@ -1,10 +1,10 @@
 ## Imports
 # Libraries
-from typing import List, Union
+from typing import List
 import scapy.all as scapy
 import pandas as pd
 # Package
-from .utils.packet_utils import is_signalling_pkt
+from .utils.packet_utils import is_signalling_pkt, extract_domain_names
 from .classes import Packet
 
 
@@ -13,13 +13,19 @@ from .classes import Packet
 timeout = 5  # seconds
 # Packet loop accumulators
 i = 0
-timestamp        = 0
-previous_time    = 0
-domain_names     = {}
-pkts = []  # Simpler representations of packets
+timestamp     = 0
+previous_time = 0
+domain_names  = {}
+pkts          = []
 
 
 def handle_packet(packet: scapy.Packet) -> None:
+    """
+    Callback function which handles one packet read from a PCAP file.
+
+    Args:
+        packet (scapy.Packet): Packet read from the PCAP file.
+    """
     global i, timestamp, previous_time, domain_names, pkts
 
     ## Packet validation
@@ -40,13 +46,17 @@ def handle_packet(packet: scapy.Packet) -> None:
     if packet.time > previous_time + timeout:
         return
     
+    # Domain name extraction
+    extract_domain_names(packet, domain_names)
 
     ## Packet fingerprint extraction
     pkt = Packet.build_from_packet(packet)
+    pkt.set_domain_names(domain_names)
     pkts.append(pkt)
 
     # Update loop variables
     previous_time = packet.time
+    i += 1
 
 
 def pcap_to_pkts(pcap_file: str) -> List[scapy.Packet]:
