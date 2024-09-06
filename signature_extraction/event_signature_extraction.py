@@ -5,7 +5,7 @@ from .pkt_extraction import pcap_to_pkts
 from .flow_grouping import group_pkts_per_flow
 
 
-def pcaps_to_event(pcap_files: Union[str, List[str]]) -> NetworkPattern:
+def pcaps_to_signature_pattern(pcap_files: Union[str, List[str]]) -> NetworkPattern:
     """
     Extract an event signature from a list of network traces.
 
@@ -64,3 +64,12 @@ def pcaps_to_event(pcap_files: Union[str, List[str]]) -> NetworkPattern:
         signature.add_flow(result_flow)
 
     return signature
+
+
+def pcaps_to_signature_csv(pcap_files: Union[str, List[str]], output_file: str) -> None:
+
+    # Extract event signature from the flows
+    signature = pcaps_to_signature_pattern(pcap_files)
+
+    # Save event signature to CSV
+    signature.to_csv(output_file)

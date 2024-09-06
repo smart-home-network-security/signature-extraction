@@ -98,7 +98,7 @@ class FlowFingerprint(BaseFlow):
 
         # If one of the port numbers is well-known, return it
         for port, data in ports_sorted:
-            if is_known_port(port, self.protocol):
+            if is_known_port(port, self.transport_protocol):
                 self.fixed_port = (port, data["host"])
                 return self.fixed_port
 
