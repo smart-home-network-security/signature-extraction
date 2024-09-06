@@ -34,18 +34,17 @@ class FlowFingerprint(BaseFlow):
         self.fixed_port = None
 
 
-    
-    # @classmethod
-    # def build_from_flow(cls, flow: Flow) -> FlowFingerprint:
-    #     """
-    #     Build a flow fingerprint from a packet fingerprint.
+    @classmethod
+    def build_from_flow(cls, flow: Flow) -> FlowFingerprint:
+        """
+        Build a FlowFingerprint object from a Flow object.
 
-    #     Args:
-    #         pkt (PacketFingerprint): Packet fingerprint to build from.
-    #     Returns:
-    #         FlowFingerprint: Flow fingerprint.
-    #     """
-    #     return cls(dict(flow))
+        Args:
+            flow (Flow): Flow object to build from.
+        Returns:
+            FlowFingerprint: Flow fingerprint.
+        """
+        return cls(dict(flow))
 
 
     def add_ports(self, flow: Flow) -> None:
@@ -114,14 +113,26 @@ class FlowFingerprint(BaseFlow):
         Returns:
             str: String representation of a FlowFingerprint object.
         """
-        # Source: host & port
-        s = f"{self.src} ->"
-        # Destination: host & port
+        port_number, port_host = self.get_fixed_port()
+
+        ## Hosts
+        # Source
+        s = f"{self.src}"
+        if port_host == self.src:
+            s += f":{port_number}"
+        s += " -> "
+        # Destination
         s += f" {self.dst}"
-        # Transport protocol
-        s += f" [{self.transport_protocol}]"
-        # Application data
-        s += f" ({self.application_protocol})"
+        if port_host == self.dst:
+            s += f":{port_number}"
+
+        ## Protocol(s)
+        # Transport layer
+        s += f" [{self.transport_protocol}"
+        # Application layer
+        if self.application_protocol != self.transport_protocol:
+            s += f" / {self.application_protocol}"
+        s += "]"
 
         return s
 
@@ -133,8 +144,27 @@ class FlowFingerprint(BaseFlow):
         Returns:
             Iterable: Iterator over the packet fingerprint attributes.
         """
+        port_number, port_host = self.get_fixed_port()
+
+        ## Hosts
+        # Source
         yield "src", self.src
+        if port_host == self.src:
+            yield "sport", port_number
+        else:
+            yield "sport", None
+        # Destination
         yield "dst", self.dst
+        if port_host == self.dst:
+            yield "dport", port_number
+        else:
+            yield "dport", None
+
+        ## Protocol(s)
+        # Transport layer
         yield "transport_protocol", self.transport_protocol
-        yield "fixed_port", self.fixed_port
-        yield "application_protocol", self.application_protocol
+        # Application layer
+        if self.application_protocol != self.transport_protocol:
+            yield "application_protocol", self.application_protocol
+        else:
+            yield "application_protocol", None
