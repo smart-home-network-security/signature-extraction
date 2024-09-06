@@ -1,9 +1,10 @@
 from __future__ import annotations
 from typing import List, Iterator
 from .Packet import Packet
+from .BaseFlow import BaseFlow
 
 
-class Flow:
+class Flow(BaseFlow):
     """
     Summary of a network flow, containing the following attributes:
         - Timestamp
@@ -50,9 +51,9 @@ class Flow:
         return cls([dict(pkt)])
     
 
-    def __eq__(self, other: Flow) -> bool:
+    def compare_full(self, other: Flow) -> bool:
         """
-        Compare two FlowFingerprint objects.
+        Compare two Flow objects over all their attributes.
 
         Args:
             other (FlowFingerprint): Flow fingerprint to compare with.
@@ -72,44 +73,6 @@ class Flow:
             and self.dport == other.dport
             and self.application_protocol == other.application_protocol
         )
-    
-
-    def match_host(self, other: Flow) -> bool:
-        """
-        Match flow fingerprints based on source and destination hosts,
-        regardless of the direction.
-
-        Args:
-            other (FlowFingerprint): Flow fingerprint to match with.
-        Returns:
-            bool: True if the flow fingerprints match, False otherwise.
-        """
-        # If other object is not a FlowFingerprint, return False
-        if not isinstance(other, Flow):
-            return False
-        
-        return (
-            (self.src == other.src and self.dst == other.dst) or
-            (self.src == other.dst and self.dst == other.src)
-        )
-    
-
-    def match_basic(self, other: Flow) -> bool:
-        """
-        Basic match between two flow fingerprints,
-        i.e. match based on source, destination, and transport protocol,
-        regardless of the direction.
-
-        Args:
-            other (FlowFingerprint): Flow fingerprint to match with.
-        Returns:
-            bool: True if the flow fingerprints match, False otherwise.
-        """
-        # If other object is not a FlowFingerprint, return False
-        if not isinstance(other, Flow):
-            return False
-        
-        return self.transport_protocol == other.transport_protocol and self.match_host(other)
     
 
     def str_base(self) -> str:

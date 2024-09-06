@@ -7,10 +7,10 @@ from .flow_grouping import group_pkts_per_flow
 
 def pcaps_to_event(pcap_files: Union[str, List[str]]) -> NetworkPattern:
     """
-    Extract an event signature from a list of flow fingerprints.
+    Extract an event signature from a list of network traces.
 
     Args:
-        flows (List[FlowFingerprint]): List of flow fingerprints.
+        pcap_files (Union[str, List[str]]): Path to the PCAP file(s).
     Returns:
         NetworkPattern: Event signature extracted from the flows.
     """
@@ -23,8 +23,7 @@ def pcaps_to_event(pcap_files: Union[str, List[str]]) -> NetworkPattern:
     for pcap in pcap_files:
 
         pkts = pcap_to_pkts(pcap)
-        flows = group_pkts_per_flow(pkts)
-        pattern = NetworkPattern(flows)
+        pattern = group_pkts_per_flow(pkts)
         patterns.append(pattern)
 
 
@@ -43,43 +42,25 @@ def pcaps_to_event(pcap_files: Union[str, List[str]]) -> NetworkPattern:
         if i in already_parsed_flow_indices:
             continue
 
-        ## Parse flow
 
+        ## Parse flow
+        result_flow = FlowFingerprint(flow)
         already_parsed_flow_indices.add(i)
 
         # Iterate over NetworkPatterns (i.e., lists of FlowFingerprints),
         # to find flows matching the one currently being processed
-        for j, pattern in enumerate(patterns):
+        for pattern in patterns:
             matched_flow = pattern.match_flow_basic(flow)
-            if j == 0:  # Reference record
-                #index = matched_record.index[0]
-                #already_parsed_flow_indices.add(index)
-                pass
-            result_pattern.
-            result = pd.concat([result, matched_record])
+            result_flow.add_flow(matched_flow)
 
-        for record in result.iterrows():
-            fingerprint.addPorts(record[1])
-
+        # Remove port if already matched
         for already_matched_port in already_matched_ports:
-            if already_matched_port in list(fingerprint.ports):
-                fingerprint.ports.pop(already_matched_port)
+            if already_matched_port in result_flow.ports:
+                del result_flow.ports[already_matched_port]
 
-        base_port = fingerprint.get_fixed_port()[0]
-        already_matched_ports.add(base_port)
+        fixed_port = result_flow.get_fixed_port()[0]
+        already_matched_ports.add(fixed_port)
 
-        result = result[
-            (result["DevicePort"] == base_port) | (result["OtherPort"] == base_port)
-        ]
-
-        fingerprint.clearPorts()
-
-        for frame in result.iterrows():
-            fingerprint.addPorts(frame[1])
-            fingerprint.getApplicationData(frame[1], "Length")
-            fingerprint.getApplicationData(frame[1], "ApplicationSpecific")
-            fingerprint.getApplicationData(frame[1], "nbPacket")
-
-        result_flows.append(fingerprint)
+        signature.add_flow(result_flow)
 
     return signature

@@ -103,23 +103,23 @@ def test_build_from_packet() -> None:
     assert packet.length == pkt_dict_a["length"]
 
 
-def test_eq() -> None:
+def test_compare_full() -> None:
     """
-    Test the equality operator of the class `Flow`.
+    Test the method `compare_full` of the class `Flow`.
     """
     flow_a = Flow([pkt_dict_a])
     flow_b = Flow([pkt_dict_b])
     flow_c = Flow([pkt_dict_c])
 
-    assert flow_a == flow_a
-    assert flow_a == flow_b
-    assert flow_a != flow_c
-    assert flow_b == flow_a
-    assert flow_b == flow_b
-    assert flow_b != flow_c
-    assert flow_c != flow_a
-    assert flow_c != flow_b
-    assert flow_c == flow_c
+    assert flow_a.compare_full(flow_a)
+    assert flow_a.compare_full(flow_b)
+    assert not flow_a.compare_full(flow_c)
+    assert flow_b.compare_full(flow_a)
+    assert flow_b.compare_full(flow_b)
+    assert not flow_b.compare_full(flow_c)
+    assert not flow_c.compare_full(flow_a)
+    assert not flow_c.compare_full(flow_b)
+    assert flow_c.compare_full(flow_c)
 
 
 def test_match_host() -> None:
@@ -175,36 +175,36 @@ def test_match_basic() -> None:
     flow_e = Flow([pkt_dict_e])
     flow_f = Flow([pkt_dict_f])
 
-    assert flow_a.match_basic(flow_a)
-    assert flow_a.match_basic(flow_b)
-    assert flow_a.match_basic(flow_c)
-    assert flow_a.match_basic(flow_d)
-    assert not flow_a.match_basic(flow_e)
-    assert not flow_a.match_basic(flow_f)
-    assert flow_b.match_basic(flow_a)
-    assert flow_b.match_basic(flow_b)
-    assert flow_b.match_basic(flow_c)
-    assert flow_b.match_basic(flow_d)
-    assert not flow_b.match_basic(flow_e)
-    assert not flow_b.match_basic(flow_f)
-    assert flow_c.match_basic(flow_a)
-    assert flow_c.match_basic(flow_b)
-    assert flow_c.match_basic(flow_c)
-    assert flow_c.match_basic(flow_d)
-    assert not flow_c.match_basic(flow_e)
-    assert not flow_c.match_basic(flow_f)
-    assert flow_d.match_basic(flow_a)
-    assert flow_d.match_basic(flow_b)
-    assert flow_d.match_basic(flow_c)
-    assert flow_d.match_basic(flow_d)
-    assert not flow_d.match_basic(flow_e)
-    assert not flow_e.match_basic(flow_a)
-    assert not flow_e.match_basic(flow_b)
-    assert not flow_e.match_basic(flow_c)
-    assert not flow_e.match_basic(flow_d)
-    assert not flow_e.match_basic(flow_f)
-    assert not flow_f.match_basic(flow_a)
-    assert not flow_f.match_basic(flow_b)
-    assert not flow_f.match_basic(flow_c)
-    assert not flow_f.match_basic(flow_d)
-    assert not flow_f.match_basic(flow_e)
+    assert flow_a == flow_a
+    assert flow_a == flow_b
+    assert flow_a == flow_c
+    assert flow_a == flow_d
+    assert flow_a != flow_e
+    assert flow_a != flow_f
+    assert flow_b == flow_a
+    assert flow_b == flow_b
+    assert flow_b == flow_c
+    assert flow_b == flow_d
+    assert flow_b != flow_e
+    assert flow_b != flow_f
+    assert flow_c == flow_a
+    assert flow_c == flow_b
+    assert flow_c == flow_c
+    assert flow_c == flow_d
+    assert flow_c != flow_e
+    assert flow_c != flow_f
+    assert flow_d == flow_a
+    assert flow_d == flow_b
+    assert flow_d == flow_c
+    assert flow_d == flow_d
+    assert flow_d != flow_e
+    assert flow_e != flow_a
+    assert flow_e != flow_b
+    assert flow_e != flow_c
+    assert flow_e != flow_d
+    assert flow_e != flow_f
+    assert flow_f != flow_a
+    assert flow_f != flow_b
+    assert flow_f != flow_c
+    assert flow_f != flow_d
+    assert flow_f != flow_e

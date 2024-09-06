@@ -1,6 +1,6 @@
 from typing import List
 import pandas as pd
-from .Flow import Flow
+from .BaseFlow import BaseFlow
 
 
 class NetworkPattern:
@@ -8,7 +8,7 @@ class NetworkPattern:
     List of network flows occurring subsequently.
     """
 
-    def __init__(self, flows: List[Flow] = []) -> None:
+    def __init__(self, flows: List[BaseFlow] = []) -> None:
         """
         NetworkPattern constructor.
 
@@ -25,7 +25,7 @@ class NetworkPattern:
         Returns:
             str: String representation of an NetworkPattern object.
         """
-        return ", ".join([f"<{flow.str_base()}>" for flow in self.flows])
+        return ", ".join([f"<{flow}>" for flow in self.flows])
     
 
     def __len__(self) -> int:
@@ -38,7 +38,7 @@ class NetworkPattern:
         return len(self.flows)
     
 
-    def get_flows(self) -> List[Flow]:
+    def get_flows(self) -> List[BaseFlow]:
         """
         Get the list of flow fingerprints.
 
@@ -48,7 +48,7 @@ class NetworkPattern:
         return self.flows
     
 
-    def set_flows(self, flows: List[Flow]) -> None:
+    def set_flows(self, flows: List[BaseFlow]) -> None:
         """
         Set the list of flow fingerprints.
 
@@ -58,22 +58,22 @@ class NetworkPattern:
         self.flows = flows
 
 
-    def add_flow(self, flow: Flow) -> None:
+    def add_flow(self, flow: BaseFlow) -> None:
         """
         Add a flow fingerprint to the list.
 
         Args:
-            flow (FlowFingerprint): Flow fingerprint to add.
+            flow (FlowFingerprint): BaseFlow fingerprint to add.
         """
         self.flows.append(flow)
 
     
-    def find_flow(self, flow: Flow) -> Flow:
+    def find_flow(self, flow: BaseFlow) -> BaseFlow:
         """
         Find a flow fingerprint in the list.
 
         Args:
-            flow (FlowFingerprint): Flow fingerprint to find.
+            flow (FlowFingerprint): BaseFlow fingerprint to find.
         Returns:
             FlowFingerprint: Found flow fingerprint, or None if not found.
         Raises:
@@ -86,21 +86,21 @@ class NetworkPattern:
             raise ValueError("No matching flow found in the pattern")
 
 
-    def match_flow_basic(self, flow: Flow) -> Flow:
+    def match_flow_basic(self, flow: BaseFlow) -> BaseFlow:
         """
         Find a flow fingerprint in the list which matches the basic attributes,
         i.e. the hosts and transport protocol,
         of the given flow fingerprint.
 
         Args:
-            flow (FlowFingerprint): Flow fingerprint to find.
+            flow (FlowFingerprint): BaseFlow to find.
         Returns:
-            FlowFingerprint: Found flow fingerprint, or None if not found.
+            FlowFingerprint: Found BaseFlow, or None if not found.
         Raises:
             ValueError: If no matching flow is found in the pattern.
         """
         for f in self.flows:
-            if f.match_basic(flow):
+            if f == flow:
                 return f
         raise ValueError("No matching flow found in the pattern")
     

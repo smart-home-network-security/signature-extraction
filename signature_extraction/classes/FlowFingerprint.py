@@ -1,9 +1,11 @@
 from __future__ import annotations
-from typing import List, Iterator
-from .Packet import Packet
+from typing import Tuple, Iterator
+from .BaseFlow import BaseFlow
+from .Flow import Flow
+from signature_extraction.utils.packet_utils import is_known_port
 
 
-class FlowFingerprint:
+class FlowFingerprint(BaseFlow):
     """
     Fingerprint of a network flow,
     matching only the following attributes:
@@ -13,122 +15,96 @@ class FlowFingerprint:
         - Application protocol
     """
 
-    def __init__(self, pkts: List[dict]) -> None:
+    def __init__(self, flow: Flow = None) -> None:
         """
         Flow fingerprint constructor.
 
         Args:
-            pkt (dict): dictionary containing the flow fingerprint attributes.
+            flow (Flow): Flow object to initialize with.
         """
-        # Get the first packet to intiialize the flow fingerprint
-        pkt = pkts[0]
-        self.src                  = pkt["src"]
-        self.dst                  = pkt["dst"]
-        self.transport_protocol   = pkt["transport_protocol"]
-        self.application_protocol = pkt["application_protocol"]
-        
+        self.src                  = flow.src if flow else None
+        self.dst                  = flow.dst if flow else None
+        self.transport_protocol   = flow.transport_protocol if flow else None
+        self.application_protocol = flow.application_protocol if flow else None
+ 
         # Initialize ports (to be computed)
         self.ports = {}
+        if flow:
+            self.add_ports(flow)
         self.fixed_port = None
 
-        # Compute flow statistics
-        self.count  = len(pkts)
-        self.length = sum(pkt["length"] for pkt in pkts)
-
 
     
-    @classmethod
-    def build_from_packet(cls, pkt: Packet) -> FlowFingerprint:
+    # @classmethod
+    # def build_from_flow(cls, flow: Flow) -> FlowFingerprint:
+    #     """
+    #     Build a flow fingerprint from a packet fingerprint.
+
+    #     Args:
+    #         pkt (PacketFingerprint): Packet fingerprint to build from.
+    #     Returns:
+    #         FlowFingerprint: Flow fingerprint.
+    #     """
+    #     return cls(dict(flow))
+
+
+    def add_ports(self, flow: Flow) -> None:
         """
-        Build a flow fingerprint from a packet fingerprint.
+        Add ports from a Flow object.
 
         Args:
-            pkt (PacketFingerprint): Packet fingerprint to build from.
-        Returns:
-            FlowFingerprint: Flow fingerprint.
+            flow (Flow): Flow object to add ports from.
         """
-        return cls([dict(pkt)])
-    
-
-    def __eq__(self, other: FlowFingerprint) -> bool:
-        """
-        Compare two FlowFingerprint objects.
-
-        Args:
-            other (FlowFingerprint): Flow fingerprint to compare with.
-        Returns:
-            bool: True if the flow fingerprints are equal, False otherwise.
-        """
-        # If other object is not a FlowFingerprint, return False
-        if not isinstance(other, FlowFingerprint):
-            return False
+        # Source port
+        if flow.sport not in self.ports:
+            self.ports[flow.sport] = {"number": 1, "host": flow.src}
+        else:
+            self.ports[flow.sport]["number"] += 1
         
-        # If other object is a FlowFingerprint, compare attributes
-        return (
-            self.src == other.src
-            and self.dst == other.dst
-            and self.transport_protocol == other.transport_protocol
-            and self.fixed_port == other.fixed_port
-            and self.application_protocol == other.application_protocol
-        )
+        # Destination port
+        if flow.dport not in self.ports:
+            self.ports[flow.dport] = {"number": 1, "host": flow.dst}
+        else:
+            self.ports[flow.dport]["number"] += 1
+
+        return self.ports
     
 
-    def match_host(self, other: FlowFingerprint) -> bool:
+    def add_flow(self, flow: Flow) -> None:
         """
-        Match flow fingerprints based on source and destination hosts,
-        regardless of the direction.
+        Add attributes of the given Flow object to the FlowFingerprint.
 
         Args:
-            other (FlowFingerprint): Flow fingerprint to match with.
-        Returns:
-            bool: True if the flow fingerprints match, False otherwise.
+            flow (Flow): Flow object to add.
         """
-        # If other object is not a FlowFingerprint, return False
-        if not isinstance(other, FlowFingerprint):
-            return False
-        
-        return (
-            (self.src == other.src and self.dst == other.dst) or
-            (self.src == other.dst and self.dst == other.src)
-        )
+        # Set attributes if not initialized
+        self.src = flow.src if not self.src else self.src
+        self.dst = flow.dst if not self.dst else self.dst
+        self.transport_protocol = flow.transport_protocol if not self.transport_protocol else self.transport_protocol
+        self.application_protocol = flow.application_protocol if not self.application_protocol else self.application_protocol
+
+        # Add flow ports
+        self.add_ports(flow)
+
     
-
-    def match_basic(self, other: FlowFingerprint) -> bool:
+    def get_fixed_port(self) -> Tuple[int, str]:
         """
-        Basic match between two flow fingerprints,
-        i.e. match based on source, destination, and transport protocol,
-        regardless of the direction.
-
-        Args:
-            other (FlowFingerprint): Flow fingerprint to match with.
-        Returns:
-            bool: True if the flow fingerprints match, False otherwise.
-        """
-        # If other object is not a FlowFingerprint, return False
-        if not isinstance(other, FlowFingerprint):
-            return False
-        
-        return self.transport_protocol == other.transport_protocol and self.match_host(other)
-    
-
-    def str_base(self) -> str:
-        """
-        String representation of the base flow fingerprint attributes,
-        without metadata and statistics.
+        Compute the fixed port of the flow fingerprint.
 
         Returns:
-            str: String representation of the base flow fingerprint attributes.
+            Tuple[int, str]: Fixed port number and corresponding host.
         """
-        # Source: host & port
-        s = f"{self.src} ->"
-        # Destination: host & port
-        s += f" {self.dst}"
-        # Transport protocol
-        s += f" [{self.transport_protocol}]"
-        # Application data
-        s += f" ({self.application_protocol})"
+        ports_sorted = sorted(self.ports.items(), key=lambda item: item[1]["number"], reverse=True)
 
-        return s
+        # If one of the port numbers is well-known, return it
+        for port, data in ports_sorted:
+            if is_known_port(port, self.protocol):
+                self.fixed_port = (port, data["host"])
+                return self.fixed_port
+
+        # Else, return the most used port
+        self.fixed_port = (ports_sorted[0][0], ports_sorted[0][1]["host"])
+        return self.fixed_port
 
 
     def __repr__(self) -> str:
@@ -138,11 +114,14 @@ class FlowFingerprint:
         Returns:
             str: String representation of a FlowFingerprint object.
         """
-        # Base attributes
-        s += self.str_base()
-        # Statistics
-        s += f" - {self.count} packets,"
-        s += f" {self.length} bytes"
+        # Source: host & port
+        s = f"{self.src} ->"
+        # Destination: host & port
+        s += f" {self.dst}"
+        # Transport protocol
+        s += f" [{self.transport_protocol}]"
+        # Application data
+        s += f" ({self.application_protocol})"
 
         return s
 
@@ -159,5 +138,3 @@ class FlowFingerprint:
         yield "transport_protocol", self.transport_protocol
         yield "fixed_port", self.fixed_port
         yield "application_protocol", self.application_protocol
-        yield "count", self.count
-        yield "length", self.length
