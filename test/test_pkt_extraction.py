@@ -1,6 +1,7 @@
 ## Imports
 # Package
-import signature_extraction.pkt_fingerprint_extraction as pkt_fingerprint_extraction
+from signature_extraction.classes import Packet
+import signature_extraction.pkt_extraction as pkt_extraction
 
 
 ### Variables
@@ -15,10 +16,10 @@ def test_pcap_to_pkts():
     pcap_file = "demo/1724059939.pcap"
 
     # Execution
-    pkts = pkt_fingerprint_extraction.pcap_to_pkts(pcap_file)
+    pkts = pkt_extraction.pcap_to_pkts(pcap_file)
 
     # Validation
-    assert all([type(pkt) == pkt_fingerprint_extraction.PacketFingerprint for pkt in pkts])
+    assert all([type(pkt) == Packet for pkt in pkts])
 
 
 def test_pkts_to_df():
@@ -26,8 +27,8 @@ def test_pkts_to_df():
     Test the function `pkts_to_df`.
     """
     # Execution
-    pkts = pkt_fingerprint_extraction.pcap_to_pkts(pcap_file)
-    df = pkt_fingerprint_extraction.pkts_to_df(pkts)
+    pkts = pkt_extraction.pcap_to_pkts(pcap_file)
+    df = pkt_extraction.pkts_to_df(pkts)
 
     # Validation
     assert df.shape[0] == len(pkts)
@@ -41,7 +42,7 @@ def test_pcap_to_csv():
     output_file = "demo/pkts.csv"
 
     # Execution
-    pkt_fingerprint_extraction.pcap_to_csv(pcap_file, output_file)
+    pkt_extraction.pcap_to_csv(pcap_file, output_file)
 
     # Validation
     pass

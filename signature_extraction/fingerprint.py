@@ -25,6 +25,8 @@ class Fingerprint:
         Args:
             frame (pd.DataFrame): Data frame to init with
         """
+        print(frame)
+        exit()
         self.ip_addresses = (frame["DeviceHost"], frame["OtherHost"])
         self.protocol = frame["TransportProtocol"]
         self.ports = {}

@@ -1,10 +1,10 @@
-from .PacketFingerprint import PacketFingerprint
-from .FlowFingerprint import FlowFingerprint
+from .Packet import Packet
+from .Flow import Flow
 from .NetworkPattern import NetworkPattern
 
 
 __all__ = [
-    "PacketFingerprint",
-    "FlowFingerprint",
+    "Packet",
+    "Flow",
     "NetworkPattern",
 ]

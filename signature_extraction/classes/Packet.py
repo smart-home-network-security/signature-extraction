@@ -8,7 +8,7 @@ from scapy.all import IP, IPv6, TCP, UDP
 from signature_extraction.utils.packet_utils import get_last_layer
 
 
-class PacketFingerprint:
+class Packet:
     """
     Summary of a packet, containing the following attributes:
         - Timestamp
@@ -28,8 +28,8 @@ class PacketFingerprint:
         Args:
             pkt (dict): dictionary containing the packet fingerprint attributes.
         """
-        self.id = PacketFingerprint.id
-        PacketFingerprint.id += 1
+        self.id = Packet.id
+        Packet.id += 1
         self.src                  = pkt["src"]
         self.dst                  = pkt["dst"]
         self.transport_protocol   = pkt["transport_protocol"]
@@ -41,7 +41,7 @@ class PacketFingerprint:
 
 
     @classmethod
-    def build_from_packet(cls, pkt: scapy.Packet) -> PacketFingerprint:
+    def build_from_packet(cls, pkt: scapy.Packet) -> Packet:
         """
         Build a PacketFingerprint object from a scapy packet.
 
@@ -83,7 +83,7 @@ class PacketFingerprint:
         return cls(pkt_dict)
     
 
-    def __eq__(self, other: PacketFingerprint) -> bool:
+    def __eq__(self, other: Packet) -> bool:
         """
         Compare two PacketFingerprint objects.
 
@@ -93,7 +93,7 @@ class PacketFingerprint:
             bool: True if the flow fingerprints are equal, False otherwise.
         """
         # If other object is not a PacketFingerprint, return False
-        if not isinstance(other, PacketFingerprint):
+        if not isinstance(other, Packet):
             return False
         
         # If other object is a PacketFingerprint, compare attributes

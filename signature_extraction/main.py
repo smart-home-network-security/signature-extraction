@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import argparse
 from ipaddress import IPv4Address
-from scapy.all import Packet, sniff
+import scapy.all as scapy
 # Custom
 from arg_types import file, directory
 from packet_utils import is_signalling_pkt
@@ -39,7 +39,7 @@ flows            = []  # Network flows (sequences of packets)
 
 ### FUNCTIONS ###
 
-def handle_packet(packet: Packet) -> None:
+def handle_packet(packet: scapy.Packet) -> None:
     """
     Callback function which handle one packet read from a PCAP file.
 
@@ -148,7 +148,7 @@ if __name__ == "__main__":
             timestamp = 0
 
         # Read packets from the PCAP file
-        sniff(offline=pcap, prn=handle_packet, store=False)
+        scapy.sniff(offline=pcap, prn=handle_packet, store=False)
 
 
         # -------------------- Simplification and flow compression ------------------- #

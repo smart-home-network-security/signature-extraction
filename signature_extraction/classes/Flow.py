@@ -3,14 +3,15 @@ from typing import List, Iterator
 from .Packet import Packet
 
 
-class FlowFingerprint:
+class Flow:
     """
-    Fingerprint of a network flow,
-    matching only the following attributes:
+    Summary of a network flow, containing the following attributes:
+        - Timestamp
         - Source & destination hosts
         - Transport protocol
-        - Fixed port (to be computed)
+        - Source & destination ports
         - Application protocol
+        - Length
     """
 
     def __init__(self, pkts: List[dict]) -> None:
@@ -25,11 +26,10 @@ class FlowFingerprint:
         self.src                  = pkt["src"]
         self.dst                  = pkt["dst"]
         self.transport_protocol   = pkt["transport_protocol"]
+        self.sport                = pkt["sport"]
+        self.dport                = pkt["dport"]
         self.application_protocol = pkt["application_protocol"]
-        
-        # Initialize ports (to be computed)
-        self.ports = {}
-        self.fixed_port = None
+        self.timestamp            = pkt["timestamp"]
 
         # Compute flow statistics
         self.count  = len(pkts)
@@ -38,7 +38,7 @@ class FlowFingerprint:
 
     
     @classmethod
-    def build_from_packet(cls, pkt: Packet) -> FlowFingerprint:
+    def build_from_packet(cls, pkt: Packet) -> Flow:
         """
         Build a flow fingerprint from a packet fingerprint.
 
@@ -50,7 +50,7 @@ class FlowFingerprint:
         return cls([dict(pkt)])
     
 
-    def __eq__(self, other: FlowFingerprint) -> bool:
+    def __eq__(self, other: Flow) -> bool:
         """
         Compare two FlowFingerprint objects.
 
@@ -60,7 +60,7 @@ class FlowFingerprint:
             bool: True if the flow fingerprints are equal, False otherwise.
         """
         # If other object is not a FlowFingerprint, return False
-        if not isinstance(other, FlowFingerprint):
+        if not isinstance(other, Flow):
             return False
         
         # If other object is a FlowFingerprint, compare attributes
@@ -68,12 +68,13 @@ class FlowFingerprint:
             self.src == other.src
             and self.dst == other.dst
             and self.transport_protocol == other.transport_protocol
-            and self.fixed_port == other.fixed_port
+            and self.sport == other.sport
+            and self.dport == other.dport
             and self.application_protocol == other.application_protocol
         )
     
 
-    def match_host(self, other: FlowFingerprint) -> bool:
+    def match_host(self, other: Flow) -> bool:
         """
         Match flow fingerprints based on source and destination hosts,
         regardless of the direction.
@@ -84,7 +85,7 @@ class FlowFingerprint:
             bool: True if the flow fingerprints match, False otherwise.
         """
         # If other object is not a FlowFingerprint, return False
-        if not isinstance(other, FlowFingerprint):
+        if not isinstance(other, Flow):
             return False
         
         return (
@@ -93,7 +94,7 @@ class FlowFingerprint:
         )
     
 
-    def match_basic(self, other: FlowFingerprint) -> bool:
+    def match_basic(self, other: Flow) -> bool:
         """
         Basic match between two flow fingerprints,
         i.e. match based on source, destination, and transport protocol,
@@ -105,7 +106,7 @@ class FlowFingerprint:
             bool: True if the flow fingerprints match, False otherwise.
         """
         # If other object is not a FlowFingerprint, return False
-        if not isinstance(other, FlowFingerprint):
+        if not isinstance(other, Flow):
             return False
         
         return self.transport_protocol == other.transport_protocol and self.match_host(other)
@@ -120,9 +121,9 @@ class FlowFingerprint:
             str: String representation of the base flow fingerprint attributes.
         """
         # Source: host & port
-        s = f"{self.src} ->"
+        s = f"{self.src}:{self.sport} ->"
         # Destination: host & port
-        s += f" {self.dst}"
+        s += f" {self.dst}:{self.dport}"
         # Transport protocol
         s += f" [{self.transport_protocol}]"
         # Application data
@@ -138,6 +139,8 @@ class FlowFingerprint:
         Returns:
             str: String representation of a FlowFingerprint object.
         """
+        # Timestamp
+        s = f"{self.timestamp}: "
         # Base attributes
         s += self.str_base()
         # Statistics
@@ -154,10 +157,11 @@ class FlowFingerprint:
         Returns:
             Iterable: Iterator over the packet fingerprint attributes.
         """
+        yield "timestamp", self.timestamp
         yield "src", self.src
         yield "dst", self.dst
         yield "transport_protocol", self.transport_protocol
-        yield "fixed_port", self.fixed_port
+        yield "sport", self.sport
+        yield "dport", self.dport
         yield "application_protocol", self.application_protocol
-        yield "count", self.count
         yield "length", self.length

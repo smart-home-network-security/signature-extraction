@@ -1,7 +1,7 @@
 from typing import List, Union
 import pandas as pd
 from .classes import FlowFingerprint, NetworkPattern
-from .pkt_fingerprint_extraction import pcap_to_pkts
+from .pkt_extraction import pcap_to_pkts
 from .flow_grouping import group_pkts_per_flow
 
 
@@ -32,10 +32,11 @@ def pcaps_to_event(pcap_files: Union[str, List[str]]) -> NetworkPattern:
 
     already_parsed_flow_indices = set()
     already_matched_ports = set()
-    result_pattern = NetworkPattern()
+    signature = NetworkPattern()
     patterns.sort(key=len)
     reference_pattern = patterns[0]
 
+    # Iterate over flows in the reference pattern
     for i, flow in enumerate(reference_pattern.get_flows()):
 
         # Flow already parsed, skip
@@ -46,11 +47,15 @@ def pcaps_to_event(pcap_files: Union[str, List[str]]) -> NetworkPattern:
 
         already_parsed_flow_indices.add(i)
 
+        # Iterate over NetworkPatterns (i.e., lists of FlowFingerprints),
+        # to find flows matching the one currently being processed
         for j, pattern in enumerate(patterns):
             matched_flow = pattern.match_flow_basic(flow)
             if j == 0:  # Reference record
-                index = matched_record.index[0]
-                already_parsed_flow_indices.add(index)
+                #index = matched_record.index[0]
+                #already_parsed_flow_indices.add(index)
+                pass
+            result_pattern.
             result = pd.concat([result, matched_record])
 
         for record in result.iterrows():
@@ -77,4 +82,4 @@ def pcaps_to_event(pcap_files: Union[str, List[str]]) -> NetworkPattern:
 
         result_flows.append(fingerprint)
 
-    return result_pattern
+    return signature

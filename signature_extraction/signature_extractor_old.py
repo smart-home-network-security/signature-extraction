@@ -7,6 +7,7 @@ import pandas as pd
 from datetime import datetime
 import yaml
 from ipaddress import IPv4Address
+import scapy.all as scapy
 from scapy.all import Packet, sniff
 # Custom
 from arg_types import file, directory
@@ -86,8 +87,8 @@ def extract_signature(network_records: list) -> list:
             matched_record = fingerprint.matchBasicSignature(record)
             if j == 0:  # Reference record
                 index = matched_record.index[0]
-                print(matched_record)
-                print(index)
+                # print(matched_record)
+                # print(index)
                 already_parsed_flows_indices.add(index)
             result = pd.concat([result, matched_record])
 
@@ -158,7 +159,7 @@ def write_profile(device_name: str, ipv4: IPv4Address, policies: dict, output: s
         yaml.dump(profile, f)
 
 
-def handle_packet(packet: Packet) -> None:
+def handle_packet(packet: scapy.Packet) -> None:
     """
     Callback function which handle one packet read from a PCAP file.
 
@@ -222,7 +223,7 @@ def extract_event_signature(pcap_files: list, device: Tuple[str, str], output_di
             timestamp = 0
 
         # Read packets from the PCAP file
-        sniff(offline=pcap, prn=handle_packet, store=False)
+        scapy.sniff(offline=pcap, prn=handle_packet, store=False)
 
 
         # -------------------- Simplification and flow compression ------------------- #

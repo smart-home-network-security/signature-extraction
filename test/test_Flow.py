@@ -1,6 +1,6 @@
 ## Imports
 # Package
-from signature_extraction.classes import FlowFingerprint
+from signature_extraction.classes import Flow
 
 
 ### VARIABLES ###
@@ -70,27 +70,27 @@ pkt_dict_f = {
 
 def test_constructor() -> None:
     """
-    Test the constructor of the class `FlowFingerprint`.
+    Test the constructor of the class `Flow`.
     """
     pkts = [pkt_dict_a, pkt_dict_b]
-    flow_fingerprint = FlowFingerprint(pkts)
+    flow = Flow(pkts)
 
-    assert flow_fingerprint.src == pkt_dict_a["src"]
-    assert flow_fingerprint.dst == pkt_dict_a["dst"]
-    assert flow_fingerprint.transport_protocol == pkt_dict_a["transport_protocol"]
-    assert flow_fingerprint.sport == pkt_dict_a["sport"]
-    assert flow_fingerprint.dport == pkt_dict_a["dport"]
-    assert flow_fingerprint.application_protocol == pkt_dict_a["application_protocol"]
-    assert flow_fingerprint.timestamp == pkt_dict_a["timestamp"]
-    assert flow_fingerprint.count == 2
-    assert flow_fingerprint.length == pkt_dict_a["length"] + pkt_dict_b["length"]
+    assert flow.src == pkt_dict_a["src"]
+    assert flow.dst == pkt_dict_a["dst"]
+    assert flow.transport_protocol == pkt_dict_a["transport_protocol"]
+    assert flow.sport == pkt_dict_a["sport"]
+    assert flow.dport == pkt_dict_a["dport"]
+    assert flow.application_protocol == pkt_dict_a["application_protocol"]
+    assert flow.timestamp == pkt_dict_a["timestamp"]
+    assert flow.count == 2
+    assert flow.length == pkt_dict_a["length"] + pkt_dict_b["length"]
 
 
 def test_build_from_packet() -> None:
     """
-    Test the class method `build_from_packet` of the class `FlowFingerprint`.
+    Test the class method `build_from_packet` of the class `Flow`.
     """
-    packet = FlowFingerprint.build_from_packet(pkt_dict_a)
+    packet = Flow.build_from_packet(pkt_dict_a)
 
     assert packet.src == pkt_dict_a["src"]
     assert packet.dst == pkt_dict_a["dst"]
@@ -105,11 +105,11 @@ def test_build_from_packet() -> None:
 
 def test_eq() -> None:
     """
-    Test the equality operator of the class `FlowFingerprint`.
+    Test the equality operator of the class `Flow`.
     """
-    flow_a = FlowFingerprint([pkt_dict_a])
-    flow_b = FlowFingerprint([pkt_dict_b])
-    flow_c = FlowFingerprint([pkt_dict_c])
+    flow_a = Flow([pkt_dict_a])
+    flow_b = Flow([pkt_dict_b])
+    flow_c = Flow([pkt_dict_c])
 
     assert flow_a == flow_a
     assert flow_a == flow_b
@@ -124,14 +124,14 @@ def test_eq() -> None:
 
 def test_match_host() -> None:
     """
-    Test the method `match_host` of the class `FlowFingerprint`.
+    Test the method `match_host` of the class `Flow`.
     """
-    flow_a = FlowFingerprint([pkt_dict_a])
-    flow_b = FlowFingerprint([pkt_dict_b])
-    flow_c = FlowFingerprint([pkt_dict_c])
-    flow_d = FlowFingerprint([pkt_dict_d])
-    flow_e = FlowFingerprint([pkt_dict_e])
-    flow_f = FlowFingerprint([pkt_dict_f])
+    flow_a = Flow([pkt_dict_a])
+    flow_b = Flow([pkt_dict_b])
+    flow_c = Flow([pkt_dict_c])
+    flow_d = Flow([pkt_dict_d])
+    flow_e = Flow([pkt_dict_e])
+    flow_f = Flow([pkt_dict_f])
 
     assert flow_a.match_host(flow_a)
     assert flow_a.match_host(flow_b)
@@ -166,14 +166,14 @@ def test_match_host() -> None:
 
 def test_match_basic() -> None:
     """
-    Test the method `match_basic` of the class `FlowFingerprint`.
+    Test the method `match_basic` of the class `Flow`.
     """
-    flow_a = FlowFingerprint([pkt_dict_a])
-    flow_b = FlowFingerprint([pkt_dict_b])
-    flow_c = FlowFingerprint([pkt_dict_c])
-    flow_d = FlowFingerprint([pkt_dict_d])
-    flow_e = FlowFingerprint([pkt_dict_e])
-    flow_f = FlowFingerprint([pkt_dict_f])
+    flow_a = Flow([pkt_dict_a])
+    flow_b = Flow([pkt_dict_b])
+    flow_c = Flow([pkt_dict_c])
+    flow_d = Flow([pkt_dict_d])
+    flow_e = Flow([pkt_dict_e])
+    flow_f = Flow([pkt_dict_f])
 
     assert flow_a.match_basic(flow_a)
     assert flow_a.match_basic(flow_b)

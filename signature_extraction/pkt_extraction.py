@@ -1,11 +1,11 @@
 ## Imports
 # Libraries
 from typing import List, Union
-from scapy.all import Packet, sniff
+import scapy.all as scapy
 import pandas as pd
 # Package
 from .utils.packet_utils import is_signalling_pkt
-from .classes import PacketFingerprint
+from .classes import Packet
 
 
 ### Variables
@@ -19,7 +19,7 @@ domain_names     = {}
 pkts = []  # Simpler representations of packets
 
 
-def handle_packet(packet: Packet) -> None:
+def handle_packet(packet: scapy.Packet) -> None:
     global i, timestamp, previous_time, domain_names, pkts
 
     ## Packet validation
@@ -42,14 +42,14 @@ def handle_packet(packet: Packet) -> None:
     
 
     ## Packet fingerprint extraction
-    pkt_fingerprint = PacketFingerprint.build_from_packet(packet)
-    pkts.append(pkt_fingerprint)
+    pkt = Packet.build_from_packet(packet)
+    pkts.append(pkt)
 
     # Update loop variables
     previous_time = packet.time
 
 
-def pcap_to_pkts(pcap_file: str) -> List[Packet]:
+def pcap_to_pkts(pcap_file: str) -> List[scapy.Packet]:
     """
     Convert a PCAP file to a list of packets.
 
@@ -59,11 +59,11 @@ def pcap_to_pkts(pcap_file: str) -> List[Packet]:
         List[Packet]: List of packet fingerprints.
     """
     global pkts
-    sniff(offline=pcap_file, prn=handle_packet, store=False)
+    scapy.sniff(offline=pcap_file, prn=handle_packet, store=False)
     return pkts
 
 
-def pkts_to_df(pkts: List[PacketFingerprint]) -> pd.DataFrame:
+def pkts_to_df(pkts: List[Packet]) -> pd.DataFrame:
     """
     Convert a list of packets to a DataFrame.
 
@@ -75,7 +75,7 @@ def pkts_to_df(pkts: List[PacketFingerprint]) -> pd.DataFrame:
     return pd.DataFrame([dict(pkt) for pkt in pkts])
 
 
-def save_pkts_to_csv(pkts: List[PacketFingerprint], output_file: str) -> None:
+def save_pkts_to_csv(pkts: List[Packet], output_file: str) -> None:
     """
     Save a list of packets to a CSV file.
 
