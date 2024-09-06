@@ -1,6 +1,6 @@
 ## Imports
 # Package
-from signature_extraction.classes import Flow
+from signature_extraction.network import Flow
 
 
 ### VARIABLES ###
@@ -10,7 +10,7 @@ pkt_dict_a = {
     "transport_protocol": "TCP",
     "sport": 80,
     "dport": 80,
-    "application_protocol": "HTTP",
+    "application_layer": "HTTP",
     "timestamp": 1234567890,
     "length": 100
 }
@@ -20,7 +20,7 @@ pkt_dict_b = {
     "transport_protocol": "TCP",
     "sport": 80,
     "dport": 80,
-    "application_protocol": "HTTP",
+    "application_layer": "HTTP",
     "timestamp": 1234567891,
     "length": 200
 }
@@ -30,7 +30,7 @@ pkt_dict_c = {
     "transport_protocol": "TCP",
     "sport": 81,
     "dport": 82,
-    "application_protocol": "HTTP",
+    "application_layer": "HTTP",
     "timestamp": 1234567892,
     "length": 300
 }
@@ -40,7 +40,7 @@ pkt_dict_d = {
     "transport_protocol": "TCP",
     "sport": 80,
     "dport": 80,
-    "application_protocol": "HTTP",
+    "application_layer": "HTTP",
     "timestamp": 1234567893,
     "length": 100
 }
@@ -50,7 +50,7 @@ pkt_dict_e = {
     "transport_protocol": "TCP",
     "sport": 80,
     "dport": 80,
-    "application_protocol": "HTTP",
+    "application_layer": "HTTP",
     "timestamp": 1234567894,
     "length": 100
 }
@@ -60,7 +60,7 @@ pkt_dict_f = {
     "transport_protocol": "UDP",
     "sport": 80,
     "dport": 80,
-    "application_protocol": "DNS",
+    "application_layer": "DNS",
     "timestamp": 1234567895,
     "length": 100
 }
@@ -80,7 +80,7 @@ def test_constructor() -> None:
     assert flow.transport_protocol == pkt_dict_a["transport_protocol"]
     assert flow.sport == pkt_dict_a["sport"]
     assert flow.dport == pkt_dict_a["dport"]
-    assert flow.application_protocol == pkt_dict_a["application_protocol"]
+    assert flow.application_layer == pkt_dict_a["application_layer"]
     assert flow.timestamp == pkt_dict_a["timestamp"]
     assert flow.count == 2
     assert flow.length == pkt_dict_a["length"] + pkt_dict_b["length"]
@@ -97,7 +97,7 @@ def test_build_from_packet() -> None:
     assert packet.transport_protocol == pkt_dict_a["transport_protocol"]
     assert packet.sport == pkt_dict_a["sport"]
     assert packet.dport == pkt_dict_a["dport"]
-    assert packet.application_protocol == pkt_dict_a["application_protocol"]
+    assert packet.application_layer == pkt_dict_a["application_layer"]
     assert packet.timestamp == pkt_dict_a["timestamp"]
     assert packet.count == 1
     assert packet.length == pkt_dict_a["length"]

@@ -25,7 +25,7 @@ class FlowFingerprint(BaseFlow):
         self.src                  = flow.src if flow else None
         self.dst                  = flow.dst if flow else None
         self.transport_protocol   = flow.transport_protocol if flow else None
-        self.application_protocol = flow.application_protocol if flow else None
+        self.application_layer = flow.application_layer if flow else None
  
         # Initialize ports (to be computed)
         self.ports = {}
@@ -80,7 +80,7 @@ class FlowFingerprint(BaseFlow):
         self.src = flow.src if not self.src else self.src
         self.dst = flow.dst if not self.dst else self.dst
         self.transport_protocol = flow.transport_protocol if not self.transport_protocol else self.transport_protocol
-        self.application_protocol = flow.application_protocol if not self.application_protocol else self.application_protocol
+        self.application_layer = flow.application_layer if not self.application_layer else self.application_layer
 
         # Add flow ports
         self.add_ports(flow)
@@ -130,8 +130,8 @@ class FlowFingerprint(BaseFlow):
         # Transport layer
         s += f" [{self.transport_protocol}"
         # Application layer
-        if self.application_protocol != self.transport_protocol:
-            s += f" / {self.application_protocol}"
+        if self.application_layer != self.transport_protocol:
+            s += f" / {self.application_layer}"
         s += "]"
 
         return s
@@ -164,7 +164,7 @@ class FlowFingerprint(BaseFlow):
         # Transport layer
         yield "transport_protocol", self.transport_protocol
         # Application layer
-        if self.application_protocol != self.transport_protocol:
-            yield "application_protocol", self.application_protocol
+        if self.application_layer != self.transport_protocol:
+            yield "application_layer", self.application_layer
         else:
-            yield "application_protocol", None
+            yield "application_layer", None

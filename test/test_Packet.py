@@ -2,7 +2,7 @@
 # Libraries
 from scapy.all import IP, TCP
 # Package
-from signature_extraction.classes import Packet
+from signature_extraction.network import Packet
 
 
 ### VARIABLES ###
@@ -12,7 +12,7 @@ pkt_dict_a = {
     "transport_protocol": "TCP",
     "sport": 80,
     "dport": 80,
-    "application_protocol": "HTTP",
+    "application_layer": "HTTP",
     "timestamp": 1234567890,
     "length": 100
 }
@@ -22,7 +22,7 @@ pkt_dict_b = {
     "transport_protocol": "TCP",
     "sport": 80,
     "dport": 80,
-    "application_protocol": "HTTP",
+    "application_layer": "HTTP",
     "timestamp": 1234567891,
     "length": 200
 }
@@ -32,7 +32,7 @@ pkt_dict_c = {
     "transport_protocol": "TCP",
     "sport": 81,
     "dport": 82,
-    "application_protocol": "HTTP",
+    "application_layer": "HTTP",
     "timestamp": 1234567892,
     "length": 300
 }
@@ -51,7 +51,7 @@ def test_constructor() -> None:
     assert pkt.transport_protocol == pkt_dict_a["transport_protocol"]
     assert pkt.sport == pkt_dict_a["sport"]
     assert pkt.dport == pkt_dict_a["dport"]
-    assert pkt.application_protocol == pkt_dict_a["application_protocol"]
+    assert pkt.application_layer == pkt_dict_a["application_layer"]
     assert pkt.timestamp == pkt_dict_a["timestamp"]
     assert pkt.length == pkt_dict_a["length"]
 

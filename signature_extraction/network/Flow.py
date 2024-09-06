@@ -29,7 +29,7 @@ class Flow(BaseFlow):
         self.transport_protocol   = pkt["transport_protocol"]
         self.sport                = pkt["sport"]
         self.dport                = pkt["dport"]
-        self.application_protocol = pkt["application_protocol"]
+        self.application_layer = pkt["application_layer"]
         self.timestamp            = pkt["timestamp"]
 
         # Compute flow statistics
@@ -71,7 +71,7 @@ class Flow(BaseFlow):
             and self.transport_protocol == other.transport_protocol
             and self.sport == other.sport
             and self.dport == other.dport
-            and self.application_protocol == other.application_protocol
+            and self.application_layer == other.application_layer
         )
     
 
@@ -90,7 +90,7 @@ class Flow(BaseFlow):
         # Transport protocol
         s += f" [{self.transport_protocol}]"
         # Application data
-        s += f" ({self.application_protocol})"
+        s += f" ({self.application_layer})"
 
         return s
 
@@ -126,5 +126,5 @@ class Flow(BaseFlow):
         yield "transport_protocol", self.transport_protocol
         yield "sport", self.sport
         yield "dport", self.dport
-        yield "application_protocol", self.application_protocol
+        yield "application_layer", self.application_layer
         yield "length", self.length

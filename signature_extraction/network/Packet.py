@@ -4,8 +4,9 @@ from __future__ import annotations
 from typing import Iterator
 import scapy.all as scapy
 from scapy.all import IP, IPv6, TCP, UDP
-# Custom
+# Package
 from signature_extraction.utils.packet_utils import get_last_layer
+from signature_extraction.application_layer import ApplicationLayer
 
 
 class Packet:
@@ -35,7 +36,7 @@ class Packet:
         self.transport_protocol   = pkt["transport_protocol"]
         self.sport                = pkt["sport"]
         self.dport                = pkt["dport"]
-        self.application_protocol = pkt["application_protocol"]
+        self.application_layer = pkt["application_layer"]
         self.timestamp            = pkt["timestamp"]
         self.length               = pkt["length"]
 
@@ -71,9 +72,7 @@ class Packet:
             pkt_dict["dport"] = pkt.dport
 
         # Application layer
-        pkt_dict["application_protocol"] = get_last_layer(pkt).name
-        # TODO: application-specific data
-        #pkt_dict["application_data"] = get_application_data(pkt)
+        pkt_dict["application_layer"] = ApplicationLayer.init_protocol(pkt)
 
         # Metadata
         pkt_dict["length"] = len(pkt)
@@ -103,7 +102,7 @@ class Packet:
             and self.transport_protocol == other.transport_protocol
             and self.sport == other.sport
             and self.dport == other.dport
-            and self.application_protocol == other.application_protocol
+            and self.application_layer == other.application_layer
         )
 
     
@@ -125,7 +124,7 @@ class Packet:
         # Transport protocol
         s += f" [{self.transport_protocol}]"
         # Application data
-        s += f" ({self.application_protocol})"
+        s += f" ({self.application_layer})"
         # Length
         s += f" {self.length} bytes"
 
@@ -143,7 +142,7 @@ class Packet:
         yield "transport_protocol", self.transport_protocol
         yield "sport", self.sport
         yield "dport", self.dport
-        yield "application_protocol", self.application_protocol
+        yield "application_layer", self.application_layer
         yield "length", self.length
 
     

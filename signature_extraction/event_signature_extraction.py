@@ -2,7 +2,7 @@
 # Libraries
 from typing import List, Union
 # Package
-from .classes import FlowFingerprint, NetworkPattern
+from .network import FlowFingerprint, NetworkPattern
 from .pkt_extraction import pcap_to_pkts
 from .flow_grouping import group_pkts_per_flow
 

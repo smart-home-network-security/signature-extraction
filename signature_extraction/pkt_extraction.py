@@ -5,7 +5,7 @@ import scapy.all as scapy
 import pandas as pd
 # Package
 from .utils.packet_utils import is_signalling_pkt, extract_domain_names
-from .classes import Packet
+from .network import Packet
 
 
 ### Variables

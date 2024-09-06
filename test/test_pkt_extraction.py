@@ -1,6 +1,6 @@
 ## Imports
 # Package
-from signature_extraction.classes import Packet
+from signature_extraction.network import Packet
 import signature_extraction.pkt_extraction as pkt_extraction
 
 

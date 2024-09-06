@@ -3,7 +3,7 @@
 from typing import List
 import pandas as pd
 # Package
-from .classes import Packet, Flow, NetworkPattern
+from .network import Packet, Flow, NetworkPattern
 from .pkt_extraction import pkts_to_df
 
 
