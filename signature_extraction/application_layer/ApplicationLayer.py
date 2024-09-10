@@ -3,6 +3,7 @@ from typing import Iterator
 import importlib
 from scapy.all import Packet
 
+
 class ApplicationLayer:
     """
     Application layer protocol.

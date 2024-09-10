@@ -1,7 +1,11 @@
+## Imports
+# Libraries
 from enum import IntEnum
 from scapy.all import Packet
 from scapy.layers.dns import DNS, dnstypes
+# Package
 from .ApplicationLayer import ApplicationLayer
+
 
 class DNS(ApplicationLayer):
     """

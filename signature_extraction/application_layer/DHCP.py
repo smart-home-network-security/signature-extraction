@@ -1,7 +1,11 @@
+## Imports
+# Libraries
 from scapy.all import Packet
 from scapy.layers.dhcp import BOOTP, DHCPTypes
+# Package
 from .ApplicationLayer import ApplicationLayer
 from signature_extraction.utils.packet_utils import get_last_layer
+
 
 class DHCP(ApplicationLayer):
     """
