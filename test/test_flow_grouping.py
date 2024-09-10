@@ -2,7 +2,6 @@
 # Libraries
 import os
 # Package
-from signature_extraction.network import Flow
 import signature_extraction.pkt_extraction as pkt_extraction
 import signature_extraction.flow_grouping as flow_grouping
 
@@ -16,7 +15,7 @@ def test_group_pkts_per_flow():
     pkts = pkt_extraction.pcap_to_pkts(pcap_file)
 
     # Execution
-    pattern = flow_grouping.group_pkts_per_flow(pkts)
+    flow_grouping.group_pkts_per_flow(pkts)
 
     # Validation
     pass

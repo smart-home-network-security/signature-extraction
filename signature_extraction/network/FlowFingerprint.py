@@ -15,22 +15,23 @@ class FlowFingerprint(BaseFlow):
         - Application protocol
     """
 
-    def __init__(self, flow: Flow = None) -> None:
+    def __init__(self, flow_dict: dict = {}) -> None:
         """
-        Flow fingerprint constructor.
+        FlowFingerprint constructor.
 
         Args:
-            flow (Flow): Flow object to initialize with.
+            flow_dict (dict): dictionary containing the flow fingerprint attributes.
         """
-        self.src                  = flow.src if flow else None
-        self.dst                  = flow.dst if flow else None
-        self.transport_protocol   = flow.transport_protocol if flow else None
-        self.application_layer = flow.application_layer if flow else None
+        self.src                = flow_dict["src"]
+        self.dst                = flow_dict["dst"]
+        self.transport_protocol = flow_dict["transport_protocol"]
+        self.application_layer  = flow_dict.get("application_layer", None)
+        if not self.application_layer:
+            self.application_layer = None
  
         # Initialize ports (to be computed)
         self.ports = {}
-        if flow:
-            self.add_ports(flow)
+        self.add_ports(flow_dict)
         self.fixed_port = None
 
 
@@ -47,7 +48,7 @@ class FlowFingerprint(BaseFlow):
         return cls(dict(flow))
 
 
-    def add_ports(self, flow: Flow) -> None:
+    def add_ports(self, flow_dict: dict = {}) -> None:
         """
         Add ports from a Flow object.
 
@@ -55,16 +56,18 @@ class FlowFingerprint(BaseFlow):
             flow (Flow): Flow object to add ports from.
         """
         # Source port
-        if flow.sport not in self.ports:
-            self.ports[flow.sport] = {"number": 1, "host": flow.src}
+        sport = flow_dict["sport"]
+        if sport not in self.ports:
+            self.ports[sport] = {"number": 1, "host": flow_dict["src"]}
         else:
-            self.ports[flow.sport]["number"] += 1
+            self.ports[sport]["number"] += 1
         
         # Destination port
-        if flow.dport not in self.ports:
-            self.ports[flow.dport] = {"number": 1, "host": flow.dst}
+        dport = flow_dict["dport"]
+        if dport not in self.ports:
+            self.ports[dport] = {"number": 1, "host": flow_dict["dst"]}
         else:
-            self.ports[flow.dport]["number"] += 1
+            self.ports[dport]["number"] += 1
 
         return self.ports
     
@@ -83,7 +86,7 @@ class FlowFingerprint(BaseFlow):
         self.application_layer = flow.application_layer if not self.application_layer else self.application_layer
 
         # Add flow ports
-        self.add_ports(flow)
+        self.add_ports(dict(flow))
 
     
     def get_fixed_port(self) -> Tuple[int, str]:
@@ -130,7 +133,7 @@ class FlowFingerprint(BaseFlow):
         # Transport layer
         s += f" [{self.transport_protocol}"
         # Application layer
-        if self.application_layer != self.transport_protocol:
+        if self.application_layer is not None and self.application_layer != self.transport_protocol:
             s += f" / {self.application_layer}"
         s += "]"
 

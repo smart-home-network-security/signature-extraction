@@ -24,13 +24,13 @@ class Flow(BaseFlow):
         """
         # Get the first packet to intiialize the flow fingerprint
         pkt = pkts[0]
-        self.src                  = pkt["src"]
-        self.dst                  = pkt["dst"]
-        self.transport_protocol   = pkt["transport_protocol"]
-        self.sport                = pkt["sport"]
-        self.dport                = pkt["dport"]
-        self.application_layer = pkt["application_layer"]
-        self.timestamp            = pkt["timestamp"]
+        self.src                = pkt["src"]
+        self.dst                = pkt["dst"]
+        self.transport_protocol = pkt["transport_protocol"]
+        self.sport              = pkt["sport"]
+        self.dport              = pkt["dport"]
+        self.application_layer  = pkt["application_layer"]
+        self.timestamp          = pkt["timestamp"]
 
         # Compute flow statistics
         self.count  = len(pkts)
@@ -83,14 +83,19 @@ class Flow(BaseFlow):
         Returns:
             str: String representation of the base flow fingerprint attributes.
         """
+        ## Hosts
         # Source: host & port
         s = f"{self.src}:{self.sport} ->"
         # Destination: host & port
         s += f" {self.dst}:{self.dport}"
-        # Transport protocol
-        s += f" [{self.transport_protocol}]"
-        # Application data
-        s += f" ({self.application_layer})"
+        
+        ## Protocol(s)
+        # Transport layer
+        s += f" [{self.transport_protocol}"
+        # Application layer
+        if self.application_layer is not None and self.application_layer != self.transport_protocol:
+            s += f" / {self.application_layer}"
+        s += "]"
 
         return s
 

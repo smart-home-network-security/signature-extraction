@@ -46,7 +46,7 @@ def pcaps_to_signature_pattern(pcap_files: Union[str, List[str]]) -> NetworkPatt
 
 
         ## Parse flow
-        result_flow = FlowFingerprint(flow)
+        result_flow = FlowFingerprint.build_from_flow(flow)
         already_parsed_flow_indices.add(i)
 
         # Iterate over NetworkPatterns (i.e., lists of FlowFingerprints),

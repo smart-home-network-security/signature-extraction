@@ -1,6 +1,8 @@
+from __future__ import annotations
 from typing import List
 import pandas as pd
 from .BaseFlow import BaseFlow
+from .FlowFingerprint import FlowFingerprint
 
 
 class NetworkPattern:
@@ -16,6 +18,20 @@ class NetworkPattern:
             flows (List[FlowFingerprint]): List of flow fingerprints.
         """
         self.flows = flows if flows else []
+
+    
+    @classmethod
+    def load_from_csv(cls, csv_file: str) -> NetworkPattern:
+        """
+        Instantiate a NetworkPattern object from a CSV file.
+
+        Args:
+            csv_file (str): CSV file containing the network pattern.
+        Returns:
+            NetworkPattern: Network pattern.
+        """
+        df = pd.read_csv(csv_file, na_filter=False)
+        return cls([FlowFingerprint(row) for _, row in df.iterrows()])
     
 
     def __repr__(self) -> str:

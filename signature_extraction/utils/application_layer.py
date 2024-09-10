@@ -1,3 +1,0 @@
-"""
-Application layer protocol parsing.
-"""

@@ -2,6 +2,8 @@ from __future__ import annotations
 from typing import Iterator
 import importlib
 from scapy.all import Packet
+from scapy.layers import http, dns, dhcp
+from scapy.contrib.coap import CoAP
 
 
 class ApplicationLayer:
@@ -18,17 +20,19 @@ class ApplicationLayer:
             pkt (Packet): packet to extract the application layer protocol from.
         Returns:
             str: application layer protocol name.
+        Raises:
+            ValueError: unknown application layer protocol.
         """
-        if pkt.haslayer("HTTPRequest"):
+        if pkt.haslayer(http.HTTP):
             return "HTTP"
-        elif pkt.haslayer("DNS"):
+        elif pkt.haslayer(dns.DNS):
             return "DNS"
-        elif pkt.haslayer("DHCP"):
+        elif pkt.haslayer(dhcp.DHCP):
             return "DHCP"
-        elif pkt.haslayer("CoAP"):
+        elif pkt.haslayer(CoAP):
             return "CoAP"
         else:
-            return "Unknown"
+            raise ValueError("Unknown application layer protocol.")
     
     
     @classmethod

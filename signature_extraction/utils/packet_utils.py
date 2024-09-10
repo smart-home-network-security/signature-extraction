@@ -54,7 +54,7 @@ def is_known_port(port: int, protocol: str = "tcp") -> bool:
     try:
         getservbyport(port, protocol)
         return True
-    except OSError:
+    except:
         return False
 
 
@@ -87,6 +87,7 @@ def is_signalling_pkt(pkt: Packet) -> bool:
 
     # TODO: other signalling packets, e.g. TLS (except the packet containing the SNI)
 
+    # TODO: clean that (use dict of layers to skip)
     if (
         pkt.haslayer("ICMPv6 Neighbor Discovery Option - Source Link-Layer Address")
         or pkt.haslayer("ICMPv6 Neighbor Discovery - Router Solicitation")

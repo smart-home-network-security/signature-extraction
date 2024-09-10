@@ -36,7 +36,7 @@ class Packet:
         self.transport_protocol   = pkt["transport_protocol"]
         self.sport                = pkt["sport"]
         self.dport                = pkt["dport"]
-        self.application_layer = pkt["application_layer"]
+        self.application_layer    = pkt["application_layer"]
         self.timestamp            = pkt["timestamp"]
         self.length               = pkt["length"]
 
@@ -72,7 +72,10 @@ class Packet:
             pkt_dict["dport"] = pkt.dport
 
         # Application layer
-        pkt_dict["application_layer"] = ApplicationLayer.init_protocol(pkt)
+        try:
+            pkt_dict["application_layer"] = ApplicationLayer.init_protocol(pkt)
+        except ValueError:
+            pkt_dict["application_layer"] = None
 
         # Metadata
         pkt_dict["length"] = len(pkt)

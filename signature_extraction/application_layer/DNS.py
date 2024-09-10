@@ -29,4 +29,4 @@ class DNS(ApplicationLayer):
         application_layer = pkt.getlayer("DNS")
         self.qr = DNS.DNSQR(application_layer.qr) if application_layer.qr else DNS.DNSQR.QUERY
         self.qtype = dnstypes.get(application_layer.qd.qtype, "Unknown")
-        self.qname = application_layer.qd.qname.decode()
+        self.qname = application_layer.qd.qname.decode()[:-1]
