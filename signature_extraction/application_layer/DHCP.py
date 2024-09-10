@@ -1,16 +1,43 @@
 from scapy.all import Packet
-from scapy.layers.dhcp import DHCP, DHCPTypes
+from scapy.layers.dhcp import BOOTP, DHCPTypes
 from .ApplicationLayer import ApplicationLayer
+from signature_extraction.utils.packet_utils import get_last_layer
 
 class DHCP(ApplicationLayer):
     """
     DHCP Application Layer Protocol.
     """
     protocol_name = "DHCP"
- 
+    dhcp_types = {
+        "discover": 1,
+        "offer":    2,
+        "request":  3,
+        "decline":  4,
+        "ack":      5,
+        "nak":      6,
+        "release":  7,
+        "inform":   8
+    }
+
+
     def __init__(self, pkt: Packet) -> None:
         """
         Constructor of the DHCP class.
         """
-        application_layer = pkt.getlayer("DHCP")
-        print(application_layer)
+        # Client MAC address
+        bootp_layer = pkt.getlayer(BOOTP)
+        self.client_mac = bootp_layer.chaddr.decode()
+        # DHCP message type
+        dhcp_options_layer = get_last_layer(pkt)
+        self.message_type = dhcp_options_layer.options[0][1]
+
+    
+    def __repr__(self) -> str:
+        """
+        String representation of the HTTP class.
+
+        Returns:
+            str: String representation of the HTTP class.
+        """
+        message_type = DHCPTypes[self.message_type] if self.message_type else "Unknown"
+        return f"DHCP - Client hardware address: {self.client_mac}, Type: {message_type.upper()}"

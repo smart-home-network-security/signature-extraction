@@ -1,5 +1,6 @@
+from enum import IntEnum
 from scapy.all import Packet
-from scapy.layers.dns import DNS, DNSQR, DNSRR, dnstypes, dnsqtypes
+from scapy.layers.dns import DNS, dnstypes
 from .ApplicationLayer import ApplicationLayer
 
 class DNS(ApplicationLayer):
@@ -7,10 +8,28 @@ class DNS(ApplicationLayer):
     DNS Application Layer Protocol.
     """
     protocol_name = "DNS"
+
+
+    class DNSQR(IntEnum):
+        """
+        DNS QR flag.
+        """
+        QUERY    = 0
+        RESPONSE = 1
+
  
     def __init__(self, pkt: Packet) -> None:
         """
         Constructor of the DNS class.
         """
         application_layer = pkt.getlayer("DNS")
-        print(application_layer)
+        self.qr = DNS.DNSQR(application_layer.qr) if application_layer.qr else DNS.DNSQR.QUERY
+        self.qtype = dnstypes.get(application_layer.qd.qtype, "Unknown")
+        self.qname = application_layer.qd.qname.decode()
+
+
+    def __repr__(self) -> str:
+        """
+        String representation of the DNS class.
+        """
+        return f"DNS - QR: {self.qr.name}, Type: {self.qtype}, Domain: \"{self.qname}\""

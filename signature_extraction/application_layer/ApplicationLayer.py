@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Iterator
 import importlib
 from scapy.all import Packet
 
@@ -44,3 +45,14 @@ class ApplicationLayer:
         protocol_module = importlib.import_module(f"{package}.{protocol_name}")
         cls = getattr(protocol_module, protocol_name)
         return cls(pkt)
+
+
+    def __iter__(self) -> Iterator:
+        """
+        Iterate over the class attributes.
+
+        Returns:
+            Iterator: iterator over the class attributes
+        """
+        for attr, value in self.__dict__.items():
+            yield attr, value
