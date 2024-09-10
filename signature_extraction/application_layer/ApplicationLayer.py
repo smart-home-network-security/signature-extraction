@@ -56,3 +56,13 @@ class ApplicationLayer:
         """
         for attr, value in self.__dict__.items():
             yield attr, value
+
+    
+    def __repr__(self) -> str:
+        """
+        String representation of the ApplicationLayer class.
+
+        Returns:
+            str: string representation of the ApplicationLayer class.
+        """
+        return f"{self.protocol_name} - {', '.join([f'{attr}: {value}' for attr, value in self])}"

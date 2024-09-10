@@ -30,14 +30,3 @@ class DHCP(ApplicationLayer):
         # DHCP message type
         dhcp_options_layer = get_last_layer(pkt)
         self.message_type = dhcp_options_layer.options[0][1]
-
-    
-    def __repr__(self) -> str:
-        """
-        String representation of the HTTP class.
-
-        Returns:
-            str: String representation of the HTTP class.
-        """
-        message_type = DHCPTypes[self.message_type] if self.message_type else "Unknown"
-        return f"DHCP - Client hardware address: {self.client_mac}, Type: {message_type.upper()}"

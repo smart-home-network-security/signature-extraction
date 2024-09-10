@@ -26,10 +26,3 @@ class DNS(ApplicationLayer):
         self.qr = DNS.DNSQR(application_layer.qr) if application_layer.qr else DNS.DNSQR.QUERY
         self.qtype = dnstypes.get(application_layer.qd.qtype, "Unknown")
         self.qname = application_layer.qd.qname.decode()
-
-
-    def __repr__(self) -> str:
-        """
-        String representation of the DNS class.
-        """
-        return f"DNS - QR: {self.qr.name}, Type: {self.qtype}, Domain: \"{self.qname}\""
