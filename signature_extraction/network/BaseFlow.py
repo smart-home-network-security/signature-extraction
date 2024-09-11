@@ -11,11 +11,12 @@ class BaseFlow:
     def __init__(self) -> None:
         """
         Abstract flow constructor.
-        Initialize all attributes to None.
+        Initialize attributes.
         """
         self.src                  = None
         self.dst                  = None
         self.transport_protocol   = None
+        self.bidirectional        = True
 
     
     def match_host(self, other: BaseFlow) -> bool:

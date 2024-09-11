@@ -1,5 +1,9 @@
+## Imports
+# Libraries
 from __future__ import annotations
 from typing import Tuple, Iterator
+from ipaddress import IPv4Address
+# Package
 from .BaseFlow import BaseFlow
 from .Flow import Flow
 from signature_extraction.utils.packet_utils import is_known_port
@@ -171,3 +175,38 @@ class FlowFingerprint(BaseFlow):
             yield "application_layer", self.application_layer
         else:
             yield "application_layer", None
+
+
+    def extract_policy(self, ipv4: IPv4Address) -> dict:
+        """
+        Extract a profile-compliant policy from this FlowFingerprint.
+        
+        Args:
+            ipv4 (IPv4Address): IP address of the device.
+        Returns:
+            dict: Policy extracted from the FlowFingerprint.
+        """
+        # Hosts
+        src_ip = "self" if self.src == str(ipv4) else self.src
+        dst_ip = "self" if self.dst == str(ipv4) else self.dst
+        policy = {
+            "protocols": {
+                "ipv4": {"src": src_ip, "dst": dst_ip}
+            }
+        }
+
+        # Protocols
+        protocol = self.transport_protocol.lower()
+        port_number, port_host = self.get_fixed_port()
+        if port_host == self.src:
+            policy["protocols"][protocol] = {"src-port": port_number}
+        elif port_host == self.dst:
+            policy["protocols"][protocol] = {"dst-port": port_number}
+
+        # Application layer protocol
+        app_protocol = self.application_layer.get_protocol_name().lower()
+        policy["protocols"][app_protocol] = dict(self.application_layer)
+        
+        policy["bidirectional"] = self.bidirectional
+
+        return policy

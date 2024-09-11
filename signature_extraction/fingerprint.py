@@ -126,7 +126,7 @@ class Fingerprint:
 
 
     def get_fixed_port(self) -> Tuple[int, str]:
-        # Sort port numbers by number of occurences
+        # Sort port numbers by number of occurrences
         ports_sorted = sorted(self.ports.items(), key=lambda item: item[1]["number"], reverse=True)
 
         # If one of the port numbers is well-known, return it

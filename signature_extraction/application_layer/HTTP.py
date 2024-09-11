@@ -1,7 +1,7 @@
 ## Imports
 # Libraries
 from scapy.all import Packet
-from scapy.layers.http import HTTP, HTTPRequest
+from scapy.layers.http import HTTP, HTTPResponse
 # Package
 from .ApplicationLayer import ApplicationLayer
 from signature_extraction.utils.packet_utils import get_last_layer
@@ -14,11 +14,11 @@ class HTTP(ApplicationLayer):
     protocol_name = "HTTP"
 
     @staticmethod
-    def is_http_request(pkt: Packet) -> bool:
+    def is_response(pkt: Packet) -> bool:
         """
         Check if the HTTP packet is a request.
         """
-        return isinstance(get_last_layer(pkt), HTTPRequest)
+        return isinstance(get_last_layer(pkt), HTTPResponse)
 
 
     def __init__(self, pkt: Packet) -> None:
@@ -29,6 +29,6 @@ class HTTP(ApplicationLayer):
             pkt (Packet): HTTP packet.
         """
         application_layer = pkt.getlayer("HTTP")
-        self.is_request = HTTP.is_http_request(pkt)
-        self.method = application_layer.Method.decode() if self.is_request else None
-        self.path = application_layer.Path.decode() if self.is_request else None
+        self.response = HTTP.is_response(pkt)
+        self.method = application_layer.Method.decode() if not self.response else None
+        self.path = application_layer.Path.decode() if not self.response else None

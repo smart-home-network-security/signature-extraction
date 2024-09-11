@@ -50,6 +50,16 @@ class ApplicationLayer:
         protocol_module = importlib.import_module(f"{package}.{protocol_name}")
         cls = getattr(protocol_module, protocol_name)
         return cls(pkt)
+    
+
+    def get_protocol_name(self) -> str:
+        """
+        Retrieve this ApplicationLayer object's protocol name.
+
+        Return:
+            str: protocol name
+        """
+        return self.protocol_name
 
 
     def __iter__(self) -> Iterator:
