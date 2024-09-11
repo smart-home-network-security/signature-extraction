@@ -173,8 +173,6 @@ cython_debug/
 *.csv#
 
 # Outputs
-demo/*
-!demo/*.pcap
 *.nft
 *.c
 CMakeLists.txt
