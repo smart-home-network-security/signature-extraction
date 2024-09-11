@@ -50,7 +50,7 @@ class CoAP(ApplicationLayer):
         self.code = coap_codes[coap_layer.code]
 
         # URI path
-        self.uri_path = ""
+        self.uri_path = None
         for key, value in coap_layer.options:
             if CoAP.is_uri_path(key):
-                self.uri_path += f"/{value}"
+                self.uri_path = self.uri_path + f"/{value}" if self.uri_path is not None else f"/{value}"

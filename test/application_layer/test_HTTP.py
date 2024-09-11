@@ -57,51 +57,48 @@ def test_http_get() -> None:
     """
     Test the constructor with an HTTP GET request.
     """
-    http = HTTP(pkt_http_get)
-    assert http.protocol_name == "HTTP"
+    http_pkt = HTTP(pkt_http_get)
+    assert http_pkt.protocol_name == "HTTP"
     assert not HTTP.is_response(pkt_http_get)
-    assert not http.response
-    assert http.method == "GET"
-    assert http.path == "/test/stuff"
+    assert not http_pkt.response
+    assert http_pkt.method == "GET"
+    assert http_pkt.path == "/test/stuff"
 
-    http = dict(http)
-    assert isinstance(http, dict)
-    assert not http["response"]
-    assert http["method"] == "GET"
-    assert http["path"] == "/test/stuff"
+    http_dict = dict(http_pkt)
+    assert not http_dict["response"]
+    assert http_dict["method"] == "GET"
+    assert http_dict["path"] == "/test/stuff"
 
 
 def test_http_post() -> None:
     """
     Test the constructor with an HTTP POST request.
     """
-    http = HTTP(pkt_http_post)
-    assert http.protocol_name == "HTTP"
+    http_pkt = HTTP(pkt_http_post)
+    assert http_pkt.protocol_name == "HTTP"
     assert not HTTP.is_response(pkt_http_post)
-    assert not http.response
-    assert http.method == "POST"
-    assert http.path == "/test/stuff"
+    assert not http_pkt.response
+    assert http_pkt.method == "POST"
+    assert http_pkt.path == "/test/stuff"
 
-    http = dict(http)
-    assert isinstance(http, dict)
-    assert not http["response"]
-    assert http["method"] == "POST"
-    assert http["path"] == "/test/stuff"
+    http_dict = dict(http_pkt)
+    assert not http_dict["response"]
+    assert http_dict["method"] == "POST"
+    assert http_dict["path"] == "/test/stuff"
 
 
 def test_http_resp() -> None:
     """
     Test the constructor with an HTTP response.
     """
-    http = HTTP(pkt_http_resp)
-    assert http.protocol_name == "HTTP"
+    http_pkt = HTTP(pkt_http_resp)
+    assert http_pkt.protocol_name == "HTTP"
     assert HTTP.is_response(pkt_http_resp)
-    assert http.response
-    assert http.method is None
-    assert http.path is None
+    assert http_pkt.response
+    assert http_pkt.method is None
+    assert http_pkt.path is None
 
-    http = dict(http)
-    assert isinstance(http, dict)
-    assert http["response"]
-    assert http["method"] is None
-    assert http["path"] is None
+    http_dict = dict(http_pkt)
+    assert http_dict["response"]
+    assert http_dict["method"] is None
+    assert http_dict["path"] is None
