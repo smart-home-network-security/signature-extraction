@@ -5,7 +5,6 @@ from typing import Iterator
 import scapy.all as scapy
 from scapy.all import IP, IPv6, TCP, UDP
 # Package
-from signature_extraction.utils.packet_utils import get_last_layer
 from signature_extraction.application_layer import ApplicationLayer
 
 
@@ -42,7 +41,7 @@ class Packet:
 
 
     @classmethod
-    def build_from_packet(cls, pkt: scapy.Packet) -> Packet:
+    def build_from_pkt(cls, pkt: scapy.Packet) -> Packet:
         """
         Build a PacketFingerprint object from a scapy packet.
 

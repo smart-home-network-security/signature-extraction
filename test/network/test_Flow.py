@@ -88,9 +88,9 @@ def test_constructor() -> None:
 
 def test_build_from_packet() -> None:
     """
-    Test the class method `build_from_packet` of the class `Flow`.
+    Test the class method `build_from_pkt` of the class `Flow`.
     """
-    packet = Flow.build_from_packet(pkt_dict_a)
+    packet = Flow.build_from_pkt(pkt_dict_a)
 
     assert packet.src == pkt_dict_a["src"]
     assert packet.dst == pkt_dict_a["dst"]

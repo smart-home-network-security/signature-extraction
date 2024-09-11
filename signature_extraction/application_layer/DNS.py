@@ -1,7 +1,6 @@
 ## Imports
 # Libraries
 from typing import Iterator
-from enum import IntEnum
 from scapy.all import Packet
 from scapy.layers.dns import dnstypes
 # Package

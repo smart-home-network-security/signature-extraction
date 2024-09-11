@@ -50,7 +50,7 @@ def handle_packet(packet: scapy.Packet) -> None:
     extract_domain_names(packet, domain_names)
 
     ## Packet fingerprint extraction
-    pkt = Packet.build_from_packet(packet)
+    pkt = Packet.build_from_pkt(packet)
     pkt.set_domain_names(domain_names)
     pkts.append(pkt)
 

@@ -2,11 +2,14 @@
 # Libraries
 from __future__ import annotations
 from typing import Tuple, Iterator
+import os
 from ipaddress import IPv4Address
 # Package
+from .Packet import Packet
 from .BaseFlow import BaseFlow
 from .Flow import Flow
 from signature_extraction.utils.packet_utils import is_known_port
+from profile_translator_blocklist import translate_policy
 
 
 class FlowFingerprint(BaseFlow):
@@ -26,6 +29,10 @@ class FlowFingerprint(BaseFlow):
         Args:
             flow_dict (dict): dictionary containing the flow fingerprint attributes.
         """
+        # Initialize with super-class constructor
+        super().__init__()
+
+        # Set attributes
         self.src                = flow_dict["src"]
         self.dst                = flow_dict["dst"]
         self.transport_protocol = flow_dict["transport_protocol"]
@@ -40,6 +47,19 @@ class FlowFingerprint(BaseFlow):
 
 
     @classmethod
+    def build_from_pkt(cls, pkt: Packet) -> FlowFingerprint:
+        """
+        Build a FlowFingerprint object from a Packet object.
+
+        Args:
+            pkt (Packet): Packet object to build from.
+        Returns:
+            FlowFingerprint: Flow fingerprint.
+        """
+        return cls(dict(pkt))
+    
+
+    @classmethod
     def build_from_flow(cls, flow: Flow) -> FlowFingerprint:
         """
         Build a FlowFingerprint object from a Flow object.
@@ -50,6 +70,26 @@ class FlowFingerprint(BaseFlow):
             FlowFingerprint: Flow fingerprint.
         """
         return cls(dict(flow))
+    
+
+    def get_fixed_port(self) -> Tuple[int, str]:
+        """
+        Compute the fixed port of the flow fingerprint.
+
+        Returns:
+            Tuple[int, str]: Fixed port number and corresponding host.
+        """
+        ports_sorted = sorted(self.ports.items(), key=lambda item: item[1]["number"], reverse=True)
+
+        # If one of the port numbers is well-known, return it
+        for port, data in ports_sorted:
+            if is_known_port(port, self.transport_protocol):
+                self.fixed_port = (port, data["host"])
+                return self.fixed_port
+
+        # Else, return the most used port
+        self.fixed_port = (ports_sorted[0][0], ports_sorted[0][1]["host"])
+        return self.fixed_port
 
 
     def add_ports(self, flow_dict: dict = {}) -> None:
@@ -91,26 +131,6 @@ class FlowFingerprint(BaseFlow):
 
         # Add flow ports
         self.add_ports(dict(flow))
-
-    
-    def get_fixed_port(self) -> Tuple[int, str]:
-        """
-        Compute the fixed port of the flow fingerprint.
-
-        Returns:
-            Tuple[int, str]: Fixed port number and corresponding host.
-        """
-        ports_sorted = sorted(self.ports.items(), key=lambda item: item[1]["number"], reverse=True)
-
-        # If one of the port numbers is well-known, return it
-        for port, data in ports_sorted:
-            if is_known_port(port, self.transport_protocol):
-                self.fixed_port = (port, data["host"])
-                return self.fixed_port
-
-        # Else, return the most used port
-        self.fixed_port = (ports_sorted[0][0], ports_sorted[0][1]["host"])
-        return self.fixed_port
 
 
     def __repr__(self) -> str:
@@ -210,3 +230,27 @@ class FlowFingerprint(BaseFlow):
         policy["bidirectional"] = self.bidirectional
 
         return policy
+
+
+    def translate_to_firewall(self, device_name: str, ipv4: IPv4Address, output_dir: str = os.getcwd()) -> None:
+        """
+        Translate the FlowFingerprint to a firewall rule.
+
+        Args:
+            device_name (str): Name of the device.
+            ipv4 (IPv4Address): IP address of the device.
+            output_dir (str): Output directory. Optional, defaults to the current working directory.
+        """
+        # Validate output directory
+        if not os.path.isdir(output_dir):
+            print(f"Output directory {output_dir} does not exist. Using current directory.")
+            output_dir = os.getcwd()
+        
+        # Device metadata
+        device = {
+            "name": device_name,
+            "ipv4": str(ipv4)
+        }
+
+        policy = self.extract_policy(ipv4)
+        translate_policy(device, policy, output_dir=output_dir)

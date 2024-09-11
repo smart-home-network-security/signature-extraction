@@ -22,7 +22,10 @@ class Flow(BaseFlow):
         Args:
             pkt (dict): dictionary containing the flow fingerprint attributes.
         """
-        # Get the first packet to intiialize the flow fingerprint
+        # Initialize with super-class constructor
+        super().__init__()
+
+        # Get the first packet to initialize the flow fingerprint
         pkt = pkts[0]
         self.src                = pkt["src"]
         self.dst                = pkt["dst"]
@@ -39,7 +42,7 @@ class Flow(BaseFlow):
 
     
     @classmethod
-    def build_from_packet(cls, pkt: Packet) -> Flow:
+    def build_from_pkt(cls, pkt: Packet) -> Flow:
         """
         Build a flow fingerprint from a packet fingerprint.
 

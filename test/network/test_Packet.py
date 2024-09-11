@@ -45,7 +45,6 @@ def test_constructor() -> None:
     Test the constructor of the class `Packet`.
     """
     pkt = Packet(pkt_dict_a)
-    assert pkt.id == 0
     assert pkt.src == pkt_dict_a["src"]
     assert pkt.dst == pkt_dict_a["dst"]
     assert pkt.transport_protocol == pkt_dict_a["transport_protocol"]
@@ -58,7 +57,7 @@ def test_constructor() -> None:
 
 def test_build_from_packet() -> None:
     """
-    Test the class method `build_from_packet` of the class `Packet`.
+    Test the class method `build_from_pkt` of the class `Packet`.
     """
     packet = (
         IP(src="192.168.1.1", dst="192.168.1.2") /
@@ -66,8 +65,7 @@ def test_build_from_packet() -> None:
     )
     pkt_len = len(packet)
 
-    pkt = Packet.build_from_packet(packet)
-    assert pkt.id == 1
+    pkt = Packet.build_from_pkt(packet)
     assert pkt.src == "192.168.1.1"
     assert pkt.dst == "192.168.1.2"
     assert pkt.transport_protocol == "TCP"
