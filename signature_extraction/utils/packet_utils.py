@@ -34,6 +34,16 @@ application_protocols = {
     }
 }
 
+# Packet layers to skip
+skip_layers = [
+    "ICMPv6 Neighbor Discovery Option - Source Link-Layer Address",
+    "ICMPv6 Neighbor Discovery - Router Solicitation",
+    "ICMPv6 Neighbor Discovery - Interval Advertisement",
+    "MLD - Multicast Listener Query",
+    "IP Option Router Alert",
+    "MLD - Multicast Listener Report"
+]
+
 
 ### FUNCTIONS ###
 
@@ -87,18 +97,8 @@ def is_signalling_pkt(pkt: Packet) -> bool:
 
     # TODO: other signalling packets, e.g. TLS (except the packet containing the SNI)
 
-    # TODO: clean that (use dict of layers to skip)
-    if (
-        pkt.haslayer("ICMPv6 Neighbor Discovery Option - Source Link-Layer Address")
-        or pkt.haslayer("ICMPv6 Neighbor Discovery - Router Solicitation")
-        or pkt.haslayer("ICMPv6 Neighbor Discovery - Interval Advertisement")
-        or pkt.haslayer("MLD - Multicast Listener Query")
-        or pkt.haslayer("IP Option Router Alert")
-        or pkt.haslayer("MLD - Multicast Listener Report")
-    ):
-        return True
-
-    return False
+    # Check if packet has any of the skip layers
+    return any(pkt.haslayer(layer) for layer in skip_layers)
 
 
 def get_last_layer(packet: Packet) -> Packet:
