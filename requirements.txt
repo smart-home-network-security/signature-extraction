@@ -1,3 +1,5 @@
-PyYAML
+# Libraries
 scapy
 pandas
+# Custom
+profile-translator-blocklist

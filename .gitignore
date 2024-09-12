@@ -1,5 +1,9 @@
-# Test script
+# Test scripts
 test.sh
+test.py
+
+# VSCode
+.vscode/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -168,8 +172,7 @@ cython_debug/
 *.csv
 *.csv#
 
-# Demo related outputs
-demo/*
-!demo/*.pcap
-output.yaml
-patterns.txt
+# Outputs
+*.nft
+*.c
+CMakeLists.txt
