@@ -1,4 +1,5 @@
 from scapy.all import Packet, ARP, IP, IPv6, TCP, Padding
+from scapy.layers.inet6 import IPv6, ICMPv6ND_RS, ICMPv6MLQuery, ICMPv6MLReport, ICMPv6ND_INDAdv, ICMPv6NDOptSrcLLAddr
 from scapy.layers.tls.all import TLS, TLS_Ext_ServerName
 from scapy.layers.dns import DNS
 from socket import getservbyport
@@ -6,15 +7,9 @@ from socket import getservbyport
 
 ### GLOBAL VARIABLES ###
 
+## KNOWN PORTS ##
 # Well-known ports, outside the range 0-1023
-known_ports = {
-    "tcp": [
-        9999  # TP-Link Smart Home protocol port
-    ],
-    "udp": []
-}
-
-# Application layer ports
+# Typical application layer ports
 application_protocols = {
     "tcp": {
         20:   "ftp",
@@ -33,15 +28,30 @@ application_protocols = {
         5683: "coap"
     }
 }
+# Well-known ports, outside the range 0-1023
+known_ports = {
+    "tcp": [
+        9999  # TP-Link Smart Home protocol port
+    ],
+    "udp": []
+}
 
+## PACKETS TO SKIP ##
+skip_tcp_flags = [
+    "S",  # SYN
+    "F",  # FIN
+    "R"   # RST
+]
 # Packet layers to skip
 skip_layers = [
-    "ICMPv6 Neighbor Discovery Option - Source Link-Layer Address",
-    "ICMPv6 Neighbor Discovery - Router Solicitation",
-    "ICMPv6 Neighbor Discovery - Interval Advertisement",
-    "MLD - Multicast Listener Query",
+    Padding,
+    ARP,
+    ICMPv6ND_RS,
+    ICMPv6MLQuery,
+    ICMPv6MLReport,
+    ICMPv6ND_INDAdv,
+    ICMPv6NDOptSrcLLAddr,
     "IP Option Router Alert",
-    "MLD - Multicast Listener Report"
 ]
 
 
@@ -75,29 +85,15 @@ def is_signalling_pkt(pkt: Packet) -> bool:
     :param pkt: packet to check
     :return: True if packet is a signalling packet, False otherwise
     """
-
-    # ARP packet
-    if pkt.haslayer(ARP):
-        return True
-
-    # Padding packet
-    if pkt.haslayer(Padding):
-        return True
-
     # TCP packet
     if pkt.haslayer(TCP):
-        signal_flags = [
-            "S",  # SYN
-            "F",  # FIN
-            "R"   # RST
-        ]
         flags = pkt.getlayer(TCP).flags
-        return any(flag in flags for flag in signal_flags)
+        return any(flag in flags for flag in skip_tcp_flags)
         # TODO: remove ACK packets only if raw TCP
 
     # TODO: other signalling packets, e.g. TLS (except the packet containing the SNI)
 
-    # Check if packet has any of the skip layers
+    # Any of the layers to skip
     return any(pkt.haslayer(layer) for layer in skip_layers)
 
 
@@ -119,32 +115,6 @@ def get_last_layer(packet: Packet) -> Packet:
         return packet.getlayer(i - 2)
 
     return packet.getlayer(i - 1)
-
-
-def get_TCP_application_layer(packet: Packet) -> str:
-    """
-    Get the application layer of a TCP packet by matching port numbers.
-
-    :param packet: TCP packet
-    :return: application layer
-    """
-    if packet.haslayer(TCP):
-        sport = packet.getlayer(TCP).sport  # source port
-        dport = packet.getlayer(TCP).dport  # destination port
-
-        sd = ""  # source port description
-        try:
-            sd = getservbyport(sport)  # get service by port number
-        except:
-            pass
-        fd = ""  # destination port description
-        try:
-            fd = getservbyport(dport)  # get service by port number
-        except:
-            pass
-
-        return f"{sd}{fd}"  # return source and destination port descriptions
-    return ""
 
 
 def extract_domain_names(packet: Packet, domain_names: dict) -> None:
