@@ -1,4 +1,4 @@
-from scapy.all import Packet, ARP, IP, IPv6, TCP, Padding
+from scapy.all import Packet, ARP, IP, IPv6, TCP, Padding, Raw
 from scapy.layers.inet6 import IPv6, ICMPv6ND_RS, ICMPv6MLQuery, ICMPv6MLReport, ICMPv6ND_INDAdv, ICMPv6NDOptSrcLLAddr
 from scapy.layers.tls.all import TLS, TLS_Ext_ServerName
 from scapy.layers.dns import DNS
@@ -110,8 +110,8 @@ def get_last_layer(packet: Packet) -> Packet:
         i += 1
         layer = packet.getlayer(i)
 
-    # if layer is raw, return the previous layer
-    if packet.getlayer(i - 1).name == "Raw":
+    # If layer is Raw or Padding, return the previous layer
+    if isinstance(packet.getlayer(i - 1), (Raw, Padding)):
         return packet.getlayer(i - 2)
 
     return packet.getlayer(i - 1)
