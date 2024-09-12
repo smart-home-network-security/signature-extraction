@@ -84,41 +84,25 @@ class NetworkPattern:
         self.flows.append(flow)
 
     
-    def find_flow(self, flow: BaseFlow) -> BaseFlow:
+    def find_matching_flow(self, flow: BaseFlow) -> BaseFlow:
         """
-        Find a flow fingerprint in the list.
+        Find a flow in the list which matches the basic attributes,
+        i.e. the hosts and transport protocol,
+        of the given flow.
 
         Args:
-            flow (FlowFingerprint): BaseFlow fingerprint to find.
+            flow (BaseFlow): flow to search for.
         Returns:
-            FlowFingerprint: Found flow fingerprint, or None if not found.
+            BaseFlow: found matching flow
         Raises:
-            ValueError: If no matching flow is found in the pattern.
+            ValueError: If no matching flow has been found in the pattern.
         """
+        # TODO: check implem of `index` function
         i = self.flows.index(flow)
         if i != -1:
             return self.flows[i]
         else:
             raise ValueError("No matching flow found in the pattern")
-
-
-    def match_flow_basic(self, flow: BaseFlow) -> BaseFlow:
-        """
-        Find a flow fingerprint in the list which matches the basic attributes,
-        i.e. the hosts and transport protocol,
-        of the given flow fingerprint.
-
-        Args:
-            flow (FlowFingerprint): BaseFlow to find.
-        Returns:
-            FlowFingerprint: Found BaseFlow, or None if not found.
-        Raises:
-            ValueError: If no matching flow is found in the pattern.
-        """
-        for f in self.flows:
-            if f == flow:
-                return f
-        raise ValueError("No matching flow found in the pattern")
     
 
     def to_df(self) -> pd.DataFrame:

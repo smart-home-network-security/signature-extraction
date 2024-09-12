@@ -52,7 +52,7 @@ def pcaps_to_signature_pattern(pcap_files: Union[str, List[str]]) -> NetworkPatt
         # Iterate over NetworkPatterns (i.e., lists of FlowFingerprints),
         # to find flows matching the one currently being processed
         for pattern in patterns:
-            matched_flow = pattern.match_flow_basic(flow)
+            matched_flow = pattern.find_matching_flow(flow)
             result_flow.add_flow(matched_flow)
 
         # Remove port if already matched
