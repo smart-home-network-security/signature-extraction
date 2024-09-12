@@ -85,13 +85,31 @@ def is_signalling_pkt(pkt: Packet) -> bool:
     :param pkt: packet to check
     :return: True if packet is a signalling packet, False otherwise
     """
+    # TLS packet
+    if pkt.haslayer(TLS):
+        try:
+            extensions = pkt[TLS].ext
+        except AttributeError:
+            # Other TLS packets are signalling packets
+            return True
+        else:
+            if extensions is None:
+                return True
+            for extension in extensions:
+                if isinstance(extension, TLS_Ext_ServerName):
+                    # TLS Client Hello with Server Name extension, not a signalling packet
+                    return False
+
     # TCP packet
     if pkt.haslayer(TCP):
         flags = pkt.getlayer(TCP).flags
-        return any(flag in flags for flag in skip_tcp_flags)
-        # TODO: remove ACK packets only if raw TCP
+        if "A" in flags:
+            # Remove ACK packets only if raw TCP
+            if isinstance(pkt.lastlayer(), TCP):
+                return True
 
-    # TODO: other signalling packets, e.g. TLS (except the packet containing the SNI)
+        # Skip TCP packets with SYN, FIN, or RST flags
+        return any(flag in flags for flag in skip_tcp_flags)
 
     # Any of the layers to skip
     return any(pkt.haslayer(layer) for layer in skip_layers)
@@ -125,26 +143,26 @@ def extract_domain_names(packet: Packet, domain_names: dict) -> None:
         packet (Packet): Packet read from the PCAP file.
         domain_names (dict): Dictionary containing domain names and their associated IP addresses.
     """
+    # Only consider packets with TLS Server Name extension or DNS
     if packet.haslayer(TLS_Ext_ServerName) or packet.haslayer(DNS):
 
         # Extract domain names from TLS packets
-        if (
-            packet.haslayer(TLS_Ext_ServerName)
-            and len(packet[TLS][TLS_Ext_ServerName].servernames) > 0
-        ):
+        if packet.haslayer(TLS_Ext_ServerName):
+            servernames = packet.getlayer(TLS_Ext_ServerName).servernames
+            if len(servernames) <= 0:
+                return
+            
             ip = None
             if packet.haslayer(IPv6):
                 ip = packet["IPv6"].dst
             elif packet.haslayer(IP):
                 ip = packet["IP"].dst
 
-            packet = packet.getlayer(TLS_Ext_ServerName)
-
-            domain_name = packet.servernames[0].servername.decode("utf-8")
-            if domain_name not in domain_names:
-                domain_names[domain_name] = []
-            if ip not in domain_names[domain_name]:
-                domain_names[domain_name].append(ip)
+            for domain_name in servernames:
+                if domain_name not in domain_names:
+                    domain_names[domain_name] = []
+                if ip not in domain_names[domain_name]:
+                    domain_names[domain_name].append(ip)
 
         # Extract domain names from DNS packets
         if packet.haslayer(DNS):

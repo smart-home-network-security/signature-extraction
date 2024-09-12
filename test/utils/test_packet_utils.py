@@ -1,8 +1,9 @@
 ## Imports
 # Libraries
-from scapy.all import Ether, ARP, IP, TCP, UDP, Padding
+from scapy.all import Ether, ARP, IP, TCP, UDP, Padding, Raw
 from scapy.layers.http import HTTP, HTTPRequest, HTTPResponse
 from scapy.layers.dns import DNS, DNSQR, DNSRR
+from scapy.layers.tls.all import TLS, TLSClientHello, TLSServerHello, TLS_Ext_ServerName
 from scapy.layers.inet6 import IPv6, ICMPv6ND_RS, ICMPv6MLQuery, ICMPv6MLReport, ICMPv6ND_INDAdv, ICMPv6NDOptSrcLLAddr
 # Package
 import signature_extraction.utils.packet_utils as packet_utils
@@ -24,6 +25,8 @@ arp_reply = (
 ## Transport layer
 # TCP
 tcp = Ether() / IP() / TCP(flags="")
+tcp_ack_raw = Ether() / IP() / TCP(flags="A")
+tcp_ack_with_data = Ether() / IP() / TCP(flags="A") / Raw()
 # UDP
 udp = Ether() / IP() / UDP()
 udp_padding = Ether() / IP() / UDP() / Padding()
@@ -41,10 +44,21 @@ nd_ind_adv = Ether() / IPv6() / ICMPv6ND_INDAdv()
 nd_opt_src_ll_addr = Ether() / IPv6() / ICMPv6NDOptSrcLLAddr()
 
 ## Application layer
+# TLS (raw)
+tls_raw = Ether() / IP() / TCP(flags="") / TLS()
+# TLS Client Hello with Server Name extension
+tls_server_name = (
+    IP(dst="93.184.216.34") / TCP(flags="S") / TLS() /
+    TLSClientHello(version=0x0303,
+        ciphers=[0x0033, 0x0039, 0x002f],  # Sample cipher suites
+        ext=[TLS_Ext_ServerName(servernames=["www.example.com"])])
+)
+# TLS Server Hello
+tls_server_hello = IP() / TCP(flags="") / TLS() / TLSServerHello()
 # HTTP GET request
 http_get = (
     IP(dst="www.example.com") /
-    TCP(dport=80) /
+    TCP(dport=80, flags="") /
     HTTP() /
     HTTPRequest(
         Method=b"GET",
@@ -57,7 +71,7 @@ http_get = (
 # HTTP response
 http_resp = (
     IP(src="www.example.com") /
-    TCP(sport=80) /
+    TCP(sport=80, flags="") /
     HTTP() /
     HTTPResponse(
         Http_Version=b"HTTP/1.1",
@@ -132,12 +146,13 @@ def test_is_signalling_pkt() -> None:
     assert packet_utils.is_signalling_pkt(tcp_fin)
     tcp_rst = Ether() / IP() / TCP(flags="R")
     assert packet_utils.is_signalling_pkt(tcp_rst)
+    assert packet_utils.is_signalling_pkt(tcp_ack_raw)
+    assert not packet_utils.is_signalling_pkt(tcp_ack_with_data)
 
     ## ARP
     # ARP request
     assert packet_utils.is_signalling_pkt(arp_request)
     # ARP reply
-    
     assert packet_utils.is_signalling_pkt(arp_reply)
 
     ## Padding
@@ -156,6 +171,10 @@ def test_is_signalling_pkt() -> None:
     # Neighbor Discovery - Source Link-Layer Address
     assert packet_utils.is_signalling_pkt(nd_opt_src_ll_addr)
 
+    # TLS
+    assert packet_utils.is_signalling_pkt(tls_raw)
+    assert packet_utils.is_signalling_pkt(tls_server_hello)
+
 
     ### Non-signalling packets ###
 
@@ -163,6 +182,14 @@ def test_is_signalling_pkt() -> None:
     assert not packet_utils.is_signalling_pkt(tcp)
     # Regular UDP packet
     assert not packet_utils.is_signalling_pkt(udp)
+    # TLS Client Hello with Server Name extension
+    assert not packet_utils.is_signalling_pkt(tls_server_name)
+    # HTTP
+    assert not packet_utils.is_signalling_pkt(http_get)
+    assert not packet_utils.is_signalling_pkt(http_resp)
+    # DNS
+    assert not packet_utils.is_signalling_pkt(dns_query)
+    assert not packet_utils.is_signalling_pkt(dns_response)
 
 
 def test_get_last_layer() -> None:
@@ -171,6 +198,8 @@ def test_get_last_layer() -> None:
     """
     assert isinstance(packet_utils.get_last_layer(arp_request), ARP)
     assert isinstance(packet_utils.get_last_layer(tcp), TCP)
+    assert isinstance(packet_utils.get_last_layer(tcp_ack_raw), TCP)
+    assert isinstance(packet_utils.get_last_layer(tcp_ack_with_data), TCP)
     assert isinstance(packet_utils.get_last_layer(udp), UDP)
     assert isinstance(packet_utils.get_last_layer(udp_padding), UDP)
     assert isinstance(packet_utils.get_last_layer(nd_rs), ICMPv6ND_RS)
@@ -178,6 +207,9 @@ def test_get_last_layer() -> None:
     assert isinstance(packet_utils.get_last_layer(ml_report), ICMPv6MLReport)
     assert isinstance(packet_utils.get_last_layer(nd_ind_adv), ICMPv6ND_INDAdv)
     assert isinstance(packet_utils.get_last_layer(nd_opt_src_ll_addr), ICMPv6NDOptSrcLLAddr)
+    assert isinstance(packet_utils.get_last_layer(tls_raw), TLS)
+    assert isinstance(packet_utils.get_last_layer(tls_server_name), TLS_Ext_ServerName)
+    assert isinstance(packet_utils.get_last_layer(tls_server_hello), TLSServerHello)
     assert isinstance(packet_utils.get_last_layer(http_get), HTTPRequest)
     assert isinstance(packet_utils.get_last_layer(http_resp), HTTPResponse)
     assert isinstance(packet_utils.get_last_layer(dns_query), DNSQR)
@@ -189,10 +221,13 @@ def test_extract_domain_names() -> None:
     """
     Test the function `extract_domain_names`.
     """
-    # Initialize domain names dictionary
+    # TLS Client Hello with Server Name extension
     domain_names = {}
+    packet_utils.extract_domain_names(tls_server_name, domain_names)
+    assert "93.184.216.34" in domain_names["www.example.com"]
 
-    ### Execution ###
+    ## DNS
+    domain_names = {}
     # DNS query
     packet_utils.extract_domain_names(dns_query, domain_names)
     assert domain_names["www.example.com"] == []
