@@ -97,7 +97,6 @@ class NetworkPattern:
         Raises:
             ValueError: If no matching flow has been found in the pattern.
         """
-        # TODO: check implem of `index` function
         i = self.flows.index(flow)
         if i != -1:
             return self.flows[i]
