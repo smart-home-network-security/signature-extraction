@@ -73,7 +73,7 @@ class ApplicationLayer:
             yield attr, value
 
     
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         """
         String representation of the ApplicationLayer class.
 
@@ -81,3 +81,13 @@ class ApplicationLayer:
             str: string representation of the ApplicationLayer class.
         """
         return f"{self.protocol_name} - {', '.join([f'{attr}: {value}' for attr, value in self])}"
+
+
+    def __repr__(self) -> str:
+        """
+        String representation of the ApplicationLayer class.
+
+        Returns:
+            str: string representation of the ApplicationLayer class.
+        """
+        return f"{self.protocol_name}_{'_'.join([f'{attr}-{value}' for attr, value in self])}"

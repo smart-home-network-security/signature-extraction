@@ -196,6 +196,24 @@ class FlowFingerprint(BaseFlow):
         else:
             yield "application_layer", None
 
+    
+    def get_id(self) -> str:
+        """
+        Generate an identifier for this FlowFingerprint.
+
+        Returns:
+            str: Identifier for this FlowFingerprint.
+        """
+        if self.application_layer is not None:
+            return repr(self.application_layer)
+        else:
+            port_number, port_host = self.get_fixed_port()
+            if port_host == self.src:
+                host = "src"
+            elif port_host == self.dst:
+                host = "dst"
+            return f"{self.transport_protocol}_{host}_{port_number}"
+
 
     def extract_policy(self, ipv4: IPv4Address) -> dict:
         """
