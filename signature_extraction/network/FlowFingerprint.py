@@ -242,8 +242,9 @@ class FlowFingerprint(BaseFlow):
             policy["protocols"][protocol] = {"dst-port": port_number}
 
         # Application layer protocol
-        app_protocol = self.application_layer.get_protocol_name().lower()
-        policy["protocols"][app_protocol] = dict(self.application_layer)
+        if self.application_layer is not None:
+            app_protocol = self.application_layer.get_protocol_name().lower()
+            policy["protocols"][app_protocol] = dict(self.application_layer)
         
         policy["bidirectional"] = self.bidirectional
 
