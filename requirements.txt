@@ -1,5 +1,5 @@
 # Libraries
-scapy
+scapy==2.6.0rc2
 pandas
 # Custom
 profile-translator-blocklist
