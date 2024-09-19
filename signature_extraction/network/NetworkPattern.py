@@ -44,6 +44,16 @@ class NetworkPattern:
         return ", ".join([f"<{flow}>" for flow in self.flows])
     
 
+    def __str__(self) -> str:
+        """
+        "Printable" string representation of an NetworkPattern object.
+
+        Returns:
+            str: String representation of an NetworkPattern object.
+        """
+        return "\n".join([f"<{flow}>" for flow in self.flows])
+    
+
     def __len__(self) -> int:
         """
         Get the number of flow fingerprints in the list.

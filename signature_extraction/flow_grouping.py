@@ -50,30 +50,6 @@ def group_pkts_per_flow(pkts: List[Packet]) -> NetworkPattern:
     return NetworkPattern(flows)
 
 
-def pattern_to_df(pattern: NetworkPattern) -> pd.DataFrame:
-    """
-    Convert a NetworkPattern object to a DataFrame.
-
-    Args:
-        pattern (NetworkPattern): pattern composed of the list of Flows
-    Returns:
-        pd.DataFrame: DataFrame representing the NetworkPattern object.
-    """
-    return pd.DataFrame([dict(flow) for flow in pattern.get_flows()])
-
-
-def pattern_to_csv(pattern: NetworkPattern, output_file: str) -> None:
-    """
-    Save a list of flow fingerprints to a CSV file.
-
-    Args:
-        pattern (NetworkPattern): pattern composed of the list of Flows
-        output_file (str): Output file.
-    """
-    df = pattern_to_df(pattern)
-    df.to_csv(output_file, index=False)
-
-
 def pkts_csv_to_pattern_csv(pkts_file: str, pattern_file: str) -> None:
     """
     Read a CSV file containing packet fingerprints,
@@ -90,4 +66,4 @@ def pkts_csv_to_pattern_csv(pkts_file: str, pattern_file: str) -> None:
     # Convert packet fingerprints to flow fingerprints
     pattern = group_pkts_per_flow(pkts)
     # Save flow fingerprints to CSV
-    pattern_to_csv(pattern, pattern_file)
+    pattern.to_csv(pattern_file)

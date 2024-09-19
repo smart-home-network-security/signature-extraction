@@ -7,30 +7,15 @@ from .pkt_extraction import pcap_to_pkts
 from .flow_grouping import group_pkts_per_flow
 
 
-def pcaps_to_signature_pattern(pcap_files: Union[str, List[str]]) -> NetworkPattern:
+def patterns_to_signature(patterns: List[NetworkPattern]) -> NetworkPattern:
     """
-    Extract an event signature from a list of network traces.
+    Extract an event signature from a list of NetworkPatterns.
 
     Args:
-        pcap_files (Union[str, List[str]]): Path to the PCAP file(s).
+        patterns (List[NetworkPattern]): List of NetworkPatterns.
     Returns:
         NetworkPattern: Event signature extracted from the flows.
     """
-    # Convert input PCAP file(s) to list if necessary
-    if isinstance(pcap_files, str):
-        pcap_files = [pcap_files]
-
-    # Extract flows from PCAP files
-    patterns = []
-    for pcap in pcap_files:
-
-        pkts = pcap_to_pkts(pcap)
-        pattern = group_pkts_per_flow(pkts)
-        patterns.append(pattern)
-
-
-    ### Extract event signature from the flows
-
     already_parsed_flow_indices = set()
     already_matched_ports = set()
     signature = NetworkPattern()
@@ -68,8 +53,39 @@ def pcaps_to_signature_pattern(pcap_files: Union[str, List[str]]) -> NetworkPatt
     return signature
 
 
-def pcaps_to_signature_csv(pcap_files: Union[str, List[str]], output_file: str) -> None:
+def pcaps_to_signature_pattern(pcap_files: Union[str, List[str]]) -> NetworkPattern:
+    """
+    Extract an event signature from a list of network traces.
 
+    Args:
+        pcap_files (Union[str, List[str]]): Path to the PCAP file(s).
+    Returns:
+        NetworkPattern: Event signature extracted from the flows.
+    """
+    # Convert input PCAP file(s) to list if necessary
+    if isinstance(pcap_files, str):
+        pcap_files = [pcap_files]
+
+    # Extract flows from PCAP files
+    patterns = []
+    for pcap in pcap_files:
+        pkts = pcap_to_pkts(pcap)
+        pattern = group_pkts_per_flow(pkts)
+        patterns.append(pattern)
+
+    # Extract event signature from the flows
+    return patterns_to_signature(patterns)
+
+
+def pcaps_to_signature_csv(pcap_files: Union[str, List[str]], output_file: str) -> None:
+    """
+    Extract an event signature from a list of network traces,
+    and save it to a CSV file.
+
+    Args:
+        pcap_files (Union[str, List[str]]): Path to the PCAP file(s).
+        output_file (str): Output CSV file.
+    """
     # Extract event signature from the flows
     signature = pcaps_to_signature_pattern(pcap_files)
 

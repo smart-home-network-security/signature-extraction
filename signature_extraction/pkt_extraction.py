@@ -59,7 +59,7 @@ def handle_packet(packet: scapy.Packet) -> None:
     i += 1
 
 
-def pcap_to_pkts(pcap_file: str) -> List[scapy.Packet]:
+def pcap_to_pkts(pcap_file: str) -> List[Packet]:
     """
     Convert a PCAP file to a list of packets.
 
@@ -71,6 +71,18 @@ def pcap_to_pkts(pcap_file: str) -> List[scapy.Packet]:
     global pkts
     scapy.sniff(offline=pcap_file, prn=handle_packet, store=False)
     return pkts
+
+
+def df_to_pkts(df: pd.DataFrame) -> List[Packet]:
+    """
+    Convert a DataFrame to a list of packets.
+
+    Args:
+        df (pd.DataFrame): DataFrame of packet fingerprints.
+    Returns:
+        List[Packet]: List of packet fingerprints.
+    """
+    return [Packet(row) for _, row in df.iterrows()]
 
 
 def pkts_to_df(pkts: List[Packet]) -> pd.DataFrame:
@@ -85,7 +97,20 @@ def pkts_to_df(pkts: List[Packet]) -> pd.DataFrame:
     return pd.DataFrame([dict(pkt) for pkt in pkts])
 
 
-def save_pkts_to_csv(pkts: List[Packet], output_file: str) -> None:
+def pcap_to_df(pcap_file: str) -> pd.DataFrame:
+    """
+    Convert a PCAP file to a DataFrame.
+
+    Args:
+        pcap_file (str): PCAP file.
+    Returns:
+        pd.DataFrame: DataFrame of packet fingerprints.
+    """
+    pkts = pcap_to_pkts(pcap_file)
+    return pkts_to_df(pkts)
+
+
+def pkts_to_csv(pkts: List[Packet], output_file: str) -> None:
     """
     Save a list of packets to a CSV file.
 
@@ -107,4 +132,4 @@ def pcap_to_csv(pcap_file: str, output_file: str) -> None:
         output_file (str): Output file.
     """
     pkts = pcap_to_pkts(pcap_file)
-    save_pkts_to_csv(pkts, output_file)
+    pkts_to_csv(pkts, output_file)
