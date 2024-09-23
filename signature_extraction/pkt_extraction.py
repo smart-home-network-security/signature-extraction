@@ -19,6 +19,18 @@ domain_names  = {}
 pkts          = []
 
 
+def reset_vars() -> None:
+    """
+    Reset global variables.
+    """
+    global i, timestamp, previous_time, domain_names, pkts
+    i = 0
+    timestamp     = 0
+    previous_time = 0
+    domain_names  = {}
+    pkts          = []
+
+
 def handle_packet(packet: scapy.Packet) -> None:
     """
     Callback function which handles one packet read from a PCAP file.
@@ -70,7 +82,9 @@ def pcap_to_pkts(pcap_file: str) -> List[Packet]:
     """
     global pkts
     scapy.sniff(offline=pcap_file, prn=handle_packet, store=False)
-    return pkts
+    packets = pkts
+    reset_vars()
+    return packets
 
 
 def df_to_pkts(df: pd.DataFrame) -> List[Packet]:

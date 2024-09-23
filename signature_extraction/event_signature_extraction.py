@@ -39,7 +39,7 @@ def patterns_to_signature(patterns: List[NetworkPattern]) -> NetworkPattern:
         for j, pattern in enumerate(patterns_sorted):
             index, matched_flow = pattern.find_matching_flow(flow)
             if j == 0:  # Reference record
-                already_parsed_flow_indices.append(index)
+                already_parsed_flow_indices.add(index)
             result_flow.add_flow(matched_flow)
 
         # Remove port if already matched
