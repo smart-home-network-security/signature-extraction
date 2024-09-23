@@ -121,7 +121,7 @@ class Packet:
         """
         # If other object is not a Packet, raise an error
         if not isinstance(other, Packet):
-            raise ValueError("Cannot compare Packet with non-Packet object.")
+            return NotImplemented
         
         # If other object is a Packet, compare timestamps
         return self.timestamp < other.timestamp
@@ -140,7 +140,7 @@ class Packet:
         """
         # If other object is not a Packet, raise an error
         if not isinstance(other, Packet):
-            raise ValueError("Cannot compare Packet with non-Packet object.")
+            return NotImplemented
         
         # If other object is a Packet, compare timestamps
         return self.timestamp > other.timestamp
