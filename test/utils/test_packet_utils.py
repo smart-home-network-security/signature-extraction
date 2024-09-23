@@ -149,63 +149,63 @@ def test_is_known_port() -> None:
     assert packet_utils.is_known_port(65536, "tcp") == False
 
 
-def test_is_signalling_pkt() -> None:
+def test_should_skip_pkt() -> None:
     """
-    Test the function `is_signalling_pkt`.
+    Test the function `should_skip_pkt`.
     """
     ### Signalling packets ###
 
     ## TCP
     tcp_syn = Ether() / IP() / TCP(flags="S")
-    assert packet_utils.is_signalling_pkt(tcp_syn)
+    assert packet_utils.should_skip_pkt(tcp_syn)
     tcp_fin = Ether() / IP() / TCP(flags="F")
-    assert packet_utils.is_signalling_pkt(tcp_fin)
+    assert packet_utils.should_skip_pkt(tcp_fin)
     tcp_rst = Ether() / IP() / TCP(flags="R")
-    assert packet_utils.is_signalling_pkt(tcp_rst)
-    assert packet_utils.is_signalling_pkt(tcp_ack_raw)
-    assert not packet_utils.is_signalling_pkt(tcp_ack_with_data)
+    assert packet_utils.should_skip_pkt(tcp_rst)
+    assert packet_utils.should_skip_pkt(tcp_ack_raw)
+    assert not packet_utils.should_skip_pkt(tcp_ack_with_data)
 
     ## ARP
     # ARP request
-    assert packet_utils.is_signalling_pkt(arp_request)
+    assert packet_utils.should_skip_pkt(arp_request)
     # ARP reply
-    assert packet_utils.is_signalling_pkt(arp_reply)
+    assert packet_utils.should_skip_pkt(arp_reply)
 
     ## Padding
     padding = Padding()
-    assert packet_utils.is_signalling_pkt(padding)
+    assert packet_utils.should_skip_pkt(padding)
 
     ## ICMPv6
     # Neighbor Discovery - Router Solicitation
-    assert packet_utils.is_signalling_pkt(nd_rs)
+    assert packet_utils.should_skip_pkt(nd_rs)
     # Multicast Listener Query
-    assert packet_utils.is_signalling_pkt(ml_query)
+    assert packet_utils.should_skip_pkt(ml_query)
     # Multicast Listener Report
-    assert packet_utils.is_signalling_pkt(ml_report)
+    assert packet_utils.should_skip_pkt(ml_report)
     # Neighbor Discovery - Interval Advertisement
-    assert packet_utils.is_signalling_pkt(nd_ind_adv)
+    assert packet_utils.should_skip_pkt(nd_ind_adv)
     # Neighbor Discovery - Source Link-Layer Address
-    assert packet_utils.is_signalling_pkt(nd_opt_src_ll_addr)
+    assert packet_utils.should_skip_pkt(nd_opt_src_ll_addr)
 
     # TLS
-    assert packet_utils.is_signalling_pkt(tls_raw)
-    assert packet_utils.is_signalling_pkt(tls_server_hello)
+    assert packet_utils.should_skip_pkt(tls_raw)
+    assert packet_utils.should_skip_pkt(tls_server_hello)
 
 
     ### Non-signalling packets ###
 
     # Regular TCP packet
-    assert not packet_utils.is_signalling_pkt(tcp)
+    assert not packet_utils.should_skip_pkt(tcp)
     # Regular UDP packet
-    assert not packet_utils.is_signalling_pkt(udp)
+    assert not packet_utils.should_skip_pkt(udp)
     # TLS Client Hello with Server Name extension
-    assert not packet_utils.is_signalling_pkt(tls_server_name)
+    assert not packet_utils.should_skip_pkt(tls_server_name)
     # HTTP
-    assert not packet_utils.is_signalling_pkt(http_get)
-    assert not packet_utils.is_signalling_pkt(http_resp)
+    assert not packet_utils.should_skip_pkt(http_get)
+    assert not packet_utils.should_skip_pkt(http_resp)
     # DNS
-    assert not packet_utils.is_signalling_pkt(dns_query)
-    assert not packet_utils.is_signalling_pkt(dns_response)
+    assert not packet_utils.should_skip_pkt(dns_query)
+    assert not packet_utils.should_skip_pkt(dns_response)
 
 
 def test_get_last_layer() -> None:

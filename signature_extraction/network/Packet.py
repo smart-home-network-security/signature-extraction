@@ -32,10 +32,10 @@ class Packet:
         Packet.id += 1
         self.src                  = pkt["src"]
         self.dst                  = pkt["dst"]
-        self.transport_protocol   = pkt["transport_protocol"]
-        self.sport                = pkt["sport"]
-        self.dport                = pkt["dport"]
-        self.application_layer    = pkt["application_layer"]
+        self.transport_protocol   = pkt.get("transport_protocol", None)
+        self.sport                = pkt.get("sport", None)
+        self.dport                = pkt.get("dport", None)
+        self.application_layer    = pkt.get("application_layer", None)
         self.timestamp            = pkt["timestamp"]
         self.length               = pkt["length"]
 

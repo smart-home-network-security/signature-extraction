@@ -1,4 +1,4 @@
-from scapy.all import Packet, ARP, IP, IPv6, TCP, Padding, Raw
+from scapy.all import Packet, ARP, IP, IPv6, TCP, UDP, Padding, Raw
 from scapy.layers.inet6 import IPv6, ICMPv6ND_RS, ICMPv6MLQuery, ICMPv6MLReport, ICMPv6ND_INDAdv, ICMPv6NDOptSrcLLAddr
 from scapy.layers.tls.all import TLS, TLS_Ext_ServerName
 from scapy.layers.dns import DNS
@@ -78,13 +78,17 @@ def is_known_port(port: int, protocol: str = "tcp") -> bool:
         return False
 
 
-def is_signalling_pkt(pkt: Packet) -> bool:
+def should_skip_pkt(pkt: Packet) -> bool:
     """
     Check if the given packet is a signalling packet (e.g., TCP SYN or ACK).
 
     :param pkt: packet to check
-    :return: True if packet is a signalling packet, False otherwise
+    :return: True if the packet should be skipped, False otherwise
     """
+    # Packet does not have a transport layer, skip it
+    if not pkt.haslayer(TCP) and not pkt.haslayer(UDP):
+        return True
+
     # TLS packet
     if pkt.haslayer(TLS):
         try:
