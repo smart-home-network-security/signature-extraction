@@ -43,12 +43,12 @@ class Packet:
     @classmethod
     def build_from_pkt(cls, pkt: scapy.Packet) -> Packet:
         """
-        Build a PacketFingerprint object from a scapy packet.
+        Build a Packet object from a scapy packet.
 
         Args:
             pkt (scapy.Packet): Packet to initialize with.
         Returns:
-            PacketFingerprint: Packet fingerprint.
+            Packet: Packet fingerprint.
         """
         # Initialize packet dictionary
         pkt_dict = {}
@@ -80,24 +80,24 @@ class Packet:
         pkt_dict["length"] = len(pkt)
         pkt_dict["timestamp"] = pkt.time
 
-        # Create PacketFingerprint object
+        # Create Packet object
         return cls(pkt_dict)
     
 
     def __eq__(self, other: Packet) -> bool:
         """
-        Compare two PacketFingerprint objects.
+        Compare two Packet objects.
 
         Args:
-            other (PacketFingerprint): Packet fingerprint to compare with.
+            other (Packet): Packet fingerprint to compare with.
         Returns:
             bool: True if the flow fingerprints are equal, False otherwise.
         """
-        # If other object is not a PacketFingerprint, return False
+        # If other object is not a Packet, return False
         if not isinstance(other, Packet):
             return False
         
-        # If other object is a PacketFingerprint, compare attributes
+        # If other object is a Packet, compare attributes
         return (
             self.src == other.src
             and self.dst == other.dst
@@ -106,14 +106,52 @@ class Packet:
             and self.dport == other.dport
             and self.application_layer == other.application_layer
         )
+    
+
+    def __lt__(self, other: Packet) -> bool:
+        """
+        Check if this Packet is less than another Packet.
+
+        Args:
+            other (Packet): Packet to compare with.
+        Returns:
+            bool: True if this Packet is less than the other Packet, False otherwise.
+        Raises:
+            ValueError: If the other object is not a Packet.
+        """
+        # If other object is not a Packet, raise an error
+        if not isinstance(other, Packet):
+            raise ValueError("Cannot compare Packet with non-Packet object.")
+        
+        # If other object is a Packet, compare timestamps
+        return self.timestamp < other.timestamp
+    
+
+    def __gt__(self, other: Packet) -> bool:
+        """
+        Check if this Packet is greater than another Packet.
+
+        Args:
+            other (Packet): Packet to compare with.
+        Returns:
+            bool: True if this Packet is greater than the other Packet, False otherwise.
+        Raises:
+            ValueError: If the other object is not a Packet.
+        """
+        # If other object is not a Packet, raise an error
+        if not isinstance(other, Packet):
+            raise ValueError("Cannot compare Packet with non-Packet object.")
+        
+        # If other object is a Packet, compare timestamps
+        return self.timestamp > other.timestamp
 
     
     def __repr__(self) -> str:
         """
-        String representation of a PacketFingerprint object.
+        String representation of a Packet object.
 
         Returns:
-            str: String representation of a PacketFingerprint object.
+            str: String representation of a Packet object.
         """
         # ID
         s = f"[{self.id}] "
