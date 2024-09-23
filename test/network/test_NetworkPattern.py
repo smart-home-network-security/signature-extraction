@@ -128,8 +128,8 @@ def test_add_flow() -> None:
     assert pattern.get_flows() == [flow_a, flow_b]
 
     # Find flows
-    assert pattern.find_matching_flow(flow_a) == flow_a
-    assert pattern.find_matching_flow(flow_b) == flow_b
+    assert pattern.find_matching_flow(flow_a) == (0, flow_a)
+    assert pattern.find_matching_flow(flow_b) == (1, flow_b)
 
 
 def test_find_matching_flow() -> None:
@@ -141,9 +141,9 @@ def test_find_matching_flow() -> None:
     flow_c = FlowFingerprint(tcp_dict_b)
     flow_d = FlowFingerprint(udp_dict)
     pattern = NetworkPattern([flow_a, flow_b])
-    assert pattern.find_matching_flow(flow_a) == flow_a
-    assert pattern.find_matching_flow(flow_b) == flow_b
-    assert pattern.find_matching_flow(flow_c) == flow_b
+    assert pattern.find_matching_flow(flow_a) == (0, flow_a)
+    assert pattern.find_matching_flow(flow_b) == (1, flow_b)
+    assert pattern.find_matching_flow(flow_c) == (1, flow_b)
     with pytest.raises(ValueError):
         pattern.find_matching_flow(flow_d)
 

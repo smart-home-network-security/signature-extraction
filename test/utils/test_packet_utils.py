@@ -1,6 +1,6 @@
 ## Imports
 # Libraries
-from scapy.all import Ether, ARP, IP, TCP, UDP, Padding, Raw
+from scapy.all import Packet, Ether, ARP, IP, TCP, UDP, Padding, Raw
 from scapy.layers.http import HTTP, HTTPRequest, HTTPResponse
 from scapy.layers.dns import DNS, DNSQR, DNSRR
 from scapy.layers.tls.all import TLS, TLSClientHello, TLSServerHello, TLS_Ext_ServerName
@@ -9,7 +9,22 @@ from scapy.layers.inet6 import IPv6, ICMPv6ND_RS, ICMPv6MLQuery, ICMPv6MLReport,
 import signature_extraction.utils.packet_utils as packet_utils
 
 
-### VARIABLES ###
+##### UTIL FUNCTIONS #####
+
+def build_packet(pkt: Packet) -> Packet:
+    """
+    Fully build a Scapy packet,
+    i.e. fill in all of its field with corresponding data.
+
+    Args:
+        pkt (scapy.Packet): Scapy packet to build.
+    Returns:
+        scapy.Packet: Fully built Scapy packet.
+    """
+    return pkt.__class__(bytes(pkt))
+
+
+##### TEST VARIABLES #####
 
 ### Packets ###
 
@@ -90,6 +105,7 @@ dns_query = (
         qd=DNSQR(qname="www.example.com")
     )
 )
+dns_query = build_packet(dns_query)
 # DNS response
 dns_response = (
     IP(src="8.8.8.8", dst="192.168.1.100") /
@@ -99,10 +115,10 @@ dns_response = (
         an=DNSRR(rrname="www.example.com", ttl=60, rdata="93.184.216.34")
     )
 )
+dns_response = build_packet(dns_response)
 
 
-
-### TEST FUNCTIONS ###
+##### TEST FUNCTIONS #####
 
 def test_is_known_port() -> None:
     """

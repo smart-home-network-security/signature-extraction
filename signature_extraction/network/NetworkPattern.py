@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List
+from typing import List, Tuple
 import pandas as pd
 from .BaseFlow import BaseFlow
 from .FlowFingerprint import FlowFingerprint
@@ -94,7 +94,7 @@ class NetworkPattern:
         self.flows.append(flow)
 
     
-    def find_matching_flow(self, flow: BaseFlow) -> BaseFlow:
+    def find_matching_flow(self, flow: BaseFlow) -> Tuple[int, BaseFlow]:
         """
         Find a flow in the list which matches the basic attributes,
         i.e. the hosts and transport protocol,
@@ -103,13 +103,13 @@ class NetworkPattern:
         Args:
             flow (BaseFlow): flow to search for.
         Returns:
-            BaseFlow: found matching flow
+            Tuple[int, BaseFlow]: associated index, and matching flow
         Raises:
             ValueError: If no matching flow has been found in the pattern.
         """
         i = self.flows.index(flow)
         if i != -1:
-            return self.flows[i]
+            return i, self.flows[i]
         else:
             raise ValueError("No matching flow found in the pattern")
     

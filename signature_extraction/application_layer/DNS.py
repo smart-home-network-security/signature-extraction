@@ -20,8 +20,8 @@ class DNS(ApplicationLayer):
         """
         application_layer = pkt.getlayer("DNS")
         self.response = application_layer.qr == 1 if application_layer.qr else False
-        self.qtype    = dnstypes.get(application_layer.qd.qtype, "Unknown")
-        self.qname    = application_layer.qd.qname.decode()[:-1]
+        self.qtype    = dnstypes.get(application_layer.qd[0].qtype, "Unknown")
+        self.qname    = application_layer.qd[0].qname.decode()[:-1]
 
     
     def __iter__(self) -> Iterator:

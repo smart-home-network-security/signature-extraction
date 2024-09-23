@@ -169,9 +169,9 @@ def extract_domain_names(packet: Packet, domain_names: dict) -> None:
             dns = packet.getlayer(DNS)
             
             # Query
-            if dns.qr == 0:
+            if dns.qr == 0 and len(dns.qd) > 0:
                 # Extract domain name
-                domain_name = dns.qd.qname.decode("utf-8")[:-1]
+                domain_name = dns.qd[0].qname.decode("utf-8")[:-1]
                 if domain_name not in domain_names:
                     domain_names[domain_name] = []
             
