@@ -147,7 +147,7 @@ class FlowFingerprint(BaseFlow):
         s = f"{self.src}"
         if port_host == self.src:
             s += f":{port_number}"
-        s += " -> "
+        s += " <-> "
         # Destination
         s += f" {self.dst}"
         if port_host == self.dst:

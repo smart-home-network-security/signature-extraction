@@ -108,10 +108,7 @@ class NetworkPattern:
             ValueError: If no matching flow has been found in the pattern.
         """
         i = self.flows.index(flow)
-        if i != -1:
-            return i, self.flows[i]
-        else:
-            raise ValueError("No matching flow found in the pattern")
+        return i, self.flows[i]
     
 
     def to_df(self) -> pd.DataFrame:

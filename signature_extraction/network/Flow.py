@@ -88,7 +88,7 @@ class Flow(BaseFlow):
         """
         ## Hosts
         # Source: host & port
-        s = f"{self.src}:{self.sport} ->"
+        s = f"{self.src}:{self.sport} <->"
         # Destination: host & port
         s += f" {self.dst}:{self.dport}"
         
