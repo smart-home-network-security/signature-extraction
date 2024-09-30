@@ -19,7 +19,8 @@ def patterns_to_signature(patterns: List[NetworkPattern]) -> NetworkPattern:
     already_parsed_flow_indices = set()
     already_matched_ports = set()
     signature = NetworkPattern()
-    patterns_sorted = sorted(patterns, key=len)
+    patterns_filtered = [p for p in patterns if p and len(p) > 0]
+    patterns_sorted = sorted(patterns_filtered, key=len)
     reference_pattern = patterns_sorted[0]
 
     # Iterate over flows in the reference pattern
@@ -86,8 +87,9 @@ def pcaps_to_signature_pattern(pcap_files: Union[str, List[str]]) -> NetworkPatt
     patterns = []
     for pcap in pcap_files:
         pkts = pcap_to_pkts(pcap)
-        pattern = group_pkts_per_flow(pkts)
-        patterns.append(pattern)
+        if len(pkts) > 0:
+            pattern = group_pkts_per_flow(pkts)
+            patterns.append(pattern)
 
     # Extract event signature from the flows
     return patterns_to_signature(patterns)
