@@ -209,7 +209,7 @@ class FlowFingerprint(BaseFlow):
         else:
             port_number, port_host = self.get_fixed_port()
             if port_host is None:
-                return self.transport_protocol
+                return f"{self.src}-{self.dst}_{self.transport_protocol}"
             else:
                 if port_host == self.src:
                     return f"{self.transport_protocol}_src_{port_number}"
