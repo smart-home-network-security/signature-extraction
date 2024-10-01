@@ -62,8 +62,9 @@ def patterns_to_signature(patterns: List[NetworkPattern]) -> NetworkPattern:
             if already_matched_port in potential_flow.ports:
                 del potential_flow.ports[already_matched_port]
 
-        fixed_port = potential_flow.get_fixed_port()[0]
-        already_matched_ports.add(fixed_port)
+        fixed_port_number = potential_flow.get_fixed_port()[0]
+        if fixed_port_number is not None:
+            already_matched_ports.add(fixed_port_number)
 
         signature.add_flow(potential_flow)
 

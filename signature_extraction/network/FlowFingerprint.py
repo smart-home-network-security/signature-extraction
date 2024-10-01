@@ -43,7 +43,7 @@ class FlowFingerprint(BaseFlow):
         # Initialize ports (to be computed)
         self.ports = {}
         self.add_ports(flow_dict)
-        self.fixed_port = None
+        self.fixed_port = (None, None)
 
 
     @classmethod
@@ -87,8 +87,8 @@ class FlowFingerprint(BaseFlow):
                 self.fixed_port = (port, data["host"])
                 return self.fixed_port
 
-        # Else, return the most used port
-        self.fixed_port = (ports_sorted[0][0], ports_sorted[0][1]["host"])
+        # Else, both ports are random
+        self.fixed_port = (None, None)
         return self.fixed_port
 
 
@@ -208,11 +208,15 @@ class FlowFingerprint(BaseFlow):
             return repr(self.application_layer)
         else:
             port_number, port_host = self.get_fixed_port()
-            if port_host == self.src:
-                host = "src"
-            elif port_host == self.dst:
-                host = "dst"
-            return f"{self.transport_protocol}_{host}_{port_number}"
+            if port_host is None:
+                return self.transport_protocol
+            else:
+                if port_host == self.src:
+                    return f"{self.transport_protocol}_src_{port_number}"
+                elif port_host == self.dst:
+                    return f"{self.transport_protocol}_dst_{port_number}"
+                else:
+                    return f"{self.transport_protocol}_{port_number}"
 
 
     def extract_policy(self, ipv4: IPv4Address) -> dict:
@@ -240,6 +244,8 @@ class FlowFingerprint(BaseFlow):
             policy["protocols"][protocol] = {"src-port": port_number}
         elif port_host == self.dst:
             policy["protocols"][protocol] = {"dst-port": port_number}
+        else:
+            policy["protocols"][protocol] = {}
 
         # Application layer protocol
         if self.application_layer is not None:
