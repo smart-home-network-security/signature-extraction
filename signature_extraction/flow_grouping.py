@@ -20,6 +20,10 @@ def group_pkts_per_flow(pkts: List[Packet]) -> NetworkPattern:
     Returns:
         NetworkPattern: pattern composed of the list of Flows.
     """
+    # If no packet, return empty NetworkPattern object
+    if len(pkts) < 1:
+        return NetworkPattern()
+
     # Initialize resulting list of flow fingerprints
     flows = []
 
