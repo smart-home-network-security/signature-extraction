@@ -204,19 +204,25 @@ class FlowFingerprint(BaseFlow):
         Returns:
             str: Identifier for this FlowFingerprint.
         """
-        if self.application_layer is not None:
-            return repr(self.application_layer)
+        id = ""
+
+        # Hosts & ports
+        port_number, port_host = self.get_fixed_port()
+        if port_host is None:
+            id += f"{self.src}-{self.dst}_{self.transport_protocol}"
         else:
-            port_number, port_host = self.get_fixed_port()
-            if port_host is None:
-                return f"{self.src}-{self.dst}_{self.transport_protocol}"
+            if port_host == self.src:
+                id += f"{self.transport_protocol}_src_{port_number}"
+            elif port_host == self.dst:
+                id += f"{self.transport_protocol}_dst_{port_number}"
             else:
-                if port_host == self.src:
-                    return f"{self.transport_protocol}_src_{port_number}"
-                elif port_host == self.dst:
-                    return f"{self.transport_protocol}_dst_{port_number}"
-                else:
-                    return f"{self.transport_protocol}_{port_number}"
+                id += f"{self.transport_protocol}_{port_number}"
+            
+        # Application layer
+        if self.application_layer is not None:
+            id += f"_{repr(self.application_layer)}"
+        
+        return id
 
 
     def extract_policy(self, ipv4: IPv4Address) -> dict:
