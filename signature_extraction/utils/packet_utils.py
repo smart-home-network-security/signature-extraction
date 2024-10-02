@@ -15,6 +15,7 @@ application_protocols = {
         20:   "ftp",
         80:   "http",
         443:  "https",
+        3478: "stun",
         5000: "ssdp",
         5683: "coap"
     },
@@ -24,6 +25,7 @@ application_protocols = {
         68:   "dhcp",
         123:  "ntp",
         1900: "ssdp",
+        3478: "stun",
         5353: "mdns",
         5683: "coap"
     }
