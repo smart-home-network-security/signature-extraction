@@ -17,7 +17,6 @@ def patterns_to_signature(patterns: List[NetworkPattern]) -> NetworkPattern:
         NetworkPattern: Event signature extracted from the flows.
     """
     already_parsed_flow_indices = set()
-    already_matched_ports = set()
     signature = NetworkPattern()
     patterns_filtered = [p for p in patterns if p and len(p) > 0]
     patterns_sorted = sorted(patterns_filtered, key=len)
@@ -56,15 +55,6 @@ def patterns_to_signature(patterns: List[NetworkPattern]) -> NetworkPattern:
 
         if skip:
             continue
-
-        # Remove port if already matched
-        for already_matched_port in already_matched_ports:
-            if already_matched_port in potential_flow.ports:
-                del potential_flow.ports[already_matched_port]
-
-        fixed_port_number = potential_flow.get_fixed_port()[0]
-        if fixed_port_number is not None:
-            already_matched_ports.add(fixed_port_number)
 
         signature.add_flow(potential_flow)
 
