@@ -63,8 +63,11 @@ def is_known_port(port: int, protocol: str = "tcp") -> bool:
     """
     Check if the given port is a well-known transport layer port.
 
-    :param port: given port number
-    :return: True if the given port number is well-known, False otherwise
+    Args:
+        port (int): given port number
+        protocol (str): transport layer protocol (tcp or udp). Optional, default is "tcp"
+    Returns:
+        bool: True if the given port number is well-known, False otherwise
     """
     protocol = protocol.lower()
     
@@ -82,10 +85,14 @@ def is_known_port(port: int, protocol: str = "tcp") -> bool:
 
 def should_skip_pkt(pkt: Packet) -> bool:
     """
-    Check if the given packet is a signalling packet (e.g., TCP SYN or ACK).
-
-    :param pkt: packet to check
-    :return: True if the packet should be skipped, False otherwise
+    Check if the given packet should be skipped,
+    i.e. if it is a control-plane packet,
+    e.g. ARP, ICMP, TCP SYN/ACK, TLS Handshake.
+    
+    Args:
+        pkt (scapy.Packet): packet to check
+    Returns:
+        bool: True if the packet should be skipped, False otherwise
     """
     # Packet does not have a transport layer, skip it
     if not pkt.haslayer(TCP) and not pkt.haslayer(UDP):
@@ -125,8 +132,10 @@ def get_last_layer(packet: Packet) -> Packet:
     """
     Get the last layer of a Scapy packet.
 
-    :param packet: Scapy Packet
-    :return: last packet layer
+    Args:
+        packet (scapy.Packet): full Scapy Packet
+    Returns:
+        scapy.Packet: last packet layer
     """
     i = 0
     layer = packet.getlayer(i)
