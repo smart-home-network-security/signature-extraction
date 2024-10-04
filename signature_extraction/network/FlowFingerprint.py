@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Tuple, Iterator
 import os
 from ipaddress import IPv4Address
+import uuid
 # Package
 from .Packet import Packet
 from .BaseFlow import BaseFlow
@@ -223,6 +224,16 @@ class FlowFingerprint(BaseFlow):
             id += f"_{repr(self.application_layer)}"
         
         return id
+
+    
+    def get_unique_id(self) -> str:
+        """
+        Generate a unique identifier for this FlowFingerprint.
+
+        Returns:
+            str: Unique identifier for this FlowFingerprint.
+        """
+        return f"{self.get_id()}_{str(uuid.uuid4())}"
 
 
     def extract_policy(self, ipv4: IPv4Address) -> dict:
