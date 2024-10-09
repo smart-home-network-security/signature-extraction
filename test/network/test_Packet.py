@@ -1,6 +1,6 @@
 ## Imports
 # Libraries
-from scapy.all import IP, TCP
+from scapy.all import IP, TCP, Raw
 # Package
 from signature_extraction.network import Packet
 
@@ -71,6 +71,27 @@ def test_build_from_packet() -> None:
     assert pkt.transport_protocol == "TCP"
     assert pkt.sport == 80
     assert pkt.dport == 80
+    assert pkt.length == pkt_len
+
+
+def test_build_from_packet_error() -> None:
+    """
+    Test the class method `build_from_pkt` of the class `Packet`,
+    when an error occurs.
+    """
+    packet = (
+        IP(src="192.168.1.1", dst="192.168.1.2") /
+        TCP(sport=80, dport=8080) /
+        Raw(b"\x01\x02\x03\x04")
+    )
+    pkt_len = len(packet)
+
+    pkt = Packet.build_from_pkt(packet)
+    assert pkt.src == "192.168.1.1"
+    assert pkt.dst == "192.168.1.2"
+    assert pkt.transport_protocol == "TCP"
+    assert pkt.sport == 80
+    assert pkt.dport == 8080
     assert pkt.length == pkt_len
 
 
