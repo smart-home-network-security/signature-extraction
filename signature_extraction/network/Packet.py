@@ -73,7 +73,7 @@ class Packet:
         # Application layer
         try:
             pkt_dict["application_layer"] = ApplicationLayer.init_protocol(pkt)
-        except ValueError:
+        except (ValueError, AttributeError):
             pkt_dict["application_layer"] = None
 
         # Metadata
