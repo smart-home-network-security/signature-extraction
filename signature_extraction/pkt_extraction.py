@@ -38,7 +38,7 @@ def handle_packet(packet: scapy.Packet) -> None:
     Args:
         packet (scapy.Packet): Packet read from the PCAP file.
     """
-    global i, timestamp, previous_time, domain_names, pkts
+    global i, timestamp, previous_time, domain_names, pkts, timeout
 
     ## Packet validation
 
@@ -71,16 +71,19 @@ def handle_packet(packet: scapy.Packet) -> None:
     i += 1
 
 
-def pcap_to_pkts(pcap_file: str) -> List[Packet]:
+def pcap_to_pkts(pcap_file: str, timeout_arg: int = 5) -> List[Packet]:
     """
     Convert a PCAP file to a list of packets.
 
     Args:
         pcap_file (str): PCAP file.
+        timeout_arg (int): Iteration is stopped if current packet's timestamp exceeds the previous one by this value [seconds].
+                           Optional, default is 5 seconds.
     Returns:
         List[Packet]: List of packet fingerprints.
     """
-    global pkts
+    global pkts, timeout
+    timeout = timeout_arg
     scapy.sniff(offline=pcap_file, prn=handle_packet, store=False)
     packets = pkts
     reset_vars()
