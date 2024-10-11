@@ -15,12 +15,17 @@ def patterns_to_signature(patterns: List[NetworkPattern]) -> NetworkPattern:
         patterns (List[NetworkPattern]): List of NetworkPatterns.
     Returns:
         NetworkPattern: Event signature extracted from the flows.
+    Raises:
+        ValueError: If no valid NetworkPatterns are provided.
     """
-    already_parsed_flow_indices = set()
-    signature = NetworkPattern()
     patterns_filtered = [p for p in patterns if p and len(p) > 0]
+    if len(patterns_filtered) == 0:
+        raise ValueError("No valid NetworkPatterns provided.")
+
     patterns_sorted = sorted(patterns_filtered, key=len)
     reference_pattern = patterns_sorted[0]
+    already_parsed_flow_indices = set()
+    signature = NetworkPattern()
 
     # Iterate over flows in the reference pattern
     for i, reference_flow in enumerate(reference_pattern.get_flows()):
