@@ -12,8 +12,10 @@ from .Flow import Flow
 from signature_extraction.utils.packet_utils import is_known_port
 from profile_translator_blocklist import translate_policy
 # Logging
+import importlib
 import logging
-logger = logging.getLogger(__name__)
+module_relative_path = importlib.import_module(__name__).__name__
+logger = logging.getLogger(module_relative_path)
 
 
 class FlowFingerprint(BaseFlow):
