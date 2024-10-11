@@ -11,6 +11,9 @@ from .BaseFlow import BaseFlow
 from .Flow import Flow
 from signature_extraction.utils.packet_utils import is_known_port
 from profile_translator_blocklist import translate_policy
+# Logging
+import logging
+logger = logging.getLogger(__name__)
 
 
 class FlowFingerprint(BaseFlow):
@@ -285,7 +288,7 @@ class FlowFingerprint(BaseFlow):
         """
         # Validate output directory
         if not os.path.isdir(output_dir):
-            print(f"Output directory {output_dir} does not exist. Using current directory.")
+            logger.warning(f"Output directory {output_dir} does not exist. Using current directory.")
             output_dir = os.getcwd()
         
         # Device metadata
