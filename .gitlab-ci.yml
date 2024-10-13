@@ -1,5 +1,7 @@
 stages:
   - test
+  #- doc
+
 
 test-job:
   stage: test
@@ -9,3 +11,15 @@ test-job:
     - pip3 install -r requirements.txt  # Install Python dependencies
     - pip3 install pytest               # Install pytest
     - pytest test/                      # Run tests
+    - pip3 install build                # Install build package
+    - python3 -m build                  # Build package
+    - pip3 install .                    # Install package
+
+
+# doc-job:
+#   stage: doc
+#   script:
+#     - apt-get update -y
+#     - apt-get install -y doxygen graphviz
+#     - doxygen Doxyfile
+#     - touch docs/html/.nojekyll
