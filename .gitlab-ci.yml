@@ -1,6 +1,6 @@
 stages:
   - test
-  #- doc
+  - doc
 
 
 test-job:
@@ -16,10 +16,16 @@ test-job:
     - pip3 install .                    # Install package
 
 
-# doc-job:
-#   stage: doc
-#   script:
-#     - apt-get update -y
-#     - apt-get install -y doxygen graphviz
-#     - doxygen Doxyfile
-#     - touch docs/html/.nojekyll
+pages:
+  stage: doc
+  script:
+    - apt-get update -y
+    - apt-get install -y doxygen graphviz
+    - doxygen Doxyfile
+    - touch docs/html/.nojekyll
+    - mv docs/html public
+  artifacts:
+    paths:
+      - public
+  only:
+    - main
