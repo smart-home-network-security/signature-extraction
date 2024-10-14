@@ -1,10 +1,4 @@
-stages:
-  - test
-  - doc
-
-
 test-job:
-  stage: test
   script:
     - python3 -m venv .venv             # Create Python virtual environment
     - source .venv/bin/activate         # Activate Python virtual environment
@@ -17,7 +11,6 @@ test-job:
 
 
 pages:
-  stage: doc
   script:
     - sudo apt-get update -y
     - sudo apt-get install -y doxygen graphviz
