@@ -31,4 +31,10 @@ class HTTP(ApplicationLayer):
         application_layer = pkt.getlayer("HTTP")
         self.response = HTTP.is_response(pkt)
         self.method = application_layer.Method.decode() if not self.response else None
-        self.path = application_layer.Path.decode() if not self.response else None
+
+        # URI
+        uri = application_layer.Path.decode() if not self.response else None
+        if uri is not None and "?" in uri:
+            uri = uri.split("?")[0]
+            uri += "*" if not uri.endswith("*") else ""
+        self.uri = uri

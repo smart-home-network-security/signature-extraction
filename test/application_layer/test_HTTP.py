@@ -62,12 +62,12 @@ def test_http_get() -> None:
     assert not HTTP.is_response(pkt_http_get)
     assert not http_pkt.response
     assert http_pkt.method == "GET"
-    assert http_pkt.path == "/test/stuff"
+    assert http_pkt.uri == "/test/stuff"
 
     http_dict = dict(http_pkt)
     assert not http_dict["response"]
     assert http_dict["method"] == "GET"
-    assert http_dict["path"] == "/test/stuff"
+    assert http_dict["uri"] == "/test/stuff"
 
 
 def test_http_post() -> None:
@@ -79,12 +79,12 @@ def test_http_post() -> None:
     assert not HTTP.is_response(pkt_http_post)
     assert not http_pkt.response
     assert http_pkt.method == "POST"
-    assert http_pkt.path == "/test/stuff"
+    assert http_pkt.uri == "/test/stuff"
 
     http_dict = dict(http_pkt)
     assert not http_dict["response"]
     assert http_dict["method"] == "POST"
-    assert http_dict["path"] == "/test/stuff"
+    assert http_dict["uri"] == "/test/stuff"
 
 
 def test_http_resp() -> None:
@@ -96,9 +96,9 @@ def test_http_resp() -> None:
     assert HTTP.is_response(pkt_http_resp)
     assert http_pkt.response
     assert http_pkt.method is None
-    assert http_pkt.path is None
+    assert http_pkt.uri is None
 
     http_dict = dict(http_pkt)
     assert http_dict["response"]
     assert http_dict["method"] is None
-    assert http_dict["path"] is None
+    assert http_dict["uri"] is None
