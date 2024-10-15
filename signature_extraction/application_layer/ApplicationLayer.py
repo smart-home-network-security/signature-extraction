@@ -11,6 +11,9 @@ class ApplicationLayer:
     Application layer protocol.
     """
 
+    characters_to_replace = ["/", "*", "=", "?"]
+
+
     @staticmethod
     def get_protocol(pkt: Packet) -> str:
         """
@@ -90,4 +93,8 @@ class ApplicationLayer:
         Returns:
             str: string representation of the ApplicationLayer class.
         """
-        return f"{self.protocol_name}_{'_'.join([f'{attr}-{value}' for attr, value in self])}"
+        s = f"{self.protocol_name}_{'_'.join([f'{attr}-{value}' for attr, value in self])}"
+        for char in ApplicationLayer.characters_to_replace:
+            if char in s:
+                s = s.replace(char, "-")
+        return s
