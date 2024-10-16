@@ -44,7 +44,7 @@ def group_pkts_per_flow(pkts: List[Packet]) -> NetworkPattern:
     )
     grouped = df.groupby("flow")
 
-    # Extract flow fingerprints
+    # Extract flows
     for key, _ in grouped:
         group = grouped.get_group(key)
         pkts = group.to_dict(orient="records")

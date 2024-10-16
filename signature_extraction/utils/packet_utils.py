@@ -42,12 +42,13 @@ known_ports = {
 }
 
 ## PACKETS TO SKIP ##
+# TCP flags
 skip_tcp_flags = [
     "S",  # SYN
     "F",  # FIN
     "R"   # RST
 ]
-# Packet layers to skip
+# Packet layers
 skip_layers = [
     Padding,
     ARP,
