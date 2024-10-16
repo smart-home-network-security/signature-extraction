@@ -38,6 +38,8 @@ class FlowFingerprint(BaseFlow):
         # Initialize with super-class constructor
         super().__init__()
 
+        self.count = 0  # Number of flows added to this FlowFingerprint
+
         # Set attributes
         self.src                = flow_dict["src"]
         self.dst                = flow_dict["dst"]
@@ -49,7 +51,7 @@ class FlowFingerprint(BaseFlow):
         # Initialize ports (to be computed)
         self.ports = {}
         self.add_ports(flow_dict)
-        self.fixed_port = (None, None)
+        self.fixed_ports = set()
 
 
     @classmethod
@@ -78,24 +80,29 @@ class FlowFingerprint(BaseFlow):
         return cls(dict(flow))
     
 
-    def get_fixed_port(self) -> Tuple[int, str]:
+    def get_fixed_ports(self) -> set[(str, int)]:
         """
-        Compute the fixed port of the flow fingerprint.
+        Compute the fixed port of the FlowFingerprint.
 
         Returns:
             Tuple[int, str]: Fixed port number and corresponding host.
         """
-        ports_sorted = sorted(self.ports.items(), key=lambda item: item[1]["number"], reverse=True)
+        # If already computed, return it
+        if self.fixed_ports:
+            return self.fixed_ports
 
-        # If one of the port numbers is well-known, return it
-        for port, data in ports_sorted:
-            if is_known_port(port, self.transport_protocol):
-                self.fixed_port = (port, data["host"])
-                return self.fixed_port
+        # Iterate over hosts and ports
+        for (host, port), count in self.ports.items():
 
-        # Else, both ports are random
-        self.fixed_port = (None, None)
-        return self.fixed_port
+            # Current port number is considered as fixed if ...
+            if (
+                is_known_port(port, self.transport_protocol)  # ... it is a well-known port
+                or count == self.count                        # ... it was used for all flows
+            ):
+                self.fixed_ports.add((host, port))
+
+        # Return fixed ports
+        return self.fixed_ports
 
 
     def add_ports(self, flow_dict: dict = {}) -> None:
@@ -105,19 +112,20 @@ class FlowFingerprint(BaseFlow):
         Args:
             flow (Flow): Flow object to add ports from.
         """
-        # Source port
-        sport = flow_dict["sport"]
-        if sport not in self.ports:
-            self.ports[sport] = {"number": 1, "host": flow_dict["src"]}
-        else:
-            self.ports[sport]["number"] += 1
+        # Increment flow count
+        self.count += 1
         
-        # Destination port
+        # Source host & port
+        src = flow_dict["src"]
+        sport = flow_dict["sport"]
+        src_sport = (src, sport)
+        self.ports[src_sport] = self.ports.get(src_sport, 0) + 1
+        
+        # Destination host & port
+        dst = flow_dict["dst"]
         dport = flow_dict["dport"]
-        if dport not in self.ports:
-            self.ports[dport] = {"number": 1, "host": flow_dict["dst"]}
-        else:
-            self.ports[dport]["number"] += 1
+        dst_dport = (dst, dport)
+        self.ports[dst_dport] = self.ports.get(dst_dport, 0) + 1
 
         return self.ports
     
@@ -129,6 +137,9 @@ class FlowFingerprint(BaseFlow):
         Args:
             flow (Flow): Flow object to add.
         """
+        # Increment flow count
+        self.count += 1
+
         # Set attributes if not initialized
         self.src = flow.src if not self.src else self.src
         self.dst = flow.dst if not self.dst else self.dst
@@ -146,18 +157,20 @@ class FlowFingerprint(BaseFlow):
         Returns:
             str: String representation of a FlowFingerprint object.
         """
-        port_number, port_host = self.get_fixed_port()
+        fixed_ports = self.get_fixed_ports()
 
         ## Hosts
         # Source
         s = f"{self.src}"
-        if port_host == self.src:
-            s += f":{port_number}"
+        for host, port in fixed_ports:
+            if host == self.src:
+                s += f":{port}"
         s += " <-> "
         # Destination
         s += f" {self.dst}"
-        if port_host == self.dst:
-            s += f":{port_number}"
+        for host, port in fixed_ports:
+            if host == self.dst:
+                s += f":{port}"
 
         ## Protocol(s)
         # Transport layer
@@ -177,19 +190,21 @@ class FlowFingerprint(BaseFlow):
         Returns:
             Iterable: Iterator over the packet fingerprint attributes.
         """
-        port_number, port_host = self.get_fixed_port()
+        fixed_ports = self.get_fixed_ports()
 
         ## Hosts
         # Source
         yield "src", self.src
-        if port_host == self.src:
-            yield "sport", port_number
+        for host, port in fixed_ports:
+            if host == self.src:
+                yield "sport", port
         else:
             yield "sport", None
         # Destination
         yield "dst", self.dst
-        if port_host == self.dst:
-            yield "dport", port_number
+        for host, port in fixed_ports:
+            if host == self.dst:
+                yield "dport", port
         else:
             yield "dport", None
 
@@ -211,18 +226,23 @@ class FlowFingerprint(BaseFlow):
             str: Identifier for this FlowFingerprint.
         """
         id = ""
+        fixed_ports = self.get_fixed_ports()
 
         # Hosts & ports
-        port_number, port_host = self.get_fixed_port()
-        if port_host is None:
-            id += f"{self.src}-{self.dst}_{self.transport_protocol}"
+        if fixed_ports:
+            id += self.transport_protocol
+            is_fixed_port = False
+            for host, port in fixed_ports:
+                if host == self.src:
+                    is_fixed_port = True
+                    id += f"_src_{port}"
+                elif host == self.dst:
+                    is_fixed_port = True
+                    id += f"_dst_{port}"
+            if not is_fixed_port:
+                id += f"_{port}"
         else:
-            if port_host == self.src:
-                id += f"{self.transport_protocol}_src_{port_number}"
-            elif port_host == self.dst:
-                id += f"{self.transport_protocol}_dst_{port_number}"
-            else:
-                id += f"{self.transport_protocol}_{port_number}"
+            id += f"{self.src}-{self.dst}_{self.transport_protocol}"
             
         # Application layer
         if self.application_layer is not None:
@@ -261,11 +281,22 @@ class FlowFingerprint(BaseFlow):
 
         # Protocols
         protocol = self.transport_protocol.lower()
-        port_number, port_host = self.get_fixed_port()
-        if port_host == self.src:
-            policy["protocols"][protocol] = {"src-port": port_number}
-        elif port_host == self.dst:
-            policy["protocols"][protocol] = {"dst-port": port_number}
+        fixed_ports = self.get_fixed_ports()
+        if fixed_ports:
+            is_fixed_port = False
+            for host, port in fixed_ports:
+                if host == self.src:
+                    is_fixed_port = True
+                    if protocol not in policy["protocols"]:
+                        policy["protocols"][protocol] = {}
+                    policy["protocols"][protocol]["src-port"] = port
+                elif host == self.dst:
+                    is_fixed_port = True
+                    if protocol not in policy["protocols"]:
+                        policy["protocols"][protocol] = {}
+                    policy["protocols"][protocol]["dst-port"] = port
+            if not is_fixed_port:
+                policy["protocols"][protocol] = {}
         else:
             policy["protocols"][protocol] = {}
 

@@ -51,9 +51,8 @@ def test_constructor() -> None:
     assert flow.transport_protocol == "UDP"
     assert isinstance(flow.application_layer, app_layer.DNS)
     # Ports
-    assert 53 in flow.ports
-    assert flow.ports[53]["number"] == 1
-    assert flow.ports[53]["host"] == "192.168.1.1"
+    assert ("192.168.1.1", 53) in flow.ports
+    assert flow.ports[("192.168.1.1", 53)] == 1
 
 
 def test_build_from_pkt() -> None:
@@ -67,9 +66,8 @@ def test_build_from_pkt() -> None:
     assert flow.transport_protocol == "UDP"
     assert isinstance(flow.application_layer, app_layer.DNS)
     # Ports
-    assert 53 in flow.ports
-    assert flow.ports[53]["number"] == 1
-    assert flow.ports[53]["host"] == "192.168.1.1"
+    assert ("192.168.1.1", 53) in flow.ports
+    assert flow.ports[("192.168.1.1", 53)] == 1
 
 
 def test_build_from_flow() -> None:
@@ -84,9 +82,8 @@ def test_build_from_flow() -> None:
     assert flow.transport_protocol == "UDP"
     assert isinstance(flow.application_layer, app_layer.DNS)
     # Ports
-    assert 53 in flow.ports
-    assert flow.ports[53]["number"] == 1
-    assert flow.ports[53]["host"] == "192.168.1.1"
+    assert ("192.168.1.1", 53) in flow.ports
+    assert flow.ports[("192.168.1.1", 53)] == 1
 
 
 def test_add_ports() -> None:
@@ -102,10 +99,9 @@ def test_add_ports() -> None:
     flow.add_ports(dict(f_2))
 
     # Verify fields
-    assert 53 in flow.ports
-    assert flow.ports[53]["number"] == 2
-    assert flow.ports[53]["host"] == "192.168.1.1"
-    assert flow.get_fixed_port() == (53, "192.168.1.1")
+    assert ("192.168.1.1", 53) in flow.ports
+    assert flow.ports[("192.168.1.1", 53)] == 2
+    assert ("192.168.1.1", 53) in flow.get_fixed_ports()
 
 
 def test_add_flow() -> None:
@@ -121,10 +117,9 @@ def test_add_flow() -> None:
     flow.add_flow(f_2)
 
     # Verify fields
-    assert 53 in flow.ports
-    assert flow.ports[53]["number"] == 2
-    assert flow.ports[53]["host"] == "192.168.1.1"
-    assert flow.get_fixed_port() == (53, "192.168.1.1")
+    assert ("192.168.1.1", 53) in flow.ports
+    assert flow.ports[("192.168.1.1", 53)] == 2
+    assert ("192.168.1.1", 53) in flow.get_fixed_ports()
 
 
 def test_extract_policy() -> None:
