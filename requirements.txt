@@ -1,6 +1,6 @@
 # Libraries
 cryptography
-scapy==2.6.0rc2
+scapy
 pandas
 # Custom
 profile-translator-blocklist
