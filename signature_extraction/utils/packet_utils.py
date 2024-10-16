@@ -33,9 +33,12 @@ application_protocols = {
 # Well-known ports, outside the range 0-1023
 known_ports = {
     "tcp": [
-        9999  # TP-Link Smart Home protocol port
+        8800,  # Tapo companion app TCP port
+        9999   # TP-Link Smart Home protocol port
     ],
-    "udp": []
+    "udp": [
+        2002   # Tapo camera UDP port
+    ]
 }
 
 ## PACKETS TO SKIP ##
