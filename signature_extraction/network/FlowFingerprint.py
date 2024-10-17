@@ -187,8 +187,12 @@ class FlowFingerprint(BaseFlow):
             # Given flow is an instance of the subclass FlowFingerprint
             elif isinstance(other, FlowFingerprint):
                 fixed_ports_other = other.get_fixed_ports()
-                pred = lambda host_port: host_port in fixed_ports_other
-                return all(pred(host_port) for host_port in fixed_ports)
+                pred_a = lambda host_port: host_port in fixed_ports_other
+                pred_b = lambda host_port_other: host_port_other in fixed_ports
+                return (
+                    all(pred_a(host_port) for host_port in fixed_ports) and
+                    all(pred_b(host_port_other) for host_port_other in fixed_ports_other)
+                )
 
 
         # No matching flow found        
