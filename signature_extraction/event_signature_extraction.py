@@ -24,20 +24,20 @@ def patterns_to_signature(patterns: List[NetworkPattern]) -> NetworkPattern:
 
     patterns_sorted = sorted(patterns_filtered, key=len)
     reference_pattern = patterns_sorted[0]
-    already_parsed_flow_indices = set()
+    already_parsed_reference_flow_indices = set()
     signature = NetworkPattern()
 
     # Iterate over flows in the reference pattern
     for i, reference_flow in enumerate(reference_pattern.get_flows()):
 
         # Flow already parsed, skip
-        if i in already_parsed_flow_indices:
+        if i in already_parsed_reference_flow_indices:
             continue
 
 
         ## Parse flow
         potential_flow = FlowFingerprint.build_from_flow(reference_flow)
-        already_parsed_flow_indices.add(i)
+        already_parsed_reference_flow_indices.add(i)
 
         # Iterate over NetworkPatterns (i.e., lists of FlowFingerprints),
         # to find flows matching the one currently being processed
@@ -53,9 +53,12 @@ def patterns_to_signature(patterns: List[NetworkPattern]) -> NetworkPattern:
                 break
             else:
                 # Matching flow found
-                # ==> Add it to the current potential flow
                 if j == 0:  # Reference record
-                    already_parsed_flow_indices.add(index)
+                    if index in already_parsed_reference_flow_indices:
+                        # Already parsed, skip
+                        continue
+                    already_parsed_reference_flow_indices.add(index)
+                # Add matching flow to the current potential flow
                 potential_flow.add_flow(matched_flow)
 
         if skip:

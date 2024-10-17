@@ -38,7 +38,7 @@ class FlowFingerprint(BaseFlow):
         # Initialize with super-class constructor
         super().__init__()
 
-        self.count = 0  # Number of flows added to this FlowFingerprint
+        self.count = 1  # Number of flows added to this FlowFingerprint
 
         # Set attributes
         self.src                = flow_dict["src"]
@@ -96,8 +96,8 @@ class FlowFingerprint(BaseFlow):
 
             # Current port number is considered as fixed if ...
             if (
-                is_known_port(port, self.transport_protocol)  # ... it is a well-known port
-                or count == self.count                        # ... it was used for all flows
+                is_known_port(port, self.transport_protocol) or  # ... it is a well-known port
+                (count > 1 and count == self.count)              # ... it was used for all flows
             ):
                 self.fixed_ports.add((host, port))
 
@@ -112,9 +112,6 @@ class FlowFingerprint(BaseFlow):
         Args:
             flow (Flow): Flow object to add ports from.
         """
-        # Increment flow count
-        self.count += 1
-        
         # Source host & port
         src = flow_dict["src"]
         sport = flow_dict["sport"]
@@ -210,7 +207,7 @@ class FlowFingerprint(BaseFlow):
                 s += f":{port}"
         s += " <-> "
         # Destination
-        s += f" {self.dst}"
+        s += f"{self.dst}"
         for host, port in fixed_ports:
             if host == self.dst:
                 s += f":{port}"
