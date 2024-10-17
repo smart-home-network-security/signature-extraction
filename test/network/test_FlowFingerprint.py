@@ -37,6 +37,22 @@ pkt_dns_request_b = (
         qd=DNSQR(qname="www.example.com")
     )
 )
+pkt_dns_request_c = (
+    IP(src="192.168.1.1", dst="192.168.1.2") /
+    UDP(sport=53, dport=12345) /
+    DNS(
+        rd=0,
+        qd=DNSQR(qname="www.example.com")
+    )
+)
+
+pkt_dict_d = {
+    "src": "192.168.1.1",
+    "dst": "192.168.1.2",
+    "sport": 53,
+    "dport": 12345,
+    "transport_protocol": "TCP"
+}
 
 
 ### TEST FUNCTIONS ###
@@ -120,6 +136,26 @@ def test_add_flow() -> None:
     assert ("192.168.1.1", 53) in flow.ports
     assert flow.ports[("192.168.1.1", 53)] == 2
     assert ("192.168.1.1", 53) in flow.get_fixed_ports()
+
+
+def test_match_flow() -> None:
+    """
+    Test the method `match_flow`,
+    which compares a BaseFlow with a FlowFingerprint.
+    """
+    # Initialize FlowFingerprint
+    flow_fingerprint = FlowFingerprint(pkt_dict)
+
+    # Verify match with other flows
+    pkt_b = Packet.build_from_pkt(pkt_dns_request_b)
+    f_2 = Flow.build_from_pkt(pkt_b)
+    assert not flow_fingerprint.match_flow(f_2)
+    pkt_c = Packet.build_from_pkt(pkt_dns_request_c)
+    f_3 = Flow.build_from_pkt(pkt_c)
+    assert flow_fingerprint.match_flow(f_3)
+    ff_4 = FlowFingerprint(pkt_dict_d)
+    assert not flow_fingerprint.match_flow(ff_4)
+
 
 
 def test_extract_policy() -> None:

@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import List, Tuple
 import pandas as pd
 from .BaseFlow import BaseFlow
+from .Flow import Flow
 from .FlowFingerprint import FlowFingerprint
 
 
@@ -15,7 +16,7 @@ class NetworkPattern:
         NetworkPattern constructor.
 
         Args:
-            flows (List[FlowFingerprint]): List of flow fingerprints.
+            flows (List[BaseFlow]): List of flow fingerprints.
         """
         self.flows = flows if flows else []
 
@@ -94,21 +95,25 @@ class NetworkPattern:
         self.flows.append(flow)
 
     
-    def find_matching_flow(self, flow: BaseFlow) -> Tuple[int, BaseFlow]:
+    def find_matching_flow(self, reference_flow: FlowFingerprint) -> Tuple[int, Flow]:
         """
         Find a flow in the list which matches the basic attributes,
-        i.e. the hosts and transport protocol,
+        i.e. the hosts, fixed port and transport protocol,
         of the given flow.
 
         Args:
-            flow (BaseFlow): flow to search for.
+            reference_flow (FlowFingerprint): flow to search for.
         Returns:
-            Tuple[int, BaseFlow]: associated index, and matching flow
+            Tuple[int, Flow]: associated index, and matching flow
         Raises:
             ValueError: If no matching flow has been found in the pattern.
         """
-        i = self.flows.index(flow)
-        return i, self.flows[i]
+        for i, flow in enumerate(self.flows):
+            if reference_flow.match_flow(flow):
+                return i, flow
+        
+        raise ValueError("No matching flow found in the pattern.")
+
     
 
     def to_df(self) -> pd.DataFrame:

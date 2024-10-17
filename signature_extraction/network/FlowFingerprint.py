@@ -1,7 +1,7 @@
 ## Imports
 # Libraries
 from __future__ import annotations
-from typing import Tuple, Iterator
+from typing import Iterator
 import os
 from ipaddress import IPv4Address
 import uuid
@@ -148,6 +148,51 @@ class FlowFingerprint(BaseFlow):
 
         # Add flow ports
         self.add_ports(dict(flow))
+
+    
+    def match_flow(self, other: BaseFlow) -> bool:
+        """
+        Compare the given BaseFlow with this FlowFingerprint,
+        based on the following attributes:
+            - Hosts (in any direction)
+            - Fixed port
+            - Transport protocol
+
+        Args:
+            other (BaseFlow): BaseFlow to match with.
+        Returns:
+            bool: True if the given BaseFlow matches, False otherwise.
+        """
+        # If other object is not a BaseFlow or one of its subclasses, return False
+        if not isinstance(other, BaseFlow):
+            return False
+        
+        # If other object is a BaseFlow, compare attributes:
+        if (
+            self.match_host(other) and                           # Hosts (in any direction)
+            self.transport_protocol == other.transport_protocol  # Transport protocol
+        ):
+            ## Ports
+            fixed_ports = self.get_fixed_ports()
+
+            # Given flow is an instance of the subclass Flow
+            if isinstance(other, Flow):
+                pred = (
+                    lambda host, port:
+                        (host == other.src and port == other.sport) or
+                        (host == other.dst and port == other.dport)
+                )
+                return all(pred(host, port) for host, port in fixed_ports)
+                
+            # Given flow is an instance of the subclass FlowFingerprint
+            elif isinstance(other, FlowFingerprint):
+                fixed_ports_other = other.get_fixed_ports()
+                pred = lambda host_port: host_port in fixed_ports_other
+                return all(pred(host_port) for host_port in fixed_ports)
+
+
+        # No matching flow found        
+        return False
 
 
     def __repr__(self) -> str:
