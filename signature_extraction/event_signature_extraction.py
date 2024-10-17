@@ -44,7 +44,7 @@ def patterns_to_signature(patterns: List[NetworkPattern]) -> NetworkPattern:
         skip = False  # Skip current reference flow if True
         for j, pattern in enumerate(patterns_sorted):
             try:
-                index, matched_flow = pattern.find_matching_flow(reference_flow)
+                index, matched_flow = pattern.find_matching_flow(potential_flow)
             except ValueError:
                 # No matching flow found for the current reference flow
                 # ==> Reference flow is not part of signature
