@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Iterator
 import importlib
-from scapy.all import Packet
+from scapy.all import Packet, Raw
 from scapy.layers import http, dns, dhcp
 from scapy.contrib.coap import CoAP
 
@@ -26,16 +26,22 @@ class ApplicationLayer:
         Raises:
             ValueError: unknown application layer protocol.
         """
-        if pkt.haslayer(http.HTTP):
-            return "HTTP"
-        elif pkt.haslayer(dns.DNS):
+        if pkt.haslayer(dns.DNS):
             return "DNS"
         elif pkt.haslayer(dhcp.DHCP):
             return "DHCP"
         elif pkt.haslayer(CoAP):
             return "CoAP"
-        else:
-            raise ValueError("Unknown application layer protocol.")
+
+        # HTTP
+        elif pkt.haslayer(http.HTTP):
+            return "HTTP"
+        elif pkt.haslayer(Raw):
+            http_layer = http.HTTP(pkt.getlayer(Raw).getfieldval("load"))
+            if http_layer.haslayer(http.HTTPRequest) or http_layer.haslayer(http.HTTPResponse):
+                return "HTTP"
+        
+        raise ValueError("Unknown application layer protocol.")
     
     
     @classmethod
