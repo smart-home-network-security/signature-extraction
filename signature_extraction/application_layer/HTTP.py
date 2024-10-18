@@ -59,17 +59,17 @@ class HTTP(ApplicationLayer):
         
         ## Other object is an HTTP layer
 
-        if self.response or other.response:
-            # If one of the two objects is a response,
-            # we cannot compare the fields.
-            # ==> conservatively return True
-            return True
-        
-        # Both objects are requests,
-        # compare method & URI
-        self_uri = self.uri[:-1] if self.uri.endswith(("*", "?")) else self.uri
-        other_uri = other.uri[:-1] if other.uri.endswith(("*", "?")) else other.uri
-        return self.method == other.method and self_uri == other_uri
+        if not self.response and not other.response:        
+            # Both objects are requests,
+            # compare method & URI
+            self_uri = self.uri[:-1] if self.uri.endswith(("*", "?")) else self.uri
+            other_uri = other.uri[:-1] if other.uri.endswith(("*", "?")) else other.uri
+            return self.method == other.method and self_uri == other_uri
+    
+        # If one of the two objects is a response,
+        # we cannot compare the fields.
+        # ==> conservatively return True
+        return True
     
 
     def __hash__(self) -> int:
