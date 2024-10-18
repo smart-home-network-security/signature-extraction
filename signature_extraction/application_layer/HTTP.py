@@ -70,3 +70,13 @@ class HTTP(ApplicationLayer):
         self_uri = self.uri[:-1] if self.uri.endswith(("*", "?")) else self.uri
         other_uri = other.uri[:-1] if other.uri.endswith(("*", "?")) else other.uri
         return self.method == other.method and self_uri == other_uri
+    
+
+    def __hash__(self) -> int:
+        """
+        Hash function for the ApplicationLayer class.
+
+        Returns:
+            int: hash value of the ApplicationLayer class.
+        """
+        return super().__hash__()

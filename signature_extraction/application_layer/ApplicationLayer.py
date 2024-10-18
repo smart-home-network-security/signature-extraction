@@ -104,3 +104,13 @@ class ApplicationLayer:
             if char in s:
                 s = s.replace(char, "-")
         return s
+    
+
+    def __hash__(self) -> int:
+        """
+        Hash function for the ApplicationLayer class.
+
+        Returns:
+            int: hash value of the ApplicationLayer class.
+        """
+        return hash((self.protocol_name, tuple(dict(self).items())))

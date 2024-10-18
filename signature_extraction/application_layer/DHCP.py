@@ -52,3 +52,13 @@ class DHCP(ApplicationLayer):
         # Other object is a DHCP layer,
         # compare qtype and qname
         return self.qtype == other.qtype and self.qname == other.qname
+    
+
+    def __hash__(self) -> int:
+        """
+        Hash function for the ApplicationLayer class.
+
+        Returns:
+            int: hash value of the ApplicationLayer class.
+        """
+        return super().__hash__()

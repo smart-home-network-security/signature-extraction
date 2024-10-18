@@ -102,3 +102,13 @@ class CoAP(ApplicationLayer):
         if self.is_request:
             yield "code", self.code
             yield "uri",  self.uri_path
+
+
+    def __hash__(self) -> int:
+        """
+        Hash function for the ApplicationLayer class.
+
+        Returns:
+            int: hash value of the ApplicationLayer class.
+        """
+        return super().__hash__()
