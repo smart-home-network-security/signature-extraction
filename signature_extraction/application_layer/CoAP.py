@@ -109,6 +109,6 @@ class CoAP(ApplicationLayer):
         Hash function for the ApplicationLayer class.
 
         Returns:
-            int: hash value of the ApplicationLayer class.
+            int: hash value of the ApplicationLayer object.
         """
         return super().__hash__()

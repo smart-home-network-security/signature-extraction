@@ -74,9 +74,10 @@ class HTTP(ApplicationLayer):
 
     def __hash__(self) -> int:
         """
-        Hash function for the ApplicationLayer class.
+        Hash function for the HTTP class.
+        Conservatively returns the same value for all HTTP objects.
 
         Returns:
-            int: hash value of the ApplicationLayer class.
+            int: hash value of the HTTP object
         """
-        return super().__hash__()
+        return hash(self.protocol_name)

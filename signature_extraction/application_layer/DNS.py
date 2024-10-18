@@ -57,9 +57,10 @@ class DNS(ApplicationLayer):
 
     def __hash__(self) -> int:
         """
-        Hash function for the ApplicationLayer class.
+        Hash function for the DNS class.
 
         Returns:
-            int: hash value of the ApplicationLayer class.
+            int: hash value of the DNS object.
         """
-        return super().__hash__()
+        attrs = tuple(attr for attr in dict(self).items() if attr[0] != "response")
+        return hash((self.protocol_name, attrs))

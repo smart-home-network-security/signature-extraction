@@ -50,15 +50,17 @@ class DHCP(ApplicationLayer):
             return False
         
         # Other object is a DHCP layer,
-        # compare qtype and qname
-        return self.qtype == other.qtype and self.qname == other.qname
+        # compare client_mac.
+        return self.client_mac == other.client_mac
     
 
     def __hash__(self) -> int:
         """
-        Hash function for the ApplicationLayer class.
+        Hash function for the DHCP class,
+        based on the client MAC address.
 
         Returns:
-            int: hash value of the ApplicationLayer class.
+            int: hash value of the DHCP object.
         """
-        return super().__hash__()
+        attrs = ("client_mac", self.client_mac)
+        return hash((self.protocol_name, attrs))

@@ -8,10 +8,8 @@ from signature_extraction.application_layer import HTTP
 
 ### VARIABLES ###
 
-# HTTP GET request
-pkt_http_get = (
-    IP(dst="www.example.com") /
-    TCP(dport=80) /
+## HTTP GET requests
+http_get_layer = (
     http.HTTP() /
     http.HTTPRequest(
         Method=b"GET",
@@ -19,13 +17,33 @@ pkt_http_get = (
         Http_Version=b"HTTP/1.1",
         Host=b"www.example.com",
         User_Agent=b"Scapy"
-    )
-)
-
-# HTTP POST request
-pkt_http_post = (
+    ))
+pkt_http_get = (
     IP(dst="www.example.com") /
     TCP(dport=80) /
+    http_get_layer
+)
+
+http_get_layer_2 = (
+    http.HTTP() /
+    http.HTTPRequest(
+        Method=b"GET",
+        Path=b"/test/stuff",
+        Http_Version=b"HTTP/1.1",
+        Host=b"www.example.com"
+    ))
+http_get_layer_3 = (
+    http.HTTP() /
+    http.HTTPRequest(
+        Method=b"GET",
+        Path=b"/test/thing",
+        Http_Version=b"HTTP/1.1",
+        Host=b"www.example.com",
+        User_Agent=b"Scapy"
+    ))
+
+## HTTP POST requests
+http_post_layer = (
     http.HTTP() /
     http.HTTPRequest(
         Method=b"POST",
@@ -35,11 +53,14 @@ pkt_http_post = (
         User_Agent=b"Scapy"
     )
 )
+pkt_http_post = (
+    IP(dst="www.example.com") /
+    TCP(dport=80) /
+    http_post_layer
+)
 
-# HTTP response
-pkt_http_resp = (
-    IP(src="www.example.com") /
-    TCP(sport=80) /
+## HTTP responses
+http_resp_layer = (
     http.HTTP() /
     http.HTTPResponse(
         Http_Version=b"HTTP/1.1",
@@ -47,6 +68,19 @@ pkt_http_resp = (
         Reason_Phrase=b"OK",
         Content_Type=b"text/html",
         Connection=b"close"
+    )
+)
+pkt_http_resp = (
+    IP(src="www.example.com") /
+    TCP(sport=80) /
+    http_resp_layer
+)
+
+http_resp_layer_error = (
+    http.HTTP() /
+    http.HTTPResponse(
+        Http_Version=b"HTTP/1.1",
+        Status_Code=b"404"
     )
 )
 
@@ -102,3 +136,24 @@ def test_http_resp() -> None:
     assert http_dict["response"]
     assert http_dict["method"] is None
     assert http_dict["uri"] is None
+
+
+def test_hash() -> None:
+    """
+    Test the hash function.
+    """
+    # HTTP requests
+    http_get  = HTTP(http_get_layer)
+    http_get_2 = HTTP(http_get_layer_2)
+    http_get_3 = HTTP(http_get_layer_3)
+    http_post = HTTP(http_post_layer)
+    # HTTP responses
+    http_resp = HTTP(http_resp_layer)
+    http_resp_error = HTTP(http_resp_layer_error)
+    # Assertions
+    assert hash(http_get)  == hash(http_get_2)
+    assert hash(http_get)  == hash(http_get_3)
+    assert hash(http_get)  == hash(http_post)
+    assert hash(http_post) == hash(http_resp)
+    assert hash(http_get)  == hash(http_resp)
+    assert hash(http_resp) == hash(http_resp_error)
