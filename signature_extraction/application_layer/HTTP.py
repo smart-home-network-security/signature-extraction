@@ -42,3 +42,31 @@ class HTTP(ApplicationLayer):
             uri = uri.split("?")[0]
             uri += "*" if not uri.endswith("*") else ""
         self.uri = uri
+
+    
+    def __eq__(self, other: ApplicationLayer) -> bool:
+        """
+        Check if two HTTP packet layers pertain to the same data transfer.
+
+        Args:
+            other (ApplicationLayer): Other ApplicationLayer object
+        Returns:
+            bool: True if the two HTTP layers are equivalent
+        """
+        # Other object is not an HTTP layer, return False
+        if not isinstance(other, HTTP):
+            return False
+        
+        ## Other object is an HTTP layer
+
+        if self.response or other.response:
+            # If one of the two objects is a response,
+            # we cannot compare the fields.
+            # ==> conservatively return True
+            return True
+        
+        # Both objects are requests,
+        # compare method & URI
+        self_uri = self.uri[:-1] if self.uri.endswith(("*", "?")) else self.uri
+        other_uri = other.uri[:-1] if other.uri.endswith(("*", "?")) else other.uri
+        return self.method == other.method and self_uri == other_uri

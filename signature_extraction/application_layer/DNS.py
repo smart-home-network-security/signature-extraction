@@ -35,3 +35,21 @@ class DNS(ApplicationLayer):
             if attr == "qname":
                 attr = "domain-name"
             yield attr, value
+
+
+    def __eq__(self, other: ApplicationLayer) -> bool:
+        """
+        Check if two DNS packet layers pertain to the same data transfer.
+
+        Args:
+            other (ApplicationLayer): Other ApplicationLayer object
+        Returns:
+            bool: True if the two DNS layers are equivalent
+        """
+        # Other object is not a DNS layer, return False
+        if not isinstance(other, DNS):
+            return False
+        
+        # Other object is a DNS layer,
+        # compare qtype and qname
+        return self.qtype == other.qtype and self.qname == other.qname

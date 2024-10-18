@@ -34,14 +34,14 @@ def test_coap_get() -> None:
     coap_pkt = CoAP(pkt_coap_get)
     assert coap_pkt.protocol_name == "CoAP"
     assert coap_pkt.get_protocol_name() == "CoAP"
-    assert coap_pkt.type == CoAP.CoAPType.CON
+    assert coap_pkt.is_request
     assert coap_pkt.code == coap.coap_codes[1]
     assert coap_pkt.uri_path == "/sensors/temperature"
 
     coap_dict = dict(coap_pkt)
-    assert coap_dict["type"] == CoAP.CoAPType.CON
+    assert coap_dict["request"]
     assert coap_dict["code"] == coap.coap_codes[1]
-    assert coap_dict["uri_path"] == "/sensors/temperature"
+    assert coap_dict["uri"] == "/sensors/temperature"
 
 
 def test_coap_resp() -> None:
@@ -51,11 +51,7 @@ def test_coap_resp() -> None:
     coap_pkt = CoAP(pkt_coap_resp)
     assert coap_pkt.protocol_name == "CoAP"
     assert coap_pkt.get_protocol_name() == "CoAP"
-    assert coap_pkt.type == CoAP.CoAPType.ACK
-    assert coap_pkt.code == coap.coap_codes[69]
-    assert coap_pkt.uri_path is None
+    assert not coap_pkt.is_request
 
     coap_dict = dict(coap_pkt)
-    assert coap_dict["type"] == CoAP.CoAPType.ACK
-    assert coap_dict["code"] == coap.coap_codes[69]
-    assert coap_dict["uri_path"] is None
+    assert not coap_dict["request"]

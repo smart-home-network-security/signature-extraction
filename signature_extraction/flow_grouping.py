@@ -35,10 +35,10 @@ def group_pkts_per_flow(pkts: List[Packet]) -> NetworkPattern:
         lambda row: tuple(
             sorted(
                 [
-                    (row["src"], row["sport"], row["transport_protocol"]),
-                    (row["dst"], row["dport"], row["transport_protocol"])
+                    (row["src"], row["sport"]),
+                    (row["dst"], row["dport"])
                 ]
-            )
+            ) + [row["transport_protocol"], row["application_layer"]]
         ),
         axis="columns",
     )
