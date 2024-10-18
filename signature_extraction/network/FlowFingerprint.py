@@ -154,6 +154,7 @@ class FlowFingerprint(BaseFlow):
             - Hosts (in any direction)
             - Fixed port
             - Transport protocol
+            - Application layer protocol
 
         Args:
             other (BaseFlow): BaseFlow to match with.
@@ -166,8 +167,12 @@ class FlowFingerprint(BaseFlow):
         
         # If other object is a BaseFlow, compare attributes:
         if (
-            self.match_host(other) and                           # Hosts (in any direction)
-            self.transport_protocol == other.transport_protocol  # Transport protocol
+            # Hosts (in any direction)
+            self.match_host(other) and
+            # Transport protocol
+            self.transport_protocol == other.transport_protocol and
+            # Application layer protocol
+            self.application_layer == other.application_layer
         ):
             ## Ports
             fixed_ports = self.get_fixed_ports()
