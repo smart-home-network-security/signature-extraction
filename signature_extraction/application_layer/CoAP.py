@@ -98,7 +98,7 @@ class CoAP(ApplicationLayer):
         Returns:
             Iterator: iterator over the relevant class attributes
         """
-        yield "request", self.is_request
+        yield "response", not self.is_request
         if self.is_request:
             yield "code", self.code
             yield "uri",  self.uri_path
@@ -106,9 +106,10 @@ class CoAP(ApplicationLayer):
 
     def __hash__(self) -> int:
         """
-        Hash function for the ApplicationLayer class.
+        Hash function for the CoAP class.
+        Conservatively returns the same value for all CoAP objects.
 
         Returns:
-            int: hash value of the ApplicationLayer object.
+            int: hash value of the CoAP object
         """
-        return super().__hash__()
+        return hash(self.protocol_name)
