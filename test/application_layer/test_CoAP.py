@@ -49,7 +49,7 @@ def test_coap_get() -> None:
     assert coap_pkt.uri_path == "/sensors/temperature"
 
     coap_dict = dict(coap_pkt)
-    assert coap_dict["request"]
+    assert not coap_dict["response"]
     assert coap_dict["code"] == coap.coap_codes[1]
     assert coap_dict["uri"] == "/sensors/temperature"
 
@@ -64,7 +64,7 @@ def test_coap_resp() -> None:
     assert not coap_pkt.is_request
 
     coap_dict = dict(coap_pkt)
-    assert not coap_dict["request"]
+    assert coap_dict["response"]
 
 
 def test_hash() -> None:
@@ -82,9 +82,9 @@ def test_hash() -> None:
     coap_resp3 = CoAP(layer_coap_resp_3)
     # Assertions
     assert hash(coap_get)   == hash(coap_get2)
-    assert hash(coap_get)   != hash(coap_get3)
-    assert hash(coap_get)   != hash(coap_get4)
-    assert hash(coap_get)   != hash(coap_resp)
+    assert hash(coap_get)   == hash(coap_get3)
+    assert hash(coap_get)   == hash(coap_get4)
+    assert hash(coap_get)   == hash(coap_resp)
     assert hash(coap_resp)  == hash(coap_resp2)
     assert hash(coap_resp)  == hash(coap_resp3)
     assert hash(coap_resp2) == hash(coap_resp3)
