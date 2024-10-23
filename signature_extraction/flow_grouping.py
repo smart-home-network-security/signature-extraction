@@ -42,7 +42,7 @@ def group_pkts_per_flow(pkts: List[Packet]) -> NetworkPattern:
         ),
         axis="columns",
     )
-    grouped = df.groupby("flow")
+    grouped = df.groupby("flow", sort=False)
 
     # Extract flows
     for key, _ in grouped:

@@ -270,12 +270,11 @@ class FlowFingerprint(BaseFlow):
         Returns:
             str: Identifier for this FlowFingerprint.
         """
-        id = ""
+        id = f"{self.src}-{self.dst}_{self.transport_protocol}"
         fixed_ports = self.get_fixed_ports()
 
         # Hosts & ports
         if fixed_ports:
-            id += self.transport_protocol
             is_fixed_port = False
             for host, port in fixed_ports:
                 if host == self.src:
@@ -286,8 +285,6 @@ class FlowFingerprint(BaseFlow):
                     id += f"_dst_{port}"
             if not is_fixed_port:
                 id += f"_{port}"
-        else:
-            id += f"{self.src}-{self.dst}_{self.transport_protocol}"
             
         # Application layer
         if self.application_layer is not None:
