@@ -207,6 +207,11 @@ def extract_domain_names(packet: Packet, dns_table: dict) -> None:
 
         # Extract domain names from DNS packets
         if packet.haslayer(DNS):
+
+            # Do not consider mDNS packets
+            if packet.getfieldval("sport") == 5353 or packet.getfieldval("dport") == 5353:
+                return
+
             dns = packet.getlayer(DNS)
             
             # Response
