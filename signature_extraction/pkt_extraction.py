@@ -15,7 +15,7 @@ timeout = 5  # seconds
 i = 0
 timestamp     = 0
 previous_time = 0
-domain_names  = {}
+dns_table     = {}
 pkts          = []
 
 
@@ -23,11 +23,11 @@ def reset_vars() -> None:
     """
     Reset global variables.
     """
-    global i, timestamp, previous_time, domain_names, pkts
+    global i, timestamp, previous_time, dns_table, pkts
     i = 0
     timestamp     = 0
     previous_time = 0
-    domain_names  = {}
+    dns_table     = {}
     pkts          = []
 
 
@@ -38,7 +38,7 @@ def handle_packet(packet: scapy.Packet) -> None:
     Args:
         packet (scapy.Packet): Packet read from the PCAP file.
     """
-    global i, timestamp, previous_time, domain_names, pkts, timeout
+    global i, timestamp, previous_time, dns_table, pkts, timeout
 
     ## Packet validation
 
@@ -59,11 +59,11 @@ def handle_packet(packet: scapy.Packet) -> None:
         return
     
     # Domain name extraction
-    extract_domain_names(packet, domain_names)
+    extract_domain_names(packet, dns_table)
 
     ## Packet fingerprint extraction
     pkt = Packet.build_from_pkt(packet)
-    pkt.set_domain_names(domain_names)
+    pkt.set_domain_names(dns_table)
     pkts.append(pkt)
 
     # Update loop variables

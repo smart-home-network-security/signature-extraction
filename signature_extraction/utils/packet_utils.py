@@ -1,3 +1,4 @@
+from enum import IntEnum, StrEnum
 from scapy.all import Packet, ARP, IP, IPv6, TCP, UDP, Padding, Raw
 from scapy.layers.inet6 import IPv6, ICMPv6ND_RS, ICMPv6MLQuery, ICMPv6MLReport, ICMPv6ND_INDAdv, ICMPv6NDOptSrcLLAddr
 from scapy.layers.tls.all import TLS, TLS_Ext_ServerName
@@ -59,6 +60,26 @@ skip_layers = [
     ICMPv6NDOptSrcLLAddr,
     "IP Option Router Alert",
 ]
+
+
+### ENUM CLASSES ###
+
+class DnsQtype(IntEnum):
+    """
+    Enum class for the DNS query types.
+    """
+    A    = 1
+    PTR  = 12
+    AAAA = 28
+    SRV  = 33
+
+
+class DnsTableKeys(StrEnum):
+    """
+    Enum class for the allowed dictionary keys.
+    """
+    IP      = "ip"
+    SERVICE = "service"
 
 
 ### FUNCTIONS ###
@@ -154,13 +175,13 @@ def get_last_layer(packet: Packet) -> Packet:
     return packet.getlayer(i - 1)
 
 
-def extract_domain_names(packet: Packet, domain_names: dict) -> None:
+def extract_domain_names(packet: Packet, dns_table: dict) -> None:
     """
     Extract domain name from a scapy packet.
 
     Args:
         packet (Packet): Packet read from the PCAP file.
-        domain_names (dict): Dictionary containing domain names and their associated IP addresses.
+        dns_table (dict): Dictionary containing domain names and their associated IP addresses.
     """
     # Only consider packets with TLS Server Name extension or DNS
     if packet.haslayer(TLS_Ext_ServerName) or packet.haslayer(DNS):
@@ -178,31 +199,49 @@ def extract_domain_names(packet: Packet, domain_names: dict) -> None:
                 ip = packet["IP"].dst
 
             for domain_name in servernames:
-                if domain_name not in domain_names:
-                    domain_names[domain_name] = []
-                if ip not in domain_names[domain_name]:
-                    domain_names[domain_name].append(ip)
+                domain_name = domain_name
+                if DnsTableKeys.IP in dns_table:
+                    dns_table[DnsTableKeys.IP][ip] = domain_name
+                else:
+                    dns_table[DnsTableKeys.IP] = {ip: domain_name}
 
         # Extract domain names from DNS packets
         if packet.haslayer(DNS):
             dns = packet.getlayer(DNS)
             
-            # Query
-            if dns.qr == 0 and len(dns.qd) > 0:
-                # Extract domain name
-                domain_name = dns.qd[0].qname.decode("utf-8")[:-1]
-                if domain_name not in domain_names:
-                    domain_names[domain_name] = []
-            
             # Response
             if dns.qr == 1:  # Response
+
                 # Extract IP addresses
                 for i in range(dns.ancount):
-                    domain_name = dns.an[i].rrname.decode("utf-8")[:-1]
-                    ip = dns.an[i].rdata
+                    an_record = dns.an[i]
+                    domain_name = an_record.rrname.decode("utf-8")[:-1]
 
-                    if domain_name not in domain_names:
-                        domain_names[domain_name] = []
+                    # A or AAAA record
+                    if an_record.type == DnsQtype.A or an_record.type == DnsQtype.AAAA:
 
-                    if ip not in domain_names[domain_name]:
-                        domain_names[domain_name].append(ip)
+                        # Check if given domain name is present in the services set
+                        if domain_name in dns_table.get(DnsTableKeys.SERVICE, {}):
+                            domain_name = dns_table[DnsTableKeys.SERVICE][domain_name]
+
+                        ip = dns.an[i].rdata
+                        if DnsTableKeys.IP in dns_table:
+                            dns_table[DnsTableKeys.IP][ip] = domain_name
+                        else:
+                            dns_table[DnsTableKeys.IP] = {ip: domain_name}
+                    
+                    # PTR record
+                    if an_record.type == DnsQtype.PTR:
+                        rdata = an_record.rdata.decode("utf-8")[:-1]
+                        if DnsTableKeys.SERVICE in dns_table:
+                            dns_table[DnsTableKeys.SERVICE][domain_name] = rdata
+                        else:
+                            dns_table[DnsTableKeys.SERVICE] = {domain_name: rdata}
+
+                    # SRV record
+                    if an_record.type == DnsQtype.SRV:
+                        service = an_record.target.decode("utf-8")[:-1]
+                        if DnsTableKeys.SERVICE in dns_table:
+                            dns_table[DnsTableKeys.SERVICE][service] = domain_name
+                        else:
+                            dns_table[DnsTableKeys.SERVICE] = {service: domain_name}

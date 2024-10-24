@@ -20,8 +20,28 @@ class DNS(ApplicationLayer):
         """
         application_layer = pkt.getlayer("DNS")
         self.response = application_layer.qr == 1 if application_layer.qr else False
-        self.qtype    = dnstypes.get(application_layer.qd[0].qtype, "Unknown")
-        self.qname    = application_layer.qd[0].qname.decode()[:-1]
+
+        # Query type and name
+        try:
+            first_query = application_layer.qd[0]
+        except IndexError:
+            try:
+                first_answer = application_layer.an[0]
+            except IndexError:
+                self.qtype = None
+                self.qname = None
+            else:
+                self.qtype = dnstypes.get(first_answer.type, None)
+                try:
+                    self.qname = first_answer.rrname.decode()[:-1]
+                except AttributeError:
+                    self.qname = None
+        else:
+            self.qtype = dnstypes.get(first_query.qtype, None)
+            try:
+                self.qname = first_query.qname.decode()[:-1]
+            except AttributeError:
+                self.qname = None
 
     
     def __iter__(self) -> Iterator:
@@ -32,6 +52,9 @@ class DNS(ApplicationLayer):
             Iterator: iterator over the class attributes
         """
         for attr, value in self.__dict__.items():
+            if value is None:
+                continue
+            
             if attr == "qname":
                 attr = "domain-name"
             yield attr, value

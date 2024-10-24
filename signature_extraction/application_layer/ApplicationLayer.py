@@ -89,7 +89,7 @@ class ApplicationLayer:
         Returns:
             str: string representation of the ApplicationLayer class.
         """
-        return f"{self.protocol_name} - {', '.join([f'{attr}: {value}' for attr, value in self])}"
+        return f"{self.protocol_name} - {', '.join([f"{attr}: {value}" if value is not None else "" for attr, value in self])}"
 
 
     def __repr__(self) -> str:
@@ -99,7 +99,7 @@ class ApplicationLayer:
         Returns:
             str: string representation of the ApplicationLayer class.
         """
-        s = f"{self.protocol_name}_{'_'.join([f'{attr}-{value}' for attr, value in self])}"
+        s = f"{self.protocol_name}_{'_'.join([f"{attr}-{value}" if value is not None else "" for attr, value in self])}"
         for char in ApplicationLayer.characters_to_replace:
             if char in s:
                 s = s.replace(char, "-")

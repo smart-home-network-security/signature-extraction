@@ -5,6 +5,7 @@ from typing import Iterator
 import scapy.all as scapy
 from scapy.all import IP, IPv6, TCP, UDP
 # Package
+from signature_extraction.utils.packet_utils import DnsTableKeys
 from signature_extraction.application_layer import ApplicationLayer
 
 
@@ -186,24 +187,13 @@ class Packet:
         yield "length", self.length
 
     
-    def set_domain_names(self, domain_names: dict) -> None:
+    def set_domain_names(self, dns_table: dict) -> None:
         """
         Replace IP addresses with domain names in the Packet.
 
         Args:
-            domain_names (dict): dictionary of domain names associated with IP addresses.
+            dns_table (dict): dictionary of IP addresses and their corresponding domain name
         """
-        src_replaced = False
-        dst_replaced = False
-
-        for domain_name, ip_addresses in domain_names.items():            
-            if self.src in ip_addresses:
-                self.src = domain_name
-                src_replaced = True
-            if self.dst in ip_addresses:
-                self.dst = domain_name
-                dst_replaced = True
-            
-            # Early stopping
-            if src_replaced and dst_replaced:
-                return
+        dns_table = dns_table.get(DnsTableKeys.IP, {})
+        self.src = dns_table.get(self.src, self.src)
+        self.dst = dns_table.get(self.dst, self.dst)

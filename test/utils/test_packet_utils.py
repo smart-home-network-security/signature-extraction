@@ -238,15 +238,15 @@ def test_extract_domain_names() -> None:
     Test the function `extract_domain_names`.
     """
     # TLS Client Hello with Server Name extension
-    domain_names = {}
-    packet_utils.extract_domain_names(tls_server_name, domain_names)
-    assert "93.184.216.34" in domain_names["www.example.com"]
+    dns_table = {}
+    packet_utils.extract_domain_names(tls_server_name, dns_table)
+    assert "www.example.com" in dns_table[packet_utils.DnsTableKeys.IP]["93.184.216.34"]
 
     ## DNS
-    domain_names = {}
+    dns_table = {}
     # DNS query
-    packet_utils.extract_domain_names(dns_query, domain_names)
-    assert domain_names["www.example.com"] == []
+    packet_utils.extract_domain_names(dns_query, dns_table)
+    assert not dns_table
     # DNS response
-    packet_utils.extract_domain_names(dns_response, domain_names)
-    assert "93.184.216.34" in domain_names["www.example.com"]
+    packet_utils.extract_domain_names(dns_response, dns_table)
+    assert "www.example.com" in dns_table[packet_utils.DnsTableKeys.IP]["93.184.216.34"]
