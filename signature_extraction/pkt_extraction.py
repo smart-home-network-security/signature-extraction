@@ -49,13 +49,15 @@ def handle_packet(packet: scapy.Packet) -> None:
     # If first packet, set timestamp
     if previous_time == 0:
         previous_time = packet.time
-
-    # Skip signalling packets (e.g., TCP SYN)
-    if should_skip_pkt(packet):
-        return
     
     # Stop iteration if timeout exceeded w.r.t. previous packet
     if packet.time > previous_time + timeout:
+        return
+    
+    previous_time = packet.time
+
+    # Skip signalling packets (e.g., TCP SYN)
+    if should_skip_pkt(packet):
         return
     
     # Domain name extraction
@@ -66,8 +68,6 @@ def handle_packet(packet: scapy.Packet) -> None:
     pkt.set_domain_names(dns_table)
     pkts.append(pkt)
 
-    # Update loop variables
-    previous_time = packet.time
     i += 1
 
 
