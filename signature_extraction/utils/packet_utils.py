@@ -1,7 +1,7 @@
 from enum import IntEnum, StrEnum
 from scapy.all import Packet, ARP, IP, IPv6, TCP, UDP, Padding, Raw
 from scapy.layers.inet6 import IPv6, ICMPv6ND_RS, ICMPv6MLQuery, ICMPv6MLReport, ICMPv6ND_INDAdv, ICMPv6NDOptSrcLLAddr
-from scapy.layers.tls.all import TLS, TLS_Ext_ServerName
+from scapy.layers.tls.all import TLS, TLSApplicationData, TLS_Ext_ServerName
 from scapy.layers.dns import DNS
 from socket import getservbyport
 
@@ -125,18 +125,8 @@ def should_skip_pkt(pkt: Packet) -> bool:
 
     # TLS packet
     if pkt.haslayer(TLS):
-        try:
-            extensions = pkt[TLS].ext
-        except AttributeError:
-            # Other TLS packets are signalling packets
-            return True
-        else:
-            if extensions is None:
-                return True
-            for extension in extensions:
-                if isinstance(extension, TLS_Ext_ServerName):
-                    # TLS Client Hello with Server Name extension, not a signalling packet
-                    return False
+        # Do not skip TLS packets with application data or Server Name extension
+        return not (pkt.haslayer(TLSApplicationData) or pkt.haslayer(TLS_Ext_ServerName))
 
     # TCP packet
     if pkt.haslayer(TCP):

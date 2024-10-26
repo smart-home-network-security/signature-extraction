@@ -13,7 +13,6 @@ from .network import Packet
 timeout = 5  # seconds
 # Packet loop accumulators
 i = 0
-timestamp     = 0
 previous_time = 0
 dns_table     = {}
 pkts          = []
@@ -23,9 +22,8 @@ def reset_vars() -> None:
     """
     Reset global variables.
     """
-    global i, timestamp, previous_time, dns_table, pkts
+    global i, previous_time, dns_table, pkts
     i = 0
-    timestamp     = 0
     previous_time = 0
     dns_table     = {}
     pkts          = []
@@ -38,13 +36,9 @@ def handle_packet(packet: scapy.Packet) -> None:
     Args:
         packet (scapy.Packet): Packet read from the PCAP file.
     """
-    global i, timestamp, previous_time, dns_table, pkts, timeout
+    global i, previous_time, dns_table, pkts, timeout
 
     ## Packet validation
-
-    # If timestamp is not set, set it with the first packet
-    if i == 0 and timestamp == 0:
-        timestamp = packet.time
 
     # If first packet, set timestamp
     if previous_time == 0:
