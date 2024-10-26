@@ -189,7 +189,7 @@ def extract_domain_names(packet: Packet, dns_table: dict) -> None:
                 ip = packet["IP"].dst
 
             for domain_name in servernames:
-                domain_name = domain_name
+                domain_name = domain_name.getfieldval("servername").decode("utf-8")
                 if DnsTableKeys.IP in dns_table:
                     dns_table[DnsTableKeys.IP][ip] = domain_name
                 else:
