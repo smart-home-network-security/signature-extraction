@@ -1,4 +1,4 @@
-from enum import IntEnum, StrEnum
+from enum import Enum, IntEnum
 from scapy.all import Packet, ARP, IP, IPv6, TCP, UDP, Padding, Raw
 from scapy.layers.inet6 import IPv6, ICMPv6ND_RS, ICMPv6MLQuery, ICMPv6MLReport, ICMPv6ND_INDAdv, ICMPv6NDOptSrcLLAddr
 from scapy.layers.tls.all import TLS, TLSApplicationData, TLS_Ext_ServerName
@@ -74,7 +74,7 @@ class DnsQtype(IntEnum):
     SRV  = 33
 
 
-class DnsTableKeys(StrEnum):
+class DnsTableKeys(Enum):
     """
     Enum class for the allowed dictionary keys.
     """
