@@ -3,7 +3,7 @@
 from scapy.all import Packet, Ether, ARP, IP, TCP, UDP, Padding, Raw
 from scapy.layers.http import HTTP, HTTPRequest, HTTPResponse
 from scapy.layers.dns import DNS, DNSQR, DNSRR
-from scapy.layers.tls.all import TLS, TLSClientHello, TLSServerHello, TLS_Ext_ServerName
+from scapy.layers.tls.all import TLS, TLSClientHello, TLSServerHello, TLS_Ext_ServerName, ServerName
 from scapy.layers.inet6 import IPv6, ICMPv6ND_RS, ICMPv6MLQuery, ICMPv6MLReport, ICMPv6ND_INDAdv, ICMPv6NDOptSrcLLAddr
 # Package
 import signature_extraction.utils.packet_utils as packet_utils
@@ -62,11 +62,12 @@ nd_opt_src_ll_addr = Ether() / IPv6() / ICMPv6NDOptSrcLLAddr()
 # TLS (raw)
 tls_raw = Ether() / IP() / TCP(flags="") / TLS()
 # TLS Client Hello with Server Name extension
+server_name = ServerName(nametype=0, namelen=15, servername=b"www.example.com")
 tls_server_name = (
     IP(dst="93.184.216.34") / TCP(flags="S") / TLS() /
     TLSClientHello(version=0x0303,
         ciphers=[0x0033, 0x0039, 0x002f],  # Sample cipher suites
-        ext=[TLS_Ext_ServerName(servernames=["www.example.com"])])
+        ext=[TLS_Ext_ServerName(servernames=[server_name])])
 )
 # TLS Server Hello
 tls_server_hello = IP() / TCP(flags="") / TLS() / TLSServerHello()
@@ -224,7 +225,7 @@ def test_get_last_layer() -> None:
     assert isinstance(packet_utils.get_last_layer(nd_ind_adv), ICMPv6ND_INDAdv)
     assert isinstance(packet_utils.get_last_layer(nd_opt_src_ll_addr), ICMPv6NDOptSrcLLAddr)
     assert isinstance(packet_utils.get_last_layer(tls_raw), TLS)
-    assert isinstance(packet_utils.get_last_layer(tls_server_name), TLS_Ext_ServerName)
+    assert isinstance(packet_utils.get_last_layer(tls_server_name), ServerName)
     assert isinstance(packet_utils.get_last_layer(tls_server_hello), TLSServerHello)
     assert isinstance(packet_utils.get_last_layer(http_get), HTTPRequest)
     assert isinstance(packet_utils.get_last_layer(http_resp), HTTPResponse)
