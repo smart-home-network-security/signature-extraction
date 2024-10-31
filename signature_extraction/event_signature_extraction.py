@@ -69,14 +69,14 @@ def patterns_to_signature(patterns: List[NetworkPattern]) -> NetworkPattern:
     return signature
 
 
-def pcaps_to_signature_pattern(pcap_files: Union[str, List[str]], timeout: int = 5) -> NetworkPattern:
+def pcaps_to_signature_pattern(pcap_files: Union[str, List[str]], timeout: int = 20) -> NetworkPattern:
     """
     Extract an event signature from a list of network traces.
 
     Args:
         pcap_files (Union[str, List[str]]): Path to the PCAP file(s).
         timeout (int): Iteration is stopped if current packet's timestamp exceeds the previous one by this value [seconds].
-                       Optional, default is 5 seconds.
+                       Optional, default is 20 seconds.
     Returns:
         NetworkPattern: Event signature extracted from the flows.
     """
