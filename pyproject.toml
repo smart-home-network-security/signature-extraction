@@ -47,6 +47,7 @@ classifiers = [
 
 dependencies = [
   # Libraries
+  "cryptography",
   "scapy",
   "pandas",
   # Custom
