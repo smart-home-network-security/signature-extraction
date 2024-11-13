@@ -1,6 +1,8 @@
 ## Imports
 # Libraries
 from typing import List, Union
+# Custom
+from dns_unbound_cache_reader import read_dns_cache
 # Package
 from .network import FlowFingerprint, NetworkPattern
 from .pkt_extraction import pcap_to_pkts
@@ -69,12 +71,13 @@ def patterns_to_signature(patterns: List[NetworkPattern]) -> NetworkPattern:
     return signature
 
 
-def pcaps_to_signature_pattern(pcap_files: Union[str, List[str]], timeout: int = 20) -> NetworkPattern:
+def pcaps_to_signature_pattern(pcap_files: Union[str, List[str]], lan_gateway: str = "127.0.0.1", timeout: int = 20) -> NetworkPattern:
     """
     Extract an event signature from a list of network traces.
 
     Args:
         pcap_files (Union[str, List[str]]): Path to the PCAP file(s).
+        lan_gateway (str): LAN gateway's hostname. Optional, default is localhost's IPv4 address.
         timeout (int): Iteration is stopped if current packet's timestamp exceeds the previous one by this value [seconds].
                        Optional, default is 20 seconds.
     Returns:
@@ -84,10 +87,13 @@ def pcaps_to_signature_pattern(pcap_files: Union[str, List[str]], timeout: int =
     if isinstance(pcap_files, str):
         pcap_files = [pcap_files]
 
+    # Get initial DNS table from LAN gateway's DNS cache
+    dns_table = read_dns_cache(host=lan_gateway)
+
     # Extract flows from PCAP files
     patterns = []
     for pcap in pcap_files:
-        pkts = pcap_to_pkts(pcap, timeout)
+        pkts = pcap_to_pkts(pcap, dns_table, timeout)
         if len(pkts) > 0:
             pattern = group_pkts_per_flow(pkts)
             patterns.append(pattern)

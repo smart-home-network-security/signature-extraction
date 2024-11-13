@@ -65,21 +65,27 @@ def handle_packet(packet: scapy.Packet) -> None:
     i += 1
 
 
-def pcap_to_pkts(pcap_file: str, timeout_arg: int = 20) -> List[Packet]:
+def pcap_to_pkts(pcap_file: str, dns_table_arg: dict = {}, timeout_arg: int = 20) -> List[Packet]:
     """
     Convert a PCAP file to a list of packets.
 
     Args:
         pcap_file (str): PCAP file.
+        dns_table_arg (dict): Dictionary mapping IP addresses to domain names. Optional, default is empty.
         timeout_arg (int): Iteration is stopped if current packet's timestamp exceeds the previous one by this value [seconds].
                            Optional, default is 20 seconds.
     Returns:
         List[Packet]: List of packet fingerprints.
     """
-    global pkts, timeout
+    # Set global variables
+    global pkts, dns_table, timeout
+    dns_table = dns_table_arg
     timeout = timeout_arg
+
+    # Read PCAP file
     scapy.sniff(offline=pcap_file, prn=handle_packet, store=False)
     packets = pkts
+
     reset_vars()
     return packets
 
@@ -108,16 +114,19 @@ def pkts_to_df(pkts: List[Packet]) -> pd.DataFrame:
     return pd.DataFrame([dict(pkt) for pkt in pkts])
 
 
-def pcap_to_df(pcap_file: str) -> pd.DataFrame:
+def pcap_to_df(pcap_file: str, dns_table_arg: dict = {}, timeout_arg: int = 20) -> pd.DataFrame:
     """
     Convert a PCAP file to a DataFrame.
 
     Args:
         pcap_file (str): PCAP file.
+        dns_table_arg (dict): Dictionary mapping IP addresses to domain names. Optional, default is empty.
+        timeout_arg (int): Iteration is stopped if current packet's timestamp exceeds the previous one by this value [seconds].
+                           Optional, default is 20 seconds.
     Returns:
         pd.DataFrame: DataFrame of packet fingerprints.
     """
-    pkts = pcap_to_pkts(pcap_file)
+    pkts = pcap_to_pkts(pcap_file, dns_table_arg, timeout_arg)
     return pkts_to_df(pkts)
 
 
@@ -133,7 +142,7 @@ def pkts_to_csv(pkts: List[Packet], output_file: str) -> None:
     df.to_csv(output_file, index=False)
 
 
-def pcap_to_csv(pcap_file: str, output_file: str) -> None:
+def pcap_to_csv(pcap_file: str, output_file: str, dns_table_arg: dict = {}, timeout_arg: int = 20) -> None:
     """
     Convert a PCAP file to a list of PacketSignatures,
     and save it to a CSV file.
@@ -141,6 +150,9 @@ def pcap_to_csv(pcap_file: str, output_file: str) -> None:
     Args:
         pcap_file (str): PCAP file.
         output_file (str): Output file.
+        dns_table_arg (dict): Dictionary mapping IP addresses to domain names. Optional, default is empty.
+        timeout_arg (int): Iteration is stopped if current packet's timestamp exceeds the previous one by this value [seconds].
+                           Optional, default is 20 seconds.
     """
-    pkts = pcap_to_pkts(pcap_file)
+    pkts = pcap_to_pkts(pcap_file, dns_table_arg, timeout_arg)
     pkts_to_csv(pkts, output_file)
