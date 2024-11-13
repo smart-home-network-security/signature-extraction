@@ -203,10 +203,10 @@ def extract_domain_names(packet: Packet, dns_table: dict) -> None:
 
             for domain_name in servernames:
                 domain_name = domain_name.getfieldval("servername").decode("utf-8")
-                if DnsTableKeys.IP in dns_table:
-                    dns_table[DnsTableKeys.IP][ip] = domain_name
+                if DnsTableKeys.IP.name in dns_table:
+                    dns_table[DnsTableKeys.IP.name][ip] = domain_name
                 else:
-                    dns_table[DnsTableKeys.IP] = {ip: domain_name}
+                    dns_table[DnsTableKeys.IP.name] = {ip: domain_name}
 
 
         # Extract domain names from DNS packets
@@ -232,14 +232,14 @@ def extract_domain_names(packet: Packet, dns_table: dict) -> None:
                     if an_record.type == DnsQtype.A or an_record.type == DnsQtype.AAAA:
 
                         # Check if given domain name is present in the services set
-                        if domain_name in dns_table.get(DnsTableKeys.SERVICE, {}):
-                            domain_name = dns_table[DnsTableKeys.SERVICE][domain_name]
+                        if domain_name in dns_table.get(DnsTableKeys.SERVICE.name, {}):
+                            domain_name = dns_table[DnsTableKeys.SERVICE.name][domain_name]
 
                         ip = dns.an[i].rdata
-                        if DnsTableKeys.IP in dns_table:
-                            dns_table[DnsTableKeys.IP][ip] = domain_name
+                        if DnsTableKeys.IP.name in dns_table:
+                            dns_table[DnsTableKeys.IP.name][ip] = domain_name
                         else:
-                            dns_table[DnsTableKeys.IP] = {ip: domain_name}
+                            dns_table[DnsTableKeys.IP.name] = {ip: domain_name}
                     
                     # PTR record
                     if an_record.type == DnsQtype.PTR:
@@ -253,24 +253,24 @@ def extract_domain_names(packet: Packet, dns_table: dict) -> None:
                         if match_ptr:
                             # PTR record is a reverse DNS lookup
                             ip = ".".join(reversed(match_ptr.groups()))
-                            if ip not in dns_table.get(DnsTableKeys.IP, {}):
-                                if DnsTableKeys.IP in dns_table:
-                                    dns_table[DnsTableKeys.IP][ip] = rdata
+                            if ip not in dns_table.get(DnsTableKeys.IP.name, {}):
+                                if DnsTableKeys.IP.name in dns_table:
+                                    dns_table[DnsTableKeys.IP.name][ip] = rdata
                                 else:
-                                    dns_table[DnsTableKeys.IP] = {ip: rdata}
+                                    dns_table[DnsTableKeys.IP.name] = {ip: rdata}
                         else:
                             # PTR record contains generic RDATA
-                            if DnsTableKeys.SERVICE in dns_table:
-                                dns_table[DnsTableKeys.SERVICE][domain_name] = rdata
+                            if DnsTableKeys.SERVICE.name in dns_table:
+                                dns_table[DnsTableKeys.SERVICE.name][domain_name] = rdata
                             else:
-                                dns_table[DnsTableKeys.SERVICE] = {domain_name: rdata}
+                                dns_table[DnsTableKeys.SERVICE.name] = {domain_name: rdata}
 
                     # SRV record
                     if an_record.type == DnsQtype.SRV:
                         service = an_record.target.decode("utf-8")
                         if service.endswith("."):
                             service = service[:-1]
-                        if DnsTableKeys.SERVICE in dns_table:
-                            dns_table[DnsTableKeys.SERVICE][service] = domain_name
+                        if DnsTableKeys.SERVICE.name in dns_table:
+                            dns_table[DnsTableKeys.SERVICE.name][service] = domain_name
                         else:
-                            dns_table[DnsTableKeys.SERVICE] = {service: domain_name}
+                            dns_table[DnsTableKeys.SERVICE.name] = {service: domain_name}

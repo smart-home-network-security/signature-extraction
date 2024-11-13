@@ -194,6 +194,6 @@ class Packet:
         Args:
             dns_table (dict): dictionary of IP addresses and their corresponding domain name
         """
-        dns_table = dns_table.get(DnsTableKeys.IP, {})
+        dns_table = dns_table.get(DnsTableKeys.IP.name, {})
         self.src = dns_table.get(self.src, self.src)
         self.dst = dns_table.get(self.dst, self.dst)

@@ -7,7 +7,7 @@ from scapy.layers.tls.all import TLS, TLSClientHello, TLSServerHello, TLS_Ext_Se
 from scapy.layers.inet6 import IPv6, ICMPv6ND_RS, ICMPv6MLQuery, ICMPv6MLReport, ICMPv6ND_INDAdv, ICMPv6NDOptSrcLLAddr
 # Package
 import signature_extraction.utils.packet_utils as packet_utils
-from signature_extraction.utils.packet_utils import DnsQtype
+from signature_extraction.utils.packet_utils import DnsQtype, DnsTableKeys
 
 
 ##### UTIL FUNCTIONS #####
@@ -262,7 +262,7 @@ def test_extract_domain_names() -> None:
     # TLS Client Hello with Server Name extension
     dns_table = {}
     packet_utils.extract_domain_names(tls_server_name, dns_table)
-    assert "www.example.com" in dns_table[packet_utils.DnsTableKeys.IP]["93.184.216.34"]
+    assert "www.example.com" in dns_table[DnsTableKeys.IP.name]["93.184.216.34"]
 
     ## DNS
     dns_table = {}
@@ -271,17 +271,17 @@ def test_extract_domain_names() -> None:
     assert not dns_table
     # DNS response
     packet_utils.extract_domain_names(dns_response_A, dns_table)
-    assert "www.example.com" in dns_table[packet_utils.DnsTableKeys.IP]["93.184.216.34"]
+    assert "www.example.com" in dns_table[DnsTableKeys.IP.name]["93.184.216.34"]
 
     # DNS PTR response
     # DNS table has not been flushed, so the domain name should not be added
     packet_utils.extract_domain_names(dns_response_PTR, dns_table)
-    assert "www.example.com" in dns_table[packet_utils.DnsTableKeys.IP]["93.184.216.34"]
-    assert "www.example2.com" not in dns_table[packet_utils.DnsTableKeys.IP]["93.184.216.34"]
+    assert "www.example.com" in dns_table[DnsTableKeys.IP.name]["93.184.216.34"]
+    assert "www.example2.com" not in dns_table[DnsTableKeys.IP.name]["93.184.216.34"]
 
     # DNS PTR, with flushed DNS table
     dns_table = {}
     packet_utils.extract_domain_names(dns_query_PTR, dns_table)
     assert not dns_table
     packet_utils.extract_domain_names(dns_response_PTR, dns_table)
-    assert "www.example2.com" in dns_table[packet_utils.DnsTableKeys.IP]["93.184.216.34"]
+    assert "www.example2.com" in dns_table[DnsTableKeys.IP.name]["93.184.216.34"]
