@@ -7,6 +7,7 @@ from scapy.layers.tls.all import TLS, TLSClientHello, TLSServerHello, TLS_Ext_Se
 from scapy.layers.inet6 import IPv6, ICMPv6ND_RS, ICMPv6MLQuery, ICMPv6MLReport, ICMPv6ND_INDAdv, ICMPv6NDOptSrcLLAddr
 # Package
 import signature_extraction.utils.packet_utils as packet_utils
+from signature_extraction.utils.packet_utils import DnsQtype
 
 
 ##### UTIL FUNCTIONS #####
@@ -97,26 +98,46 @@ http_resp = (
         Connection=b"close"
     )
 )
-# DNS query
-dns_query = (
+# DNS A query
+dns_query_A = (
     IP(dst="8.8.8.8") /
     UDP(dport=53) /
     DNS(
         rd=1,
-        qd=DNSQR(qname="www.example.com")
+        qd=DNSQR(qtype=DnsQtype.A.value, qname="www.example.com")
     )
 )
-dns_query = build_packet(dns_query)
-# DNS response
-dns_response = (
+dns_query_A = build_packet(dns_query_A)
+# DNS A response
+dns_response_A = (
     IP(src="8.8.8.8", dst="192.168.1.100") /
     UDP(sport=53, dport=12345) /
     DNS(id=0xAAAA, qr=1, aa=1, rd=1, ra=1,
-        qd=DNSQR(qname="www.example.com"),
-        an=DNSRR(rrname="www.example.com", ttl=60, rdata="93.184.216.34")
+        qd=DNSQR(qtype=DnsQtype.A.value, qname="www.example.com"),
+        an=DNSRR(type=DnsQtype.A.value, rrname="www.example.com", ttl=60, rdata="93.184.216.34")
     )
 )
-dns_response = build_packet(dns_response)
+dns_response_A = build_packet(dns_response_A)
+# DNS PTR query
+dns_query_PTR = (
+    IP(dst="8.8.8.8") /
+    UDP(dport=53) /
+    DNS(
+        rd=1,
+        qd=DNSQR(qtype=DnsQtype.PTR.value, qname="34.216.184.93.in-addr.arpa")
+    )
+)
+dns_query_PTR = build_packet(dns_query_PTR)
+# DNS PTR response
+dns_response_PTR = (
+    IP(src="8.8.8.8", dst="192.168.1.100") /
+    UDP(sport=53, dport=12345) /
+    DNS(id=0xAAAA, qr=1, aa=1, rd=1, ra=1,
+        qd=DNSQR(qtype=DnsQtype.PTR.value, qname="www.example2.com"),
+        an=DNSRR(type=DnsQtype.PTR.value, rrname="34.216.184.93.in-addr.arpa", ttl=60, rdata="www.example2.com")
+    )
+)
+dns_response_PTR = build_packet(dns_response_PTR)
 
 
 ##### TEST FUNCTIONS #####
@@ -205,8 +226,8 @@ def test_should_skip_pkt() -> None:
     assert not packet_utils.should_skip_pkt(http_get)
     assert not packet_utils.should_skip_pkt(http_resp)
     # DNS
-    assert not packet_utils.should_skip_pkt(dns_query)
-    assert not packet_utils.should_skip_pkt(dns_response)
+    assert not packet_utils.should_skip_pkt(dns_query_A)
+    assert not packet_utils.should_skip_pkt(dns_response_A)
 
 
 def test_get_last_layer() -> None:
@@ -229,8 +250,8 @@ def test_get_last_layer() -> None:
     assert isinstance(packet_utils.get_last_layer(tls_server_hello), TLSServerHello)
     assert isinstance(packet_utils.get_last_layer(http_get), HTTPRequest)
     assert isinstance(packet_utils.get_last_layer(http_resp), HTTPResponse)
-    assert isinstance(packet_utils.get_last_layer(dns_query), DNSQR)
-    assert isinstance(packet_utils.get_last_layer(dns_response), DNSRR)
+    assert isinstance(packet_utils.get_last_layer(dns_query_A), DNSQR)
+    assert isinstance(packet_utils.get_last_layer(dns_response_A), DNSRR)
 
 
 
@@ -246,8 +267,21 @@ def test_extract_domain_names() -> None:
     ## DNS
     dns_table = {}
     # DNS query
-    packet_utils.extract_domain_names(dns_query, dns_table)
+    packet_utils.extract_domain_names(dns_query_A, dns_table)
     assert not dns_table
     # DNS response
-    packet_utils.extract_domain_names(dns_response, dns_table)
+    packet_utils.extract_domain_names(dns_response_A, dns_table)
     assert "www.example.com" in dns_table[packet_utils.DnsTableKeys.IP]["93.184.216.34"]
+
+    # DNS PTR response
+    # DNS table has not been flushed, so the domain name should not be added
+    packet_utils.extract_domain_names(dns_response_PTR, dns_table)
+    assert "www.example.com" in dns_table[packet_utils.DnsTableKeys.IP]["93.184.216.34"]
+    assert "www.example2.com" not in dns_table[packet_utils.DnsTableKeys.IP]["93.184.216.34"]
+
+    # DNS PTR, with flushed DNS table
+    dns_table = {}
+    packet_utils.extract_domain_names(dns_query_PTR, dns_table)
+    assert not dns_table
+    packet_utils.extract_domain_names(dns_response_PTR, dns_table)
+    assert "www.example2.com" in dns_table[packet_utils.DnsTableKeys.IP]["93.184.216.34"]

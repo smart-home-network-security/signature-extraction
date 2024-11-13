@@ -1,4 +1,5 @@
 from enum import Enum, IntEnum
+import re
 from scapy.all import Packet, ARP, IP, IPv6, TCP, UDP, Padding, Raw
 from scapy.layers.inet6 import IPv6, ICMPv6ND_RS, ICMPv6MLQuery, ICMPv6MLReport, ICMPv6ND_INDAdv, ICMPv6NDOptSrcLLAddr
 from scapy.layers.tls.all import TLS, TLSApplicationData, TLS_Ext_ServerName
@@ -223,7 +224,9 @@ def extract_domain_names(packet: Packet, dns_table: dict) -> None:
                 # Extract IP addresses
                 for i in range(dns.ancount):
                     an_record = dns.an[i]
-                    domain_name = an_record.rrname.decode("utf-8")[:-1]
+                    domain_name = an_record.rrname.decode("utf-8")
+                    if domain_name.endswith("."):
+                        domain_name = domain_name[:-1]
 
                     # A or AAAA record
                     if an_record.type == DnsQtype.A or an_record.type == DnsQtype.AAAA:
@@ -240,15 +243,33 @@ def extract_domain_names(packet: Packet, dns_table: dict) -> None:
                     
                     # PTR record
                     if an_record.type == DnsQtype.PTR:
-                        rdata = an_record.rdata.decode("utf-8")[:-1]
-                        if DnsTableKeys.SERVICE in dns_table:
-                            dns_table[DnsTableKeys.SERVICE][domain_name] = rdata
+                        rdata = an_record.rdata.decode("utf-8")
+                        if rdata.endswith("."):
+                            rdata = rdata[:-1]
+                        # Regex patterns
+                        pattern_ipv4_byte = r"(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])"                          # Single byte from an IPv4 address
+                        pattern_ptr       = (pattern_ipv4_byte + r"\.") * 3 + pattern_ipv4_byte + r".in-addr.arpa"  # Reverse DNS lookup RDATA
+                        match_ptr = re.match(pattern_ptr, domain_name)
+                        if match_ptr:
+                            # PTR record is a reverse DNS lookup
+                            ip = ".".join(reversed(match_ptr.groups()))
+                            if ip not in dns_table.get(DnsTableKeys.IP, {}):
+                                if DnsTableKeys.IP in dns_table:
+                                    dns_table[DnsTableKeys.IP][ip] = rdata
+                                else:
+                                    dns_table[DnsTableKeys.IP] = {ip: rdata}
                         else:
-                            dns_table[DnsTableKeys.SERVICE] = {domain_name: rdata}
+                            # PTR record contains generic RDATA
+                            if DnsTableKeys.SERVICE in dns_table:
+                                dns_table[DnsTableKeys.SERVICE][domain_name] = rdata
+                            else:
+                                dns_table[DnsTableKeys.SERVICE] = {domain_name: rdata}
 
                     # SRV record
                     if an_record.type == DnsQtype.SRV:
-                        service = an_record.target.decode("utf-8")[:-1]
+                        service = an_record.target.decode("utf-8")
+                        if service.endswith("."):
+                            service = service[:-1]
                         if DnsTableKeys.SERVICE in dns_table:
                             dns_table[DnsTableKeys.SERVICE][service] = domain_name
                         else:
