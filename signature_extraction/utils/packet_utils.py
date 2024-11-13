@@ -167,7 +167,19 @@ def get_last_layer(packet: Packet) -> Packet:
 
 def extract_domain_names(packet: Packet, dns_table: dict) -> None:
     """
-    Extract domain name from a scapy packet.
+    Extract domain name from a scapy packet,
+    more precisely from TLS Server Name extension and DNS packets containing an answer section.
+    The resulting dictionary takes the following format:
+        {
+            DnsTableKeys.IP: {
+                ip_address: domain_name,
+                ...
+            },
+            DnsTableKeys.SERVICE: {
+                service_name: actual_name,
+                ...
+            }
+        }
 
     Args:
         packet (Packet): Packet read from the PCAP file.
@@ -194,6 +206,7 @@ def extract_domain_names(packet: Packet, dns_table: dict) -> None:
                     dns_table[DnsTableKeys.IP][ip] = domain_name
                 else:
                     dns_table[DnsTableKeys.IP] = {ip: domain_name}
+
 
         # Extract domain names from DNS packets
         if packet.haslayer(DNS):
