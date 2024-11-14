@@ -5,6 +5,7 @@ from scapy.all import ARP, IP, IPv6, TCP, UDP, Padding, Raw
 from scapy.layers.inet6 import IPv6, ICMPv6ND_RS, ICMPv6MLQuery, ICMPv6MLReport, ICMPv6ND_INDAdv, ICMPv6NDOptSrcLLAddr
 from scapy.layers.tls.all import TLS, TLSApplicationData, TLS_Ext_ServerName
 from scapy.layers.dns import DNS
+from scapy.layers.dhcp import BOOTP, DHCP
 from socket import getservbyport
 from dns_unbound_cache_reader import DnsRtype, DnsTableKeys
 
@@ -56,6 +57,8 @@ skip_tcp_flags = [
 skip_layers = [
     Padding,
     ARP,
+    BOOTP,
+    DHCP,
     ICMPv6ND_RS,
     ICMPv6MLQuery,
     ICMPv6MLReport,
