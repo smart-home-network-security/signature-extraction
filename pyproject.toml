@@ -51,9 +51,10 @@ dependencies = [
   "scapy",
   "pandas",
   # Custom
+  "dns-unbound-cache-reader",
   "profile-translator-blocklist"
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/smart-home-network-security/signature-extraction"
-"Source" = "https://github.com/smart-home-network-security/signature-extraction"
+"Homepage" = "https://forge.uclouvain.be/smart-home-network-security/signature-extraction"
+"Source" = "https://forge.uclouvain.be/smart-home-network-security/signature-extraction"

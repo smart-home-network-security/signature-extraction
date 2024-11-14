@@ -3,4 +3,5 @@ cryptography
 scapy
 pandas
 # Custom
+dns-unbound-cache-reader
 profile-translator-blocklist
