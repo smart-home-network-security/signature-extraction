@@ -1,5 +1,6 @@
 ## Imports
 # Libraries
+import pytest
 from scapy.all import Packet, Ether, ARP, IP, TCP, UDP, Padding, Raw
 from scapy.layers.http import HTTP, HTTPRequest, HTTPResponse
 from scapy.layers.dns import DNS, DNSQR, DNSRR
@@ -7,7 +8,7 @@ from scapy.layers.tls.all import TLS, TLSClientHello, TLSServerHello, TLS_Ext_Se
 from scapy.layers.inet6 import IPv6, ICMPv6ND_RS, ICMPv6MLQuery, ICMPv6MLReport, ICMPv6ND_INDAdv, ICMPv6NDOptSrcLLAddr
 # Package
 import signature_extraction.utils.packet_utils as packet_utils
-from signature_extraction.utils.packet_utils import DnsQtype, DnsTableKeys
+from signature_extraction.utils import DnsRtype, DnsTableKeys
 
 
 ##### UTIL FUNCTIONS #####
@@ -104,7 +105,7 @@ dns_query_A = (
     UDP(dport=53) /
     DNS(
         rd=1,
-        qd=DNSQR(qtype=DnsQtype.A.value, qname="www.example.com")
+        qd=DNSQR(qtype=DnsRtype.A.value, qname="www.example.com")
     )
 )
 dns_query_A = build_packet(dns_query_A)
@@ -113,8 +114,8 @@ dns_response_A = (
     IP(src="8.8.8.8", dst="192.168.1.100") /
     UDP(sport=53, dport=12345) /
     DNS(id=0xAAAA, qr=1, aa=1, rd=1, ra=1,
-        qd=DNSQR(qtype=DnsQtype.A.value, qname="www.example.com"),
-        an=DNSRR(type=DnsQtype.A.value, rrname="www.example.com", ttl=60, rdata="93.184.216.34")
+        qd=DNSQR(qtype=DnsRtype.A.value, qname="www.example.com"),
+        an=DNSRR(type=DnsRtype.A.value, rrname="www.example.com", ttl=60, rdata="93.184.216.34")
     )
 )
 dns_response_A = build_packet(dns_response_A)
@@ -124,7 +125,7 @@ dns_query_PTR = (
     UDP(dport=53) /
     DNS(
         rd=1,
-        qd=DNSQR(qtype=DnsQtype.PTR.value, qname="34.216.184.93.in-addr.arpa")
+        qd=DNSQR(qtype=DnsRtype.PTR.value, qname="34.216.184.93.in-addr.arpa")
     )
 )
 dns_query_PTR = build_packet(dns_query_PTR)
@@ -133,8 +134,8 @@ dns_response_PTR = (
     IP(src="8.8.8.8", dst="192.168.1.100") /
     UDP(sport=53, dport=12345) /
     DNS(id=0xAAAA, qr=1, aa=1, rd=1, ra=1,
-        qd=DNSQR(qtype=DnsQtype.PTR.value, qname="www.example2.com"),
-        an=DNSRR(type=DnsQtype.PTR.value, rrname="34.216.184.93.in-addr.arpa", ttl=60, rdata="www.example2.com")
+        qd=DNSQR(qtype=DnsRtype.PTR.value, qname="www.example2.com"),
+        an=DNSRR(type=DnsRtype.PTR.value, rrname="34.216.184.93.in-addr.arpa", ttl=60, rdata="www.example2.com")
     )
 )
 dns_response_PTR = build_packet(dns_response_PTR)
@@ -254,7 +255,6 @@ def test_get_last_layer() -> None:
     assert isinstance(packet_utils.get_last_layer(dns_response_A), DNSRR)
 
 
-
 def test_extract_domain_names() -> None:
     """
     Test the function `extract_domain_names`.
@@ -285,3 +285,29 @@ def test_extract_domain_names() -> None:
     assert not dns_table
     packet_utils.extract_domain_names(dns_response_PTR, dns_table)
     assert "www.example2.com" in dns_table[DnsTableKeys.IP.name]["93.184.216.34"]
+
+
+def test_get_domain_name_from_ip() -> None:
+    """
+    Test the function `get_domain_name_from_ip`.
+    """
+    # Build DNS table
+    dns_table = {
+        DnsTableKeys.IP.name: {
+            "1.1.1.1": "www.example1.com",
+            "2.2.2.2": "www.example2.com",
+            "3.3.3.3": "server3.example.com"
+        },
+        DnsTableKeys.ALIAS.name: {
+            "server3.example.com": "www.example3.com"
+        }
+    }
+
+    # Known IP with direct domain name
+    assert packet_utils.get_domain_name_from_ip("1.1.1.1", dns_table) == "www.example1.com"
+    assert packet_utils.get_domain_name_from_ip("2.2.2.2", dns_table) == "www.example2.com"
+    # Known IP with alias
+    assert packet_utils.get_domain_name_from_ip("3.3.3.3", dns_table) == "www.example3.com"
+    # Unknown IP
+    with pytest.raises(KeyError):
+        packet_utils.get_domain_name_from_ip("0.0.0.0", dns_table)

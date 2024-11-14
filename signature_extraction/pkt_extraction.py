@@ -4,7 +4,7 @@ from typing import List
 import scapy.all as scapy
 import pandas as pd
 # Package
-from .utils.packet_utils import should_skip_pkt, extract_domain_names
+from .utils import should_skip_pkt, extract_domain_names
 from .network import Packet
 
 

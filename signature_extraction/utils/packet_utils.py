@@ -1,10 +1,12 @@
-from enum import Enum, IntEnum
+from typing import List
 import re
-from scapy.all import Packet, ARP, IP, IPv6, TCP, UDP, Padding, Raw
+from scapy.all import Packet as ScapyPacket
+from scapy.all import ARP, IP, IPv6, TCP, UDP, Padding, Raw
 from scapy.layers.inet6 import IPv6, ICMPv6ND_RS, ICMPv6MLQuery, ICMPv6MLReport, ICMPv6ND_INDAdv, ICMPv6NDOptSrcLLAddr
 from scapy.layers.tls.all import TLS, TLSApplicationData, TLS_Ext_ServerName
 from scapy.layers.dns import DNS
 from socket import getservbyport
+from dns_unbound_cache_reader import DnsRtype, DnsTableKeys
 
 
 ### GLOBAL VARIABLES ###
@@ -63,26 +65,6 @@ skip_layers = [
 ]
 
 
-### ENUM CLASSES ###
-
-class DnsQtype(IntEnum):
-    """
-    Enum class for the DNS query types.
-    """
-    A    = 1
-    PTR  = 12
-    AAAA = 28
-    SRV  = 33
-
-
-class DnsTableKeys(Enum):
-    """
-    Enum class for the allowed dictionary keys.
-    """
-    IP      = "ip"
-    SERVICE = "service"
-
-
 ### FUNCTIONS ###
 
 def is_known_port(port: int, protocol: str = "tcp") -> bool:
@@ -109,7 +91,7 @@ def is_known_port(port: int, protocol: str = "tcp") -> bool:
         return False
 
 
-def should_skip_pkt(pkt: Packet) -> bool:
+def should_skip_pkt(pkt: ScapyPacket) -> bool:
     """
     Check if the given packet should be skipped,
     i.e. if it is a control-plane packet,
@@ -144,7 +126,7 @@ def should_skip_pkt(pkt: Packet) -> bool:
     return any(pkt.haslayer(layer) for layer in skip_layers)
 
 
-def get_last_layer(packet: Packet) -> Packet:
+def get_last_layer(packet: ScapyPacket) -> ScapyPacket:
     """
     Get the last layer of a Scapy packet.
 
@@ -166,7 +148,7 @@ def get_last_layer(packet: Packet) -> Packet:
     return packet.getlayer(i - 1)
 
 
-def extract_domain_names(packet: Packet, dns_table: dict) -> None:
+def extract_domain_names(packet: ScapyPacket, dns_table: dict) -> None:
     """
     Extract domain name from a scapy packet,
     more precisely from TLS Server Name extension and DNS packets containing an answer section.
@@ -176,8 +158,8 @@ def extract_domain_names(packet: Packet, dns_table: dict) -> None:
                 ip_address: domain_name,
                 ...
             },
-            DnsTableKeys.SERVICE: {
-                service_name: actual_name,
+            DnsTableKeys.ALIAS: {
+                canonical_name: alias,
                 ...
             }
         }
@@ -221,35 +203,49 @@ def extract_domain_names(packet: Packet, dns_table: dict) -> None:
             # Response
             if dns.qr == 1:  # Response
 
-                # Extract IP addresses
-                for i in range(dns.ancount):
-                    an_record = dns.an[i]
-                    domain_name = an_record.rrname.decode("utf-8")
-                    if domain_name.endswith("."):
-                        domain_name = domain_name[:-1]
+                # Extract IP addresses from DNS Answer and Additional sections
+                for record in dns.an + dns.ar:
+                    qname = record.rrname.decode("utf-8")
+                    if qname.endswith("."):
+                        qname = qname[:-1]
 
                     # A or AAAA record
-                    if an_record.type == DnsQtype.A or an_record.type == DnsQtype.AAAA:
-
-                        # Check if given domain name is present in the services set
-                        if domain_name in dns_table.get(DnsTableKeys.SERVICE.name, {}):
-                            domain_name = dns_table[DnsTableKeys.SERVICE.name][domain_name]
-
-                        ip = dns.an[i].rdata
+                    if record.type == DnsRtype.A or record.type == DnsRtype.AAAA:
+                        ip = record.rdata
                         if DnsTableKeys.IP.name in dns_table:
-                            dns_table[DnsTableKeys.IP.name][ip] = domain_name
+                            dns_table[DnsTableKeys.IP.name][ip] = qname
                         else:
-                            dns_table[DnsTableKeys.IP.name] = {ip: domain_name}
+                            dns_table[DnsTableKeys.IP.name] = {ip: qname}
+
+                    # CNAME record
+                    if record.type == DnsRtype.CNAME:
+                        cname = record.rdata.decode("utf-8")
+                        if cname.endswith("."):
+                            cname = cname[:-1]
+                        if DnsTableKeys.ALIAS.name in dns_table:
+                            dns_table[DnsTableKeys.ALIAS.name][cname] = qname
+                        else:
+                            dns_table[DnsTableKeys.ALIAS.name] = {cname: qname}
+                    
+                    # SRV record
+                    if record.type == DnsRtype.SRV:
+                        service = record.target.decode("utf-8")
+                        if service.endswith("."):
+                            service = service[:-1]
+                        if DnsTableKeys.ALIAS.name in dns_table:
+                            dns_table[DnsTableKeys.ALIAS.name][service] = qname
+                        else:
+                            dns_table[DnsTableKeys.ALIAS.name] = {service: qname}
                     
                     # PTR record
-                    if an_record.type == DnsQtype.PTR:
-                        rdata = an_record.rdata.decode("utf-8")
+                    if record.type == DnsRtype.PTR:
+                        rdata = record.rdata.decode("utf-8")
                         if rdata.endswith("."):
                             rdata = rdata[:-1]
                         # Regex patterns
                         pattern_ipv4_byte = r"(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])"                          # Single byte from an IPv4 address
                         pattern_ptr       = (pattern_ipv4_byte + r"\.") * 3 + pattern_ipv4_byte + r".in-addr.arpa"  # Reverse DNS lookup RDATA
-                        match_ptr = re.match(pattern_ptr, domain_name)
+                        match_ptr = re.match(pattern_ptr, qname)
                         if match_ptr:
                             # PTR record is a reverse DNS lookup
                             ip = ".".join(reversed(match_ptr.groups()))
@@ -260,17 +256,33 @@ def extract_domain_names(packet: Packet, dns_table: dict) -> None:
                                     dns_table[DnsTableKeys.IP.name] = {ip: rdata}
                         else:
                             # PTR record contains generic RDATA
-                            if DnsTableKeys.SERVICE.name in dns_table:
-                                dns_table[DnsTableKeys.SERVICE.name][domain_name] = rdata
+                            if DnsTableKeys.ALIAS.name in dns_table:
+                                dns_table[DnsTableKeys.ALIAS.name][qname] = rdata
                             else:
-                                dns_table[DnsTableKeys.SERVICE.name] = {domain_name: rdata}
+                                dns_table[DnsTableKeys.ALIAS.name] = {qname: rdata}
 
-                    # SRV record
-                    if an_record.type == DnsQtype.SRV:
-                        service = an_record.target.decode("utf-8")
-                        if service.endswith("."):
-                            service = service[:-1]
-                        if DnsTableKeys.SERVICE.name in dns_table:
-                            dns_table[DnsTableKeys.SERVICE.name][service] = domain_name
-                        else:
-                            dns_table[DnsTableKeys.SERVICE.name] = {service: domain_name}
+
+def get_domain_name_from_ip(ip: str, dns_table: dict) -> str:
+    """
+    Get the domain name associated with the given IP address.
+
+    Args:
+        ip (str): IP address to look up.
+        dns_table (dict): Dictionary mapping IP addresses and their associated domain names.
+    Returns:
+        str: Domain name associated with the given IP address.
+    Raises:
+        KeyError: if the IP address is not found in the DNS table.
+    """
+    if DnsTableKeys.IP.name in dns_table:
+        dns_table_ip = dns_table[DnsTableKeys.IP.name]
+        domain_name = dns_table_ip[ip]
+
+        # Replace name with alias if available
+        if DnsTableKeys.ALIAS.name in dns_table:
+            dns_table_alias = dns_table[DnsTableKeys.ALIAS.name]
+            domain_name = dns_table_alias.get(domain_name, domain_name)
+
+        return domain_name
+    else:
+        raise KeyError(f"IP address {ip} not found in DNS table")

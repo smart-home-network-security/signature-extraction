@@ -2,6 +2,7 @@
 # Libraries
 from scapy.all import IP, TCP, Raw
 # Package
+from signature_extraction.utils import DnsTableKeys
 from signature_extraction.network import Packet
 
 
@@ -112,3 +113,27 @@ def test_eq() -> None:
     assert pkt_c != pkt_a
     assert pkt_c != pkt_b
     assert pkt_c == pkt_c
+
+
+def test_set_domain_names() -> None:
+    """
+    Test the method `set_domain_names` of the class `Packet`.
+    """
+    # Build DNS table
+    dns_table = {
+        DnsTableKeys.IP.name: {
+            "192.168.1.1": "www.example1.com",
+            "192.168.1.2": "server2.example.com",
+        },
+        DnsTableKeys.ALIAS.name: {
+            "server2.example.com": "www.example2.com"
+        }
+    }
+
+    # Build packet & set domain names
+    pkt = Packet(pkt_dict_a)
+    pkt.set_domain_names(dns_table)
+
+    # Verify domain names
+    assert pkt.src == "www.example1.com"
+    assert pkt.dst == "www.example2.com"

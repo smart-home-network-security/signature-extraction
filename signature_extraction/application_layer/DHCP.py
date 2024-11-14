@@ -4,7 +4,7 @@ from scapy.all import Packet
 from scapy.layers.dhcp import BOOTP
 # Package
 from .ApplicationLayer import ApplicationLayer
-from signature_extraction.utils.packet_utils import get_last_layer
+from signature_extraction.utils import get_last_layer
 
 
 class DHCP(ApplicationLayer):

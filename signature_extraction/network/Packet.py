@@ -1,11 +1,11 @@
 ## Imports
 # Libraries
 from __future__ import annotations
-from typing import Iterator
+from typing import List, Iterator
 import scapy.all as scapy
 from scapy.all import IP, IPv6, TCP, UDP
 # Package
-from signature_extraction.utils.packet_utils import DnsTableKeys
+from signature_extraction.utils import DnsTableKeys, get_domain_name_from_ip
 from signature_extraction.application_layer import ApplicationLayer
 
 
@@ -20,6 +20,35 @@ class Packet:
         - Length
     """
     id = 0
+
+
+    @staticmethod
+    def replace_ips_with_domains(pkts: List[Packet], dns_table: dict) -> List[Packet]:
+        """
+        Replace IP addresses with corresponding domain names in a list of packets.
+        Given list will be modified in-place.
+        The DNS table has the following format:
+            {
+                DnsTableKeys.IP: {
+                    ip_address: domain_name,
+                    ...
+                },
+                DnsTableKeys.ALIAS: {
+                    canonical_name: alias,
+                    ...
+                }
+            }
+
+        Args:
+            pkts (List[Packet]): List of packets.
+            dns_table (dict): Dictionary containing IP addresses and their associated domain names.
+        Returns:
+            List[Packet]: the given list of packets, with IP addresses replaced by domain names.
+        """
+        for pkt in pkts:
+            pkt.set_domain_names(dns_table)
+
+        return pkts
 
 
     def __init__(self, pkt: dict) -> None:
@@ -194,6 +223,16 @@ class Packet:
         Args:
             dns_table (dict): dictionary of IP addresses and their corresponding domain name
         """
-        dns_table = dns_table.get(DnsTableKeys.IP.name, {})
-        self.src = dns_table.get(self.src, self.src)
-        self.dst = dns_table.get(self.dst, self.dst)
+        if DnsTableKeys.IP.name in dns_table:
+            
+            # Source address
+            try:
+                self.src = get_domain_name_from_ip(self.src, dns_table)
+            except KeyError:
+                pass
+
+            # Destination address
+            try:
+                self.dst = get_domain_name_from_ip(self.dst, dns_table)
+            except KeyError:
+                pass

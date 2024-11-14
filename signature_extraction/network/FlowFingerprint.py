@@ -9,7 +9,7 @@ import uuid
 from .Packet import Packet
 from .BaseFlow import BaseFlow
 from .Flow import Flow
-from signature_extraction.utils.packet_utils import is_known_port
+from signature_extraction.utils import is_known_port
 from profile_translator_blocklist import translate_policy
 # Logging
 import importlib

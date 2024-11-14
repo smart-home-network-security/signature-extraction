@@ -4,7 +4,7 @@ from typing import List, Union
 # Custom
 from dns_unbound_cache_reader import read_dns_cache
 # Package
-from .network import FlowFingerprint, NetworkPattern
+from .network import Packet, FlowFingerprint, NetworkPattern
 from .pkt_extraction import pcap_to_pkts
 from .flow_grouping import group_pkts_per_flow
 
@@ -94,6 +94,7 @@ def pcaps_to_signature_pattern(pcap_files: Union[str, List[str]], lan_gateway: s
     patterns = []
     for pcap in pcap_files:
         pkts = pcap_to_pkts(pcap, dns_table, timeout)
+        pkts = Packet.replace_ips_with_domains(pkts, dns_table)
         if len(pkts) > 0:
             pattern = group_pkts_per_flow(pkts)
             patterns.append(pattern)
