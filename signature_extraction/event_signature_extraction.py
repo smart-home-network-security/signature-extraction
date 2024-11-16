@@ -2,7 +2,7 @@
 # Libraries
 from typing import List, Union
 # Custom
-from dns_unbound_cache_reader import read_dns_cache
+from dns_unbound_cache_reader import update_dns_table
 # Package
 from .network import Packet, FlowFingerprint, NetworkPattern
 from .pkt_extraction import pcap_to_pkts
@@ -71,13 +71,17 @@ def patterns_to_signature(patterns: List[NetworkPattern]) -> NetworkPattern:
     return signature
 
 
-def pcaps_to_signature_pattern(pcap_files: Union[str, List[str]], lan_gateway: str = "127.0.0.1", timeout: int = 20) -> NetworkPattern:
+def pcaps_to_signature_pattern(
+        pcap_files: Union[str, List[str]],
+        dns_table: dict = {},
+        timeout: int = 20
+    ) -> NetworkPattern:
     """
     Extract an event signature from a list of network traces.
 
     Args:
         pcap_files (Union[str, List[str]]): Path to the PCAP file(s).
-        lan_gateway (str): LAN gateway's hostname. Optional, default is localhost's IPv4 address.
+        dns_table (dict): DNS table to use for IP-to-domain resolution. Optional, default is empty.
         timeout (int): Iteration is stopped if current packet's timestamp exceeds the previous one by this value [seconds].
                        Optional, default is 20 seconds.
     Returns:
@@ -86,9 +90,6 @@ def pcaps_to_signature_pattern(pcap_files: Union[str, List[str]], lan_gateway: s
     # Convert input PCAP file(s) to list if necessary
     if isinstance(pcap_files, str):
         pcap_files = [pcap_files]
-
-    # Get initial DNS table from LAN gateway's DNS cache
-    dns_table = read_dns_cache(host=lan_gateway)
 
     # Extract flows from PCAP files
     patterns = []
@@ -103,7 +104,12 @@ def pcaps_to_signature_pattern(pcap_files: Union[str, List[str]], lan_gateway: s
     return patterns_to_signature(patterns)
 
 
-def pcaps_to_signature_csv(pcap_files: Union[str, List[str]], output_file: str) -> None:
+def pcaps_to_signature_csv(
+        pcap_files: Union[str, List[str]],
+        output_file: str,
+        dns_table: dict = {},
+        timeout: int = 20
+    ) -> None:
     """
     Extract an event signature from a list of network traces,
     and save it to a CSV file.
@@ -111,9 +117,12 @@ def pcaps_to_signature_csv(pcap_files: Union[str, List[str]], output_file: str) 
     Args:
         pcap_files (Union[str, List[str]]): Path to the PCAP file(s).
         output_file (str): Output CSV file.
+        dns_table (dict): DNS table to use for IP-to-domain resolution. Optional, default is empty.
+        timeout (int): Iteration is stopped if current packet's timestamp exceeds the previous one by this value [seconds].
+                       Optional, default is 20 seconds.
     """
     # Extract event signature from the flows
-    signature = pcaps_to_signature_pattern(pcap_files)
+    signature = pcaps_to_signature_pattern(pcap_files, dns_table, timeout)
 
     # Save event signature to CSV
     signature.to_csv(output_file)
