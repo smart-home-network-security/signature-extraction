@@ -42,6 +42,7 @@ known_ports = {
         9999   # TP-Link Smart Home protocol port
     ],
     "udp": [
+        #9999,  # TP-Link Smart Home protocol port
         20002  # Tapo camera UDP port
     ]
 }

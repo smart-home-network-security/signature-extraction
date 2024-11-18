@@ -1,10 +1,9 @@
 ## Imports
 # Libraries
 from typing import List, Union
-# Custom
-from dns_unbound_cache_reader import update_dns_table
+from copy import deepcopy
 # Package
-from .network import Packet, FlowFingerprint, NetworkPattern
+from .network import Packet, Flow, FlowFingerprint, NetworkPattern
 from .pkt_extraction import pcap_to_pkts
 from .flow_grouping import group_pkts_per_flow
 
@@ -38,7 +37,10 @@ def patterns_to_signature(patterns: List[NetworkPattern]) -> NetworkPattern:
 
 
         ## Parse flow
-        potential_flow = FlowFingerprint.build_from_flow(reference_flow)
+        if isinstance(reference_flow, FlowFingerprint):
+            potential_flow = deepcopy(reference_flow)
+        elif isinstance(reference_flow, Flow):
+            potential_flow = FlowFingerprint(reference_flow)
         already_parsed_reference_flow_indices.add(i)
 
         # Iterate over NetworkPatterns (i.e., lists of FlowFingerprints),

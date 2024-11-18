@@ -3,7 +3,7 @@
 from typing import List
 import pandas as pd
 # Package
-from .network import Packet, Flow, NetworkPattern
+from .network import Packet, BaseFlow, Flow, FlowFingerprint, NetworkPattern
 from .pkt_extraction import pkts_to_df
 
 
@@ -25,7 +25,7 @@ def group_pkts_per_flow(pkts: List[Packet]) -> NetworkPattern:
         return NetworkPattern()
 
     # Initialize resulting list of flow fingerprints
-    flows = []
+    flows: List[BaseFlow] = []
 
     # Convert packets to DataFrame for easy grouping
     df = pkts_to_df(pkts)
@@ -49,7 +49,20 @@ def group_pkts_per_flow(pkts: List[Packet]) -> NetworkPattern:
         group = grouped.get_group(key)
         pkts = group.to_dict(orient="records")
         flow = Flow(pkts)
-        flows.append(flow)
+        
+        # Check if an equivalent flow is already in the list
+        found_matching_flow = False
+        for f in flows:
+            if f.match_flow(flow):
+                index = flows.index(f)
+                if isinstance(f, Flow):
+                    f = FlowFingerprint(f)
+                    flows[index] = f
+                f.add_flow(flow)
+                found_matching_flow = True
+
+        if not found_matching_flow:
+            flows.append(flow)
     
     return NetworkPattern(flows)
 

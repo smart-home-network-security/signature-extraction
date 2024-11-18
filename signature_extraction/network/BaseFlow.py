@@ -57,3 +57,15 @@ class BaseFlow:
             self.match_host(other)
             and self.transport_protocol == other.transport_protocol
         )
+    
+
+    def match_flow(self, other: BaseFlow) -> bool:
+        """
+        Compare two BaseFlow objects.
+
+        Args:
+            other (BaseFlow): Abstract flow to compare with.
+        Returns:
+            bool: True if the flow fingerprints are equal, False otherwise.
+        """
+        return self == other

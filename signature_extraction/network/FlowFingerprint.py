@@ -1,7 +1,7 @@
 ## Imports
 # Libraries
 from __future__ import annotations
-from typing import Iterator
+from typing import Union, Iterator
 import os
 from ipaddress import IPv4Address
 import uuid
@@ -28,56 +28,34 @@ class FlowFingerprint(BaseFlow):
         - Application protocol
     """
 
-    def __init__(self, flow_dict: dict = {}) -> None:
+    def __init__(self, flow_data: Union[dict, Packet, Flow]) -> None:
         """
         FlowFingerprint constructor.
 
         Args:
-            flow_dict (dict): dictionary containing the flow fingerprint attributes.
+            flow_data (dict | Packet | Flow): flow fingerprint data.
         """
         # Initialize with super-class constructor
         super().__init__()
 
         self.count = 1  # Number of flows added to this FlowFingerprint
 
+        # If given data is not a dictionary, convert it
+        if isinstance(flow_data, Packet) or isinstance(flow_data, Flow):
+            flow_data = dict(flow_data)
+
         # Set attributes
-        self.src                = flow_dict["src"]
-        self.dst                = flow_dict["dst"]
-        self.transport_protocol = flow_dict["transport_protocol"]
-        self.application_layer  = flow_dict.get("application_layer", None)
+        self.src                = flow_data["src"]
+        self.dst                = flow_data["dst"]
+        self.transport_protocol = flow_data["transport_protocol"]
+        self.application_layer  = flow_data.get("application_layer", None)
         if not self.application_layer:
             self.application_layer = None
  
         # Initialize ports (to be computed)
         self.ports = {}
-        self.add_ports(flow_dict)
+        self.add_ports(flow_data)
         self.fixed_ports = set()
-
-
-    @classmethod
-    def build_from_pkt(cls, pkt: Packet) -> FlowFingerprint:
-        """
-        Build a FlowFingerprint object from a Packet object.
-
-        Args:
-            pkt (Packet): Packet object to build from.
-        Returns:
-            FlowFingerprint: Flow fingerprint.
-        """
-        return cls(dict(pkt))
-    
-
-    @classmethod
-    def build_from_flow(cls, flow: Flow) -> FlowFingerprint:
-        """
-        Build a FlowFingerprint object from a Flow object.
-
-        Args:
-            flow (Flow): Flow object to build from.
-        Returns:
-            FlowFingerprint: Flow fingerprint.
-        """
-        return cls(dict(flow))
     
 
     def get_fixed_ports(self) -> set[(str, int)]:
@@ -127,24 +105,40 @@ class FlowFingerprint(BaseFlow):
         return self.ports
     
 
-    def add_flow(self, flow: Flow) -> None:
+    def _add_ports_from_flow_fingerprint(self, flow_fingerprint: FlowFingerprint) -> None:
         """
-        Add attributes of the given Flow object to the FlowFingerprint.
+        Add ports from a FlowFingerprint object.
 
         Args:
-            flow (Flow): Flow object to add.
+            flow_fingerprint (FlowFingerprint): FlowFingerprint object to add ports from.
         """
-        # Increment flow count
-        self.count += 1
+        for (host, port), count in flow_fingerprint.ports.items():
+            self.ports[(host, port)] = self.ports.get((host, port), 0) + count
 
+        return self.ports
+
+
+    def add_flow(self, flow: BaseFlow) -> None:
+        """
+        Add attributes of the given BaseFlow object to this FlowFingerprint.
+
+        Args:
+            flow (BaseFlow): BaseFlow object to add.
+        """
+        ## Operations common to both Flow and FlowFingerprint
         # Set attributes if not initialized
         self.src = flow.src if not self.src else self.src
         self.dst = flow.dst if not self.dst else self.dst
         self.transport_protocol = flow.transport_protocol if not self.transport_protocol else self.transport_protocol
         self.application_layer = flow.application_layer if not self.application_layer else self.application_layer
-
-        # Add flow ports
-        self.add_ports(dict(flow))
+        
+        ## Dispatch on the type of the given object
+        if isinstance(flow, Flow):
+            self.count += 1
+            self.add_ports(dict(flow))
+        elif isinstance(flow, FlowFingerprint):
+            self.count += flow.count
+            self._add_ports_from_flow_fingerprint(flow)
 
     
     def match_flow(self, other: BaseFlow) -> bool:
@@ -262,7 +256,7 @@ class FlowFingerprint(BaseFlow):
         else:
             yield "application_layer", None
 
-    
+
     def get_id(self) -> str:
         """
         Generate an identifier for this FlowFingerprint.

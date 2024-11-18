@@ -57,9 +57,10 @@ pkt_dict_d = {
 
 ### TEST FUNCTIONS ###
 
-def test_constructor() -> None:
+def test_constructor_dict() -> None:
     """
-    Test the constructor of the class `FlowFingerprint`.
+    Test the constructor of the class `FlowFingerprint`,
+    with a dictionary as input.
     """
     flow = FlowFingerprint(pkt_dict)
     assert flow.src == "192.168.1.2"
@@ -71,12 +72,13 @@ def test_constructor() -> None:
     assert flow.ports[("192.168.1.1", 53)] == 1
 
 
-def test_build_from_pkt() -> None:
+def test_constructor_pkt() -> None:
     """
-    Test the class method `build_from_pkt`.
+    Test the constructor of the class `FlowFingerprint`,
+    with a Packet as input.
     """
     pkt = Packet.build_from_pkt(pkt_dns_request_a)
-    flow = FlowFingerprint.build_from_pkt(pkt)
+    flow = FlowFingerprint(pkt)
     assert flow.src == "192.168.1.2"
     assert flow.dst == "192.168.1.1"
     assert flow.transport_protocol == "UDP"
@@ -88,11 +90,12 @@ def test_build_from_pkt() -> None:
 
 def test_build_from_flow() -> None:
     """
-    Test the class method `build_from_pkt`.
+    Test the constructor of the class `FlowFingerprint`,
+    with a Flow as input.
     """
     pkt = Packet.build_from_pkt(pkt_dns_request_a)
     f = Flow.build_from_pkt(pkt)
-    flow = FlowFingerprint.build_from_flow(f)
+    flow = FlowFingerprint(f)
     assert flow.src == "192.168.1.2"
     assert flow.dst == "192.168.1.1"
     assert flow.transport_protocol == "UDP"
@@ -122,7 +125,8 @@ def test_add_ports() -> None:
 
 def test_add_flow() -> None:
     """
-    Test the method `add_flow`.
+    Test the method `add_flow`,
+    with a Flow as argument.
     """
     # Initialize FlowFingerprint
     flow = FlowFingerprint(pkt_dict)
@@ -130,6 +134,25 @@ def test_add_flow() -> None:
     # Add new flow
     pkt_b = Packet.build_from_pkt(pkt_dns_request_b)
     f_2 = Flow.build_from_pkt(pkt_b)
+    flow.add_flow(f_2)
+
+    # Verify fields
+    assert ("192.168.1.1", 53) in flow.ports
+    assert flow.ports[("192.168.1.1", 53)] == 2
+    assert ("192.168.1.1", 53) in flow.get_fixed_ports()
+
+
+def test_add_flow_fingerprint() -> None:
+    """
+    Test the methos `add_flow`,
+    with a FlowFingerprint as argument.
+    """
+    # Initialize FlowFingerprint
+    flow = FlowFingerprint(pkt_dict)
+
+    # Add new FlowFingerprint
+    pkt_b = Packet.build_from_pkt(pkt_dns_request_b)
+    f_2 = FlowFingerprint(pkt_b)
     flow.add_flow(f_2)
 
     # Verify fields
@@ -155,7 +178,6 @@ def test_match_flow() -> None:
     assert flow_fingerprint.match_flow(f_3)
     ff_4 = FlowFingerprint(pkt_dict_d)
     assert not flow_fingerprint.match_flow(ff_4)
-
 
 
 def test_extract_policy() -> None:
