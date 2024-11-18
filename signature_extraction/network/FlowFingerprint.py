@@ -3,8 +3,8 @@
 from __future__ import annotations
 from typing import Union, Iterator
 import os
+import time
 from ipaddress import IPv4Address
-import uuid
 # Package
 from .Packet import Packet
 from .BaseFlow import BaseFlow
@@ -289,12 +289,13 @@ class FlowFingerprint(BaseFlow):
     
     def get_unique_id(self) -> str:
         """
-        Generate a unique identifier for this FlowFingerprint.
+        Generate a unique identifier for this FlowFingerprint,
+        based on the current time.
 
         Returns:
             str: Unique identifier for this FlowFingerprint.
         """
-        return f"{self.get_id()}_{str(uuid.uuid4())}"
+        return f"{self.get_id()}_{int(time.time())}"
 
 
     def extract_policy(self, ipv4: IPv4Address) -> dict:
