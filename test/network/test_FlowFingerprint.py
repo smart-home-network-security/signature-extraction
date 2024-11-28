@@ -6,7 +6,7 @@ from scapy.all import IP, UDP
 from scapy.layers.dns import DNS, DNSQR
 # Package
 import signature_extraction.application_layer as app_layer
-from signature_extraction.network import Packet, Flow, FlowFingerprint
+from signature_extraction.network import Packet, FlowFingerprint
 
 
 ### VARIABLES ###
@@ -37,6 +37,7 @@ pkt_dns_request_b = (
         qd=DNSQR(qname="www.example.com")
     )
 )
+
 pkt_dns_request_c = (
     IP(src="192.168.1.1", dst="192.168.1.2") /
     UDP(sport=53, dport=12345) /
@@ -88,23 +89,6 @@ def test_constructor_pkt() -> None:
     assert flow.ports[("192.168.1.1", 53)] == 1
 
 
-def test_build_from_flow() -> None:
-    """
-    Test the constructor of the class `FlowFingerprint`,
-    with a Flow as input.
-    """
-    pkt = Packet.build_from_pkt(pkt_dns_request_a)
-    f = Flow.build_from_pkt(pkt)
-    flow = FlowFingerprint(f)
-    assert flow.src == "192.168.1.2"
-    assert flow.dst == "192.168.1.1"
-    assert flow.transport_protocol == "UDP"
-    assert isinstance(flow.application_layer, app_layer.DNS)
-    # Ports
-    assert ("192.168.1.1", 53) in flow.ports
-    assert flow.ports[("192.168.1.1", 53)] == 1
-
-
 def test_add_ports() -> None:
     """
     Test the method `add_ports`.
@@ -114,8 +98,8 @@ def test_add_ports() -> None:
 
     # Create new flow
     pkt_b = Packet.build_from_pkt(pkt_dns_request_b)
-    f_2 = Flow.build_from_pkt(pkt_b)
-    flow.add_ports(dict(f_2))
+    f_2 = FlowFingerprint(pkt_b)
+    flow.add_ports(f_2)
 
     # Verify fields
     assert ("192.168.1.1", 53) in flow.ports
@@ -132,19 +116,22 @@ def test_add_flow() -> None:
     flow = FlowFingerprint(pkt_dict)
 
     # Add new flow
-    pkt_b = Packet.build_from_pkt(pkt_dns_request_b)
-    f_2 = Flow.build_from_pkt(pkt_b)
+    pkt_c = Packet.build_from_pkt(pkt_dns_request_c)
+    f_2 = FlowFingerprint(pkt_c)
     flow.add_flow(f_2)
 
     # Verify fields
     assert ("192.168.1.1", 53) in flow.ports
     assert flow.ports[("192.168.1.1", 53)] == 2
     assert ("192.168.1.1", 53) in flow.get_fixed_ports()
+    assert ("192.168.1.2", 12345) in flow.ports
+    assert flow.ports[("192.168.1.2", 12345)] == 2
+    assert ("192.168.1.2", 12345) in flow.get_fixed_ports()
 
 
 def test_add_flow_fingerprint() -> None:
     """
-    Test the methos `add_flow`,
+    Test the method `add_flow`,
     with a FlowFingerprint as argument.
     """
     # Initialize FlowFingerprint
@@ -164,20 +151,20 @@ def test_add_flow_fingerprint() -> None:
 def test_match_flow() -> None:
     """
     Test the method `match_flow`,
-    which compares a BaseFlow with a FlowFingerprint.
+    which compares two FlowFingerprints.
     """
     # Initialize FlowFingerprint
     flow_fingerprint = FlowFingerprint(pkt_dict)
 
     # Verify match with other flows
     pkt_b = Packet.build_from_pkt(pkt_dns_request_b)
-    f_2 = Flow.build_from_pkt(pkt_b)
+    f_2 = FlowFingerprint(pkt_b)
     assert not flow_fingerprint.match_flow(f_2)
     pkt_c = Packet.build_from_pkt(pkt_dns_request_c)
-    f_3 = Flow.build_from_pkt(pkt_c)
+    f_3 = FlowFingerprint(pkt_c)
     assert flow_fingerprint.match_flow(f_3)
-    ff_4 = FlowFingerprint(pkt_dict_d)
-    assert not flow_fingerprint.match_flow(ff_4)
+    f_4 = FlowFingerprint(pkt_dict_d)
+    assert not flow_fingerprint.match_flow(f_4)
 
 
 def test_extract_policy() -> None:
