@@ -146,9 +146,11 @@ class FlowFingerprint:
         if self.dst != flow.dst and compare_domain_names(self.dst, flow.dst):
             self.dst = get_wildcard_subdomain(self.dst, flow.dst)
         
+        # Update application layer if needed
+        self.application_layer.update(flow.application_layer) if self.application_layer else flow.application_layer
+
         # Update other attributes
         self.transport_protocol = flow.transport_protocol if not self.transport_protocol else self.transport_protocol
-        self.application_layer = flow.application_layer if not self.application_layer else self.application_layer
         self.count += flow.count
         self.add_ports(flow)
 
@@ -388,7 +390,10 @@ class FlowFingerprint:
         # Application layer protocol
         if self.application_layer is not None:
             app_protocol = self.application_layer.get_protocol_name().lower()
-            policy["protocols"][app_protocol] = dict(self.application_layer)
+            attrs = dict(self.application_layer)
+            if "domain-name" in attrs:
+                attrs["domain-name"] = attrs["domain-name"].replace("*","$")
+            policy["protocols"][app_protocol] = attrs
         
         policy["bidirectional"] = self.bidirectional
 

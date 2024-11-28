@@ -69,6 +69,18 @@ class ApplicationLayer:
             str: protocol name
         """
         return self.protocol_name
+    
+
+    def update(self, other: ApplicationLayer) -> None:
+        """
+        Update the current ApplicationLayer object with another one.
+        Does nothing by default.
+        Can be overridden by subclasses.
+
+        Args:
+            other (ApplicationLayer): other ApplicationLayer object.
+        """
+        pass
 
 
     def __iter__(self) -> Iterator:

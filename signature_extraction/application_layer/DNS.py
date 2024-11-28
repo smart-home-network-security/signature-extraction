@@ -1,10 +1,11 @@
 ## Imports
 # Libraries
+from __future__ import annotations
 from typing import Iterator
 from scapy.all import Packet
 from scapy.layers.dns import dnstypes
 # Package
-from signature_extraction.utils import compare_domain_names
+from signature_extraction.utils import compare_domain_names, get_wildcard_subdomain
 from .ApplicationLayer import ApplicationLayer
 
 
@@ -43,6 +44,20 @@ class DNS(ApplicationLayer):
                 self.qname = first_query.qname.decode()[:-1]
             except AttributeError:
                 self.qname = None
+
+    
+    def update(self, other: DNS) -> None:
+        """
+        Update the current DNS object with another one.
+
+        Args:
+            other (DNS): other DNS object.
+        """
+        if not isinstance(other, DNS):
+            raise ValueError("Cannot update DNS object with a non-DNS object.")
+        
+        if self.qname != other.qname and compare_domain_names(self.qname, other.qname):
+            self.qname = get_wildcard_subdomain(self.qname, other.qname)
 
     
     def __iter__(self) -> Iterator:
