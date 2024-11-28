@@ -1,7 +1,7 @@
 ## Imports
 # Libraries
 from __future__ import annotations
-from typing import Union, Iterator
+from typing import Union, List, Iterator
 import os
 import time
 from ipaddress import IPv4Address
@@ -28,7 +28,7 @@ class FlowFingerprint(BaseFlow):
         - Application protocol
     """
 
-    def __init__(self, flow_data: Union[dict, Packet, Flow]) -> None:
+    def __init__(self, flow_data: Union[dict, Packet, Flow, List[Packet]]) -> None:
         """
         FlowFingerprint constructor.
 
@@ -43,6 +43,12 @@ class FlowFingerprint(BaseFlow):
         # If given data is not a dictionary, convert it
         if isinstance(flow_data, Packet) or isinstance(flow_data, Flow):
             flow_data = dict(flow_data)
+        elif isinstance(flow_data, list):
+            first_item = flow_data[0]
+            if isinstance(first_item, Packet) or isinstance(first_item, Flow):
+                flow_data = dict(first_item)
+            else:
+                flow_data = first_item
 
         # Set attributes
         self.src                = flow_data["src"]
