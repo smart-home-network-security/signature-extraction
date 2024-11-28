@@ -7,7 +7,7 @@ import time
 from ipaddress import IPv4Address
 # Package
 from .Packet import Packet
-from signature_extraction.utils import is_known_port
+from signature_extraction.utils import is_known_port, compare_domain_names, compare_hosts, get_wildcard_subdomain
 from profile_translator_blocklist import translate_policy
 # Logging
 import importlib
@@ -59,7 +59,6 @@ class FlowFingerprint:
         # Initialize ports (to be computed)
         self.ports = {}
         self._add_ports(flow_data)
-        self.fixed_ports = set()
     
 
     def get_fixed_ports(self) -> set[(str, int)]:
@@ -69,6 +68,9 @@ class FlowFingerprint:
         Returns:
             Tuple[int, str]: Fixed port number and corresponding host.
         """
+        # Initialize fixed_ports
+        fixed_ports = set()
+
         # Iterate over hosts and ports
         for (host, port), count in self.ports.items():
 
@@ -77,10 +79,10 @@ class FlowFingerprint:
                 is_known_port(port, self.transport_protocol) or  # ... it is a well-known port
                 (count > 1 and count == self.count)              # ... it was used for all flows
             ):
-                self.fixed_ports.add((host, port))
+                fixed_ports.add((host, port))
 
         # Return fixed ports
-        return self.fixed_ports
+        return fixed_ports
 
 
     def _add_ports(self, flow_dict: dict = {}) -> dict:
@@ -117,7 +119,16 @@ class FlowFingerprint:
             dict: Updated ports dictionary.
         """
         for (host, port), count in flow_fingerprint.ports.items():
-            self.ports[(host, port)] = self.ports.get((host, port), 0) + count
+            try:
+                h, p = next((h, p) for h, p in self.ports if compare_hosts(h, host) and p == port)
+                ports_value = self.ports.get((h, p), 0)
+                del self.ports[(h, p)]
+                # Update hostname if needed
+                if h != host and compare_domain_names(h, host):
+                    h = get_wildcard_subdomain(h, host)
+                self.ports[(h, p)] = ports_value + count
+            except StopIteration:
+                continue
 
         return self.ports
 
@@ -129,8 +140,13 @@ class FlowFingerprint:
         Args:
             flow (FlowFingerprint): FlowFingerprint object to add.
         """
-        self.src = flow.src if not self.src else self.src
-        self.dst = flow.dst if not self.dst else self.dst
+        # Update hosts if needed
+        if self.src != flow.src and compare_domain_names(self.src, flow.src):
+            self.src = get_wildcard_subdomain(self.src, flow.src)
+        if self.dst != flow.dst and compare_domain_names(self.dst, flow.dst):
+            self.dst = get_wildcard_subdomain(self.dst, flow.dst)
+        
+        # Update other attributes
         self.transport_protocol = flow.transport_protocol if not self.transport_protocol else self.transport_protocol
         self.application_layer = flow.application_layer if not self.application_layer else self.application_layer
         self.count += flow.count
@@ -139,7 +155,7 @@ class FlowFingerprint:
     
     def match_host(self, other: FlowFingerprint) -> bool:
         """
-        Match FlowFingeprints based on source and destination hosts,
+        Match FlowFingerprint objects based on source and destination hosts,
         regardless of the direction.
 
         Args:
@@ -151,10 +167,42 @@ class FlowFingerprint:
         if not isinstance(other, FlowFingerprint):
             return False
         
-        return (
-            (self.src == other.src and self.dst == other.dst) or
-            (self.src == other.dst and self.dst == other.src)
+        are_hosts_matching = (
+            compare_hosts(self.src, other.src) and compare_hosts(self.dst, other.dst) or
+            compare_hosts(self.src, other.dst) and compare_hosts(self.dst, other.src)
         )
+        return are_hosts_matching
+    
+
+    def match_fixed_ports(self, other: FlowFingerprint) -> bool:
+        """
+        Match the fixed ports of two FlowFingerprint objects.
+
+        Args:
+            other (FlowFingerprint): FlowFingerprint to match with.
+        Returns:
+            bool: True if the FlowFingerprints' fixed ports match, False otherwise.
+        """
+        # If other object is not an FlowFingerprint, return False
+        if not isinstance(other, FlowFingerprint):
+            return False
+        
+        ## If other object is an FlowFingerprint, compare fixed ports
+        self_fixed_ports = self.get_fixed_ports()
+        other_fixed_ports = other.get_fixed_ports()
+        
+        # Fixed ports set should have the same length
+        if len(self_fixed_ports) != len(other_fixed_ports):
+            return False
+        
+        # Check if fixed ports match
+        for host, port in self_fixed_ports:
+            try:
+                next((other_host, other_port) for other_host, other_port in self.ports if compare_hosts(other_host, host) and other_port == port)
+            except StopIteration:
+                return False
+        
+        return True
 
     
     def match_flow(self, other: FlowFingerprint) -> bool:
@@ -176,16 +224,17 @@ class FlowFingerprint:
             return False
         
         # If other object is a FlowFingerprint, compare attributes:
-        return (
+        are_flow_matching = (
             # Hosts (in any direction)
             self.match_host(other) and
             # Fixed port
-            self.get_fixed_ports() == other.get_fixed_ports() and
+            self.match_fixed_ports(other) and
             # Transport protocol
             self.transport_protocol == other.transport_protocol and
             # Application layer protocol
             self.application_layer == other.application_layer
         )
+        return are_flow_matching
 
 
     def __repr__(self) -> str:
@@ -307,8 +356,8 @@ class FlowFingerprint:
             dict: Policy extracted from the FlowFingerprint.
         """
         # Hosts
-        src_ip = "self" if self.src == str(ipv4) else self.src
-        dst_ip = "self" if self.dst == str(ipv4) else self.dst
+        src_ip = "self" if self.src == str(ipv4) else self.src.replace("*","$")
+        dst_ip = "self" if self.dst == str(ipv4) else self.dst.replace("*","$")
         policy = {
             "protocols": {
                 "ipv4": {"src": src_ip, "dst": dst_ip}

@@ -83,7 +83,7 @@ def pcap_to_pkts(pcap_file: str, dns_table_arg: dict = {}, timeout_arg: int = 20
 
     # Read PCAP file
     scapy.sniff(offline=pcap_file, prn=handle_packet, store=False)
-    packets = pkts
+    packets = Packet.replace_ips_with_domains(pkts, dns_table)
 
     reset_vars()
     return packets

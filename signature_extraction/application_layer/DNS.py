@@ -4,6 +4,7 @@ from typing import Iterator
 from scapy.all import Packet
 from scapy.layers.dns import dnstypes
 # Package
+from signature_extraction.utils import compare_domain_names
 from .ApplicationLayer import ApplicationLayer
 
 
@@ -73,9 +74,22 @@ class DNS(ApplicationLayer):
         if not isinstance(other, DNS):
             return False
         
-        # Other object is a DNS layer,
-        # compare qtype and qname
-        return self.qtype == other.qtype and self.qname == other.qname
+        ## Other object is a DNS layer
+
+        # Compare qtype
+        if self.qtype != other.qtype:
+            return False
+        
+        ## Compare qname
+        # qnames are identical
+        if self.qname == other.qname:
+            return True
+        
+        # If qnames differ only by the first subdomain, consider them equal
+        if self.qname is not None and other.qname is not None:
+            return compare_domain_names(self.qname, other.qname)
+
+        return False
 
 
     def __hash__(self) -> int:

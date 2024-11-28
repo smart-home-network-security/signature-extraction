@@ -1,5 +1,5 @@
-from typing import List
 import re
+from ipaddress import ip_address, IPv4Address, IPv6Address
 from scapy.all import Packet as ScapyPacket
 from scapy.all import ARP, IP, IPv6, TCP, UDP, Padding, Raw
 from scapy.layers.inet6 import IPv6, ICMPv6ND_RS, ICMPv6MLQuery, ICMPv6MLReport, ICMPv6ND_INDAdv, ICMPv6NDOptSrcLLAddr
@@ -93,6 +93,91 @@ def is_known_port(port: int, protocol: str = "tcp") -> bool:
         return True
     except:
         return False
+    
+
+def compare_domain_names(domain_a: str, domain_b: str) -> bool:
+    """
+    Compare two domain names.
+
+    Args:
+        domain_a (str): first domain name
+        domain_b (str): second domain name
+    Returns:
+        bool: True if the two domain names are (considered) equal, False otherwise
+    """
+    # If both are identical, return True
+    if domain_a == domain_b:
+        return True
+
+    # If one domain name is a subdomain of the other, return True
+    if domain_a.endswith(domain_b) or domain_b.endswith(domain_a):
+        return True
+
+    # If both domain names are subdomains of the same domain, return True
+    if domain_a.split(".", 1)[1] == domain_b.split(".", 1)[1]:
+        return True
+
+    return False
+    
+
+def compare_hosts(host_a: str, host_b: str) -> bool:
+    """
+    Compare two hostnames or IP addresses.
+
+    Args:
+        host_a (str): first hostname or IP address
+        host_b (str): second hostname or IP address
+    Returns:
+        bool: True if the two hosts are equal, False otherwise
+    """
+    # If both are identical, return True
+    if host_a == host_b:
+        return True
+
+    # Try to convert to IP address
+    a_is_ip = True
+    b_is_ip = True
+    try:
+        host_a = ip_address(host_a)
+    except ValueError:
+        a_is_ip = False    
+    try:
+        host_b = ip_address(host_b)
+    except ValueError:
+        b_is_ip = False
+
+    if a_is_ip and b_is_ip:
+        # If both are IP addresses, compare them
+        # (should be False by now)
+        return host_a == host_b
+    
+    # If one is an IP address and the other is a hostname, return False
+    elif a_is_ip and not b_is_ip:
+        return False
+    elif not a_is_ip and b_is_ip:
+        return False
+
+    # Both are different hostnames
+    # If they differ only by the first subdomain, consider them equal
+    return compare_domain_names(host_a, host_b)
+
+
+def get_wildcard_subdomain(domain_a: str, domain_b: str) -> str:
+    """
+    Get the wildcard subdomain matching the two given domain names.
+
+    Args:
+        domain_a (str): first domain name
+        domain_b (str): second domain name
+    Returns:
+        str: wildcard subdomain matching the two domain names
+    """
+    if domain_a.endswith(domain_b):
+        return f"*.{domain_b}"
+    elif domain_b.endswith(domain_a):
+        return f"*.{domain_a}"
+    else:
+        return f"*.{domain_a.split(".", 1)[1]}"
 
 
 def should_skip_pkt(pkt: ScapyPacket) -> bool:
