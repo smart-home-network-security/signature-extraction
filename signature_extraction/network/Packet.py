@@ -53,10 +53,10 @@ class Packet:
 
     def __init__(self, pkt: dict) -> None:
         """
-        Flow fingerprint constructor.
+        Packet constructor.
 
         Args:
-            pkt (dict): dictionary containing the packet fingerprint attributes.
+            pkt (dict): dictionary containing the packet attributes.
         """
         self.id = Packet.id
         Packet.id += 1
