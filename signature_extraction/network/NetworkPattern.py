@@ -1,8 +1,6 @@
 from __future__ import annotations
 from typing import List, Tuple
 import pandas as pd
-from .BaseFlow import BaseFlow
-from .Flow import Flow
 from .FlowFingerprint import FlowFingerprint
 
 
@@ -11,12 +9,12 @@ class NetworkPattern:
     List of network flows occurring subsequently.
     """
 
-    def __init__(self, flows: List[BaseFlow] = []) -> None:
+    def __init__(self, flows: List[FlowFingerprint] = []) -> None:
         """
         NetworkPattern constructor.
 
         Args:
-            flows (List[BaseFlow]): List of flow fingerprints.
+            flows (List[FlowFingerprint]): List of flow fingerprints.
         """
         self.flows = flows if flows else []
 
@@ -65,7 +63,7 @@ class NetworkPattern:
         return len(self.flows)
     
 
-    def get_flows(self) -> List[BaseFlow]:
+    def get_flows(self) -> List[FlowFingerprint]:
         """
         Get the list of flow fingerprints.
 
@@ -75,7 +73,7 @@ class NetworkPattern:
         return self.flows
     
 
-    def set_flows(self, flows: List[BaseFlow]) -> None:
+    def set_flows(self, flows: List[FlowFingerprint]) -> None:
         """
         Set the list of flow fingerprints.
 
@@ -85,17 +83,17 @@ class NetworkPattern:
         self.flows = flows
 
 
-    def add_flow(self, flow: BaseFlow) -> None:
+    def add_flow(self, flow: FlowFingerprint) -> None:
         """
         Add a flow fingerprint to the list.
 
         Args:
-            flow (FlowFingerprint): BaseFlow fingerprint to add.
+            flow (FlowFingerprint): FlowFingerprint fingerprint to add.
         """
         self.flows.append(flow)
 
     
-    def find_matching_flow(self, reference_flow: FlowFingerprint) -> Tuple[int, Flow]:
+    def find_matching_flow(self, reference_flow: FlowFingerprint) -> Tuple[int, FlowFingerprint]:
         """
         Find a flow in the list which matches the basic attributes,
         i.e. the hosts, fixed port and transport protocol,
@@ -104,7 +102,7 @@ class NetworkPattern:
         Args:
             reference_flow (FlowFingerprint): flow to search for.
         Returns:
-            Tuple[int, Flow]: associated index, and matching flow
+            Tuple[int, FlowFingerprint]: associated index, and matching flow
         Raises:
             ValueError: If no matching flow has been found in the pattern.
         """
