@@ -109,16 +109,20 @@ class FlowFingerprint:
         return self.ports
     
 
-    def add_ports(self, flow_fingerprint: FlowFingerprint) -> dict:
+    def add_ports(self, other: FlowFingerprint) -> dict:
         """
-        Add ports from a FlowFingerprint object.
+        Add ports from a given FlowFingerprint object.
 
         Args:
             flow_fingerprint (FlowFingerprint): FlowFingerprint object to add ports from.
         Returns:
             dict: Updated ports dictionary.
         """
-        for (host, port), count in flow_fingerprint.ports.items():
+        # If other object is not an FlowFingerprint, return False
+        if not isinstance(other, FlowFingerprint):
+            return False
+        
+        for (host, port), count in other.ports.items():
             try:
                 h, p = next((h, p) for h, p in self.ports if compare_hosts(h, host) and p == port)
                 self.ports[(h, p)] += count
@@ -165,31 +169,25 @@ class FlowFingerprint:
         return are_hosts_matching
     
 
-    def match_fixed_ports(self, other: FlowFingerprint) -> bool:
+    def match_ports(self, other: FlowFingerprint) -> bool:
         """
-        Match the fixed ports of two FlowFingerprint objects.
+        Check if the ports of given FlowFingerprint object,
+        match the ports of this FlowFingerprint object.
 
         Args:
             other (FlowFingerprint): FlowFingerprint to match with.
         Returns:
-            bool: True if the FlowFingerprints' fixed ports match, False otherwise.
+            bool: True if the given FlowFingerprints' ports match, False otherwise.
         """
         # If other object is not an FlowFingerprint, return False
         if not isinstance(other, FlowFingerprint):
             return False
         
-        ## If other object is an FlowFingerprint, compare fixed ports
-        self_fixed_ports = self.get_fixed_ports()
-        other_fixed_ports = other.get_fixed_ports()
-        
-        # Fixed ports set should have the same length
-        if len(self_fixed_ports) != len(other_fixed_ports):
-            return False
-        
-        # Check if fixed ports match
-        for host, port in self_fixed_ports:
+        for (host, port) in other.ports.keys():
             try:
-                next((other_host, other_port) for other_host, other_port in self.ports if compare_hosts(other_host, host) and other_port == port)
+                h, p = next((h, p) for h, p in self.ports if compare_hosts(h, host))
+                if (h, p) in self.get_fixed_ports() and port != p:
+                    return False
             except StopIteration:
                 return False
         
@@ -219,7 +217,7 @@ class FlowFingerprint:
             # Hosts (in any direction)
             self.match_host(other) and
             # Fixed port
-            self.match_fixed_ports(other) and
+            self.match_ports(other) and
             # Transport protocol
             self.transport_protocol == other.transport_protocol and
             # Application layer protocol
