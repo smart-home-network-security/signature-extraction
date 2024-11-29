@@ -1,5 +1,6 @@
 ## Imports
 # Libraries
+from typing import Iterator
 from scapy.all import Packet, Raw
 import scapy.layers as scapy
 # Package
@@ -70,6 +71,20 @@ class HTTP(ApplicationLayer):
         # we cannot compare the fields.
         # ==> conservatively return True
         return True
+    
+
+    def __iter__(self) -> Iterator:
+        """
+        Iterate over the relevant class attributes.
+
+        Returns:
+            Iterator: iterator over the relevant class attributes
+        """
+        yield "response", self.response
+        if self.method is not None:
+            yield "method", self.method
+        if self.uri is not None:
+            yield "uri", self.uri
     
 
     def __hash__(self) -> int:
