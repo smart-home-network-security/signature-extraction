@@ -177,7 +177,7 @@ def get_wildcard_subdomain(domain_a: str, domain_b: str) -> str:
     elif domain_b.endswith(domain_a):
         return f"*.{domain_a}"
     else:
-        return f"*.{domain_a.split(".", 1)[1]}"
+        return f"*.{domain_a.split('.', 1)[1]}"
 
 
 def should_skip_pkt(pkt: ScapyPacket) -> bool:
