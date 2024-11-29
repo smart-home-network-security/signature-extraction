@@ -135,13 +135,11 @@ class FlowFingerprint:
         Args:
             flow (FlowFingerprint): FlowFingerprint object to add.
         """
-        # Update application layer if needed
-        self.application_layer.update(flow.application_layer) if self.application_layer else flow.application_layer
-
-        # Update other attributes
+        # Update attributes if needed
         self.src = flow.src if not self.src else self.src
         self.dst = flow.dst if not self.dst else self.dst
         self.transport_protocol = flow.transport_protocol if not self.transport_protocol else self.transport_protocol
+        self.application_layer = flow.application_layer if not self.application_layer else self.application_layer
         self.count += flow.count
         self.add_ports(flow)
 

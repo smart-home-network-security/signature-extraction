@@ -46,20 +46,6 @@ class DNS(ApplicationLayer):
                 self.qname = None
 
     
-    def update(self, other: DNS) -> None:
-        """
-        Update the current DNS object with another one.
-
-        Args:
-            other (DNS): other DNS object.
-        """
-        if not isinstance(other, DNS):
-            raise ValueError("Cannot update DNS object with a non-DNS object.")
-        
-        if self.qname != other.qname and compare_domain_names(self.qname, other.qname):
-            self.qname = get_wildcard_subdomain(self.qname, other.qname)
-
-    
     def __iter__(self) -> Iterator:
         """
         Iterate over the class attributes.
