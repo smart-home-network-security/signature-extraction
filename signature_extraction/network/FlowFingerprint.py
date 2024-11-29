@@ -7,7 +7,7 @@ import time
 from ipaddress import IPv4Address
 # Package
 from .Packet import Packet
-from signature_extraction.utils import is_known_port, compare_domain_names, compare_hosts, get_wildcard_subdomain
+from signature_extraction.utils import is_known_port, compare_hosts
 from profile_translator_blocklist import translate_policy
 # Logging
 import importlib
@@ -121,14 +121,9 @@ class FlowFingerprint:
         for (host, port), count in flow_fingerprint.ports.items():
             try:
                 h, p = next((h, p) for h, p in self.ports if compare_hosts(h, host) and p == port)
-                ports_value = self.ports.get((h, p), 0)
-                del self.ports[(h, p)]
-                # Update hostname if needed
-                if h != host and compare_domain_names(h, host):
-                    h = get_wildcard_subdomain(h, host)
-                self.ports[(h, p)] = ports_value + count
+                self.ports[(h, p)] += count
             except StopIteration:
-                continue
+                self.ports[(host, port)] = count
 
         return self.ports
 
@@ -140,16 +135,12 @@ class FlowFingerprint:
         Args:
             flow (FlowFingerprint): FlowFingerprint object to add.
         """
-        # Update hosts if needed
-        if self.src != flow.src and compare_domain_names(self.src, flow.src):
-            self.src = get_wildcard_subdomain(self.src, flow.src)
-        if self.dst != flow.dst and compare_domain_names(self.dst, flow.dst):
-            self.dst = get_wildcard_subdomain(self.dst, flow.dst)
-        
         # Update application layer if needed
         self.application_layer.update(flow.application_layer) if self.application_layer else flow.application_layer
 
         # Update other attributes
+        self.src = flow.src if not self.src else self.src
+        self.dst = flow.dst if not self.dst else self.dst
         self.transport_protocol = flow.transport_protocol if not self.transport_protocol else self.transport_protocol
         self.count += flow.count
         self.add_ports(flow)
