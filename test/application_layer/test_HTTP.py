@@ -1,5 +1,6 @@
 ## Imports
 # Libraries
+import pytest
 from scapy.all import IP, TCP
 import scapy.layers.http as http
 # Package
@@ -134,8 +135,10 @@ def test_http_resp() -> None:
 
     http_dict = dict(http_pkt)
     assert http_dict["response"]
-    assert http_dict["method"] is None
-    assert http_dict["uri"] is None
+    with pytest.raises(KeyError):
+        assert http_dict["method"] is None
+    with pytest.raises(KeyError):
+        assert http_dict["uri"] is None
 
 
 def test_hash() -> None:
