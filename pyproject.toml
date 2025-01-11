@@ -47,12 +47,12 @@ classifiers = [
 
 dependencies = [
   # Libraries
-  "cryptography",
-  "scapy",
-  "pandas",
+  "cryptography==43.0.1",
+  "scapy==2.6.0",
+  "pandas==2.2.3",
   # Custom
-  "dns-unbound-cache-reader",
-  "profile-translator-blocklist"
+  "dns-unbound-cache-reader==0.2.0",
+  "profile-translator-blocklist==0.5.0"
 ]
 
 [project.urls]

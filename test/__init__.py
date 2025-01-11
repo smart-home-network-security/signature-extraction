@@ -1,3 +1,3 @@
 """
-Tests for the package `signature-extractor`.
+Tests for the package `signature-extraction`.
 """
