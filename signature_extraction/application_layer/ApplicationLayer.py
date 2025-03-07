@@ -11,7 +11,7 @@ class ApplicationLayer:
     Application layer protocol.
     """
 
-    characters_to_replace = ["/", "*", "=", "?"]
+    characters_to_replace = [" ", "/", "*", "=", "?"]
 
 
     @staticmethod
