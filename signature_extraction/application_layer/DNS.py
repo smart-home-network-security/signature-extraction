@@ -4,9 +4,11 @@ from __future__ import annotations
 from typing import Iterator
 from scapy.all import Packet
 from scapy.layers.dns import dnstypes
+from fractions import Fraction
 # Package
 from signature_extraction.utils import compare_domain_names, get_wildcard_subdomain
 from .ApplicationLayer import ApplicationLayer
+from signature_extraction.utils.distance import discrete_distance, levenshtein_ratio
 
 
 class DNS(ApplicationLayer):
@@ -102,3 +104,32 @@ class DNS(ApplicationLayer):
         """
         attrs = tuple(attr for attr in dict(self).items() if attr[0] != "response")
         return hash((self.protocol_name, attrs))
+    
+
+    def compute_distance(self, other: DNS) -> Fraction:
+        """
+        Compute the distance between this and another DNS layer.
+
+        Args:
+            other (DNS): Other DNS object
+        Returns:
+            Fraction: distance between this and another DNS layer
+        """
+        # If other is not a DNS layer, distance is maximal (1)
+        if not isinstance(other, DNS):
+            return Fraction(1)
+        
+
+        # Weights
+        WEIGHT_QTYPE = Fraction(1, 3)
+        WEIGHT_QNAME = Fraction(2, 3)
+        
+        # qtype distance
+        # 0 if qtypes are identical, 1 if they differ
+        distance_qtype = discrete_distance(self.qtype, other.qtype) if self.qtype is not None and other.qtype is not None else Fraction(1)
+
+        # qname distance: Levenshtein distance
+        distance_qname = levenshtein_ratio(self.qname, other.qname) if self.qname is not None and other.qname is not None else Fraction(1)
+
+        # Return weighted distance
+        return WEIGHT_QTYPE * distance_qtype + WEIGHT_QNAME * distance_qname 

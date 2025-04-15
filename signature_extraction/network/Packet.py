@@ -85,9 +85,11 @@ class Packet:
 
         # Network layer: hosts (src & dst)
         if pkt.haslayer(IP):
+            pkt_dict["network_protocol"] = "IPv4"
             pkt_dict["src"] = pkt.getlayer(IP).src
             pkt_dict["dst"] = pkt.getlayer(IP).dst
         elif pkt.haslayer(IPv6):
+            pkt_dict["network_protocol"] = "IPv6"
             pkt_dict["src"] = pkt.getlayer(IPv6).src
             pkt_dict["dst"] = pkt.getlayer(IPv6).dst
 

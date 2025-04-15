@@ -1,11 +1,14 @@
 ## Imports
 # Libraries
+from __future__ import annotations
 from typing import Union, Iterator
 from enum import IntEnum
 from scapy.all import Packet
 from scapy.contrib.coap import CoAP, coap_codes
+from fractions import Fraction
 # Package
 from .ApplicationLayer import ApplicationLayer
+from signature_extraction.utils.distance import discrete_distance, levenshtein_ratio
 
 
 class CoAP(ApplicationLayer):
@@ -113,3 +116,39 @@ class CoAP(ApplicationLayer):
             int: hash value of the CoAP object
         """
         return hash(self.protocol_name)
+    
+
+    def compute_distance(self, other: CoAP) -> Fraction:
+        """
+        Compute the distance between this and another CoAP layer.
+
+        Args:
+            other (CoAP): Other CoAP object
+        Returns:
+            Fraction: distance between this and another CoAP layer
+        """
+        # If other is not a CoAP layer, distance is maximal (1.0)
+        if not isinstance(other, CoAP):
+            return Fraction(1)
+        
+
+        WEIGHT_CODE = Fraction(1, 2)
+        WEIGHT_URI  = Fraction(1, 2)
+
+        # CoAP code
+        # 0 if identical, 1 if different
+        distance_code = Fraction(1)
+        try:
+            distance_code = discrete_distance(self.code, other.code)
+        except AttributeError:
+            pass
+
+        # URI path
+        # Levenshtein distance
+        distance_uri = Fraction(1)
+        try:
+            distance_uri = levenshtein_ratio(self.uri_path, other.uri_path)
+        except AttributeError:
+            pass
+        
+        return WEIGHT_CODE * distance_code + WEIGHT_URI * distance_uri

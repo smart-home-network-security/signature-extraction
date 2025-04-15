@@ -95,6 +95,22 @@ def is_known_port(port: int, protocol: str = "tcp") -> bool:
         return False
     
 
+def is_ip_address(ip: str) -> bool:
+    """
+    Check if the given string is a valid IP (v4 or v6) address.
+
+    Args:
+        ip (str): given string
+    Returns:
+        bool: True if the string is a valid IP (v4 or v6) address, False otherwise
+    """
+    try:
+        ip_address(ip)
+        return True
+    except ValueError:
+        return False
+    
+
 def compare_domain_names(domain_a: str, domain_b: str) -> bool:
     """
     Compare two domain names.
@@ -135,16 +151,8 @@ def compare_hosts(host_a: str, host_b: str) -> bool:
         return True
 
     # Try to convert to IP address
-    a_is_ip = True
-    b_is_ip = True
-    try:
-        host_a = ip_address(host_a)
-    except ValueError:
-        a_is_ip = False    
-    try:
-        host_b = ip_address(host_b)
-    except ValueError:
-        b_is_ip = False
+    a_is_ip = is_ip_address(host_a)
+    b_is_ip = is_ip_address(host_b)
 
     if a_is_ip and b_is_ip:
         # If both are IP addresses, compare them

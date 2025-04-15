@@ -1,11 +1,14 @@
 ## Imports
 # Libraries
+from __future__ import annotations
 from typing import Iterator
 from scapy.all import Packet, Raw
 import scapy.layers as scapy
+from fractions import Fraction
 # Package
 from .ApplicationLayer import ApplicationLayer
 from signature_extraction.utils import get_last_layer
+from signature_extraction.utils.distance import discrete_distance, levenshtein_ratio
 
 
 class HTTP(ApplicationLayer):
@@ -96,3 +99,32 @@ class HTTP(ApplicationLayer):
             int: hash value of the HTTP object
         """
         return hash(self.protocol_name)
+    
+
+    def compute_distance(self, other: HTTP) -> Fraction:
+        """
+        Compute the distance between this and another HTTP layer.
+
+        Args:
+            other (HTTP): Other HTTP object
+        Returns:
+            Fraction: distance between this and another HTTP layer
+        """
+        # If other is not a HTTP layer, distance is maximal (1)
+        if not isinstance(other, HTTP):
+            return Fraction(1)
+        
+
+        # Weights
+        WEIGHT_METHOD = Fraction(1, 2)
+        WEIGHT_URI    = Fraction(1, 2)
+
+        # Method
+        # 0 if identical, 1 if different
+        distance_method = discrete_distance(self.method, other.method) if self.method is not None and other.method is not None else Fraction(1)
+
+        # URI
+        # Levenshtein distance
+        distance_uri = levenshtein_ratio(self.uri, other.uri) if self.uri is not None and other.uri is not None else Fraction(1)
+
+        return WEIGHT_METHOD * distance_method + WEIGHT_URI * distance_uri

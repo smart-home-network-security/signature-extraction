@@ -5,9 +5,11 @@ from typing import Union, Iterator
 import os
 import time
 from ipaddress import IPv4Address
+from fractions import Fraction
 # Package
 from .Packet import Packet
 from signature_extraction.utils import is_known_port, compare_hosts
+from signature_extraction.utils.distance import discrete_distance, distance_hosts
 from profile_translator_blocklist import translate_policy
 # Logging
 import importlib
@@ -49,6 +51,7 @@ class FlowFingerprint:
                 flow_data = first_item
 
         # Set attributes
+        self.network_protocol   = flow_data["network_protocol"]
         self.src                = flow_data["src"]
         self.dst                = flow_data["dst"]
         self.transport_protocol = flow_data["transport_protocol"]
@@ -63,10 +66,10 @@ class FlowFingerprint:
 
     def get_fixed_ports(self) -> set[(str, int)]:
         """
-        Compute the fixed port of the FlowFingerprint.
+        Compute the fixed ports of the FlowFingerprint.
 
         Returns:
-            Tuple[int, str]: Fixed port number and corresponding host.
+            set[(str, int)]: Set of hosts and their fixed ports.
         """
         # Initialize fixed_ports
         fixed_ports = set()
@@ -409,3 +412,144 @@ class FlowFingerprint:
 
         policy = self.extract_policy(ipv4)
         translate_policy(device, policy, output_dir=output_dir)
+
+
+
+    ##### DISTANCE METRICS #####
+
+
+    def _distance_network_layer(self, other: FlowFingerprint) -> Fraction:
+        """
+        Compute distance between this and another FlowFingerprint's network layer attributes,
+        i.e. network protocol, source and destination hosts.
+
+        Args:
+            other (FlowFingerprint): Other FlowFingerprint object.
+        Returns:
+            Fraction: Distance between this and the other FlowFingerprint's network layer attributes.
+        """
+        # Weights
+        WEIGHT_PROTOCOL    = Fraction(1, 3)
+        WEIGHT_HOSTS       = Fraction(2, 3)
+        WEIGHT_SINGLE_HOST = Fraction(1, 2)
+
+        # Network protocol
+        distance_protocol = discrete_distance(self.network_protocol, other.network_protocol)
+
+
+        ### Hosts
+        
+        # Source
+        distance_src_src = distance_hosts(self.src, other.src)
+        distance_src_dst = distance_hosts(self.src, other.dst)
+        is_same_direction = False
+        if distance_src_src <= distance_src_dst:
+            distance_src = distance_src_src
+            is_same_direction = True
+        else:
+            distance_src = distance_src_dst
+        
+        # Destination
+        if is_same_direction:
+            distance_dst = distance_hosts(self.dst, other.dst)
+        else:
+            distance_dst = distance_hosts(self.dst, other.src)
+
+
+        # Return final result
+        return WEIGHT_PROTOCOL * distance_protocol + WEIGHT_HOSTS * WEIGHT_SINGLE_HOST * (distance_src + distance_dst)
+    
+
+    def _distance_ports(self, other: FlowFingerprint) -> Fraction:
+        """
+        Compute distance metric between this and another FlowFingerprint's fixed ports, defined as follows:
+        1 - (# identical ports / # max ports)
+
+        Args:
+            other (FlowFingerprint): Other FlowFingerprint object.
+        Returns:
+            Fraction: Distance between this and the other FlowFingerprint's fixed ports.
+        """
+        self_fixed_ports = self.get_fixed_ports()
+        other_fixed_ports = other.get_fixed_ports()
+
+        # Count identical ports
+        n_identical_ports = 0
+        for (host, port) in self_fixed_ports:
+            try:
+                next((h, p) for h, p in other_fixed_ports if port == p)
+            except StopIteration:
+                continue
+            else:
+                n_identical_ports += 1
+        
+        # Compute distance
+        n_max_ports = max(len(self_fixed_ports), len(other_fixed_ports))
+        distance = Fraction(1) - Fraction(n_identical_ports, n_max_ports)
+        return distance
+    
+
+    def _distance_transport_layer(self, other: FlowFingerprint) -> Fraction:
+        """
+        Compute distance between this and another FlowFingerprint's transport layer attributes,
+        i.e. transport protocol, source and destination ports.
+
+        Args:
+            other (FlowFingerprint): Other FlowFingerprint object.
+        Returns:
+            Fraction: Distance between this and the other FlowFingerprint's transport layer attributes.
+        """
+        # Weights
+        WEIGHT_PROTOCOL = Fraction(1, 3)
+        WEIGHT_PORTS    = Fraction(2, 3)
+
+        # Transport protocol
+        distance_protocol = discrete_distance(self.transport_protocol, other.transport_protocol)
+
+        # Fixed ports
+        distance_ports = self._distance_ports(other)
+
+        # Return final result
+        return WEIGHT_PROTOCOL * distance_protocol + WEIGHT_PORTS * distance_ports
+    
+
+    def _distance_application_layer(self, other: FlowFingerprint) -> Fraction:
+        """
+        Compute distance between this and another FlowFingerprint's application layer attributes
+        (application protocol dependent).
+
+        Args:
+            other (FlowFingerprint): Other FlowFingerprint object.
+        Returns:
+            Fraction: Distance between this and the other FlowFingerprint's application layer attributes.
+        """
+        # If one of the two objects does not have an application layer,
+        # return maximal distance (1)
+        if self.application_layer is None or other.application_layer is None:
+            return Fraction(1)
+
+        return self.application_layer.compute_distance(other.application_layer)
+
+
+    def compute_distance(self, other: FlowFingerprint) -> Fraction:
+        """
+        Compute distance metric between this and another FlowFingerprint object,
+        taking into account the network, transport and application layers.
+
+        Args:
+            other (FlowFingerprint): Other FlowFingerprint object.
+        Returns:
+            Fraction: Distance between this and the other FlowFingerprint object.
+        """
+        # Weights
+        WEIGHT_NETWORK     = Fraction(1, 3)
+        WEIGHT_TRANSPORT   = Fraction(1, 3)
+        WEIGHT_APPLICATION = Fraction(1, 3)
+
+        distance = (
+            WEIGHT_NETWORK * self._distance_network_layer(other) +
+            WEIGHT_TRANSPORT * self._distance_transport_layer(other) +
+            WEIGHT_APPLICATION * self._distance_application_layer(other)
+        )
+
+        return distance
