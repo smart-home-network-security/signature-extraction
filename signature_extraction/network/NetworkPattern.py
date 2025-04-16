@@ -9,7 +9,7 @@ class NetworkPattern:
     List of network flows occurring subsequently.
     """
 
-    def __init__(self, flows: List[FlowFingerprint] = []) -> None:
+    def __init__(self, flows: list[FlowFingerprint] = []) -> None:
         """
         NetworkPattern constructor.
 
@@ -55,25 +55,25 @@ class NetworkPattern:
 
     def __len__(self) -> int:
         """
-        Get the number of flow fingerprints in the list.
+        Get the number of FlowFingerprints in the NetworkPattern.
 
         Returns:
-            int: Number of flow fingerprints.
+            int: Number of FlowFingerprints.
         """
         return len(self.flows)
     
 
-    def get_flows(self) -> List[FlowFingerprint]:
+    def get_flows(self) -> list[FlowFingerprint]:
         """
-        Get the list of flow fingerprints.
+        Get the list of FlowFingerprints.
 
         Returns:
-            List[FlowFingerprint]: List of flow fingerprints.
+            List[FlowFingerprint]: list of FlowFingerprints.
         """
         return self.flows
     
 
-    def set_flows(self, flows: List[FlowFingerprint]) -> None:
+    def set_flows(self, flows: list[FlowFingerprint]) -> None:
         """
         Set the list of flow fingerprints.
 
@@ -85,7 +85,7 @@ class NetworkPattern:
 
     def add_flow(self, flow: FlowFingerprint) -> None:
         """
-        Add a flow fingerprint to the list.
+        Add a FlowFingerprint to this NetworkPattern.
 
         Args:
             flow (FlowFingerprint): FlowFingerprint fingerprint to add.

@@ -52,8 +52,8 @@ class FlowFingerprint:
                 flow_data = first_item
 
         ## Set attributes
-        self.src                = flow_data["src"]
-        self.dst                = flow_data["dst"]
+        self.src = flow_data["src"]
+        self.dst = flow_data["dst"]
 
         # Set network-layer protocol
         self.network_protocol = "IPv4"  # Default: IPv4
@@ -231,6 +231,8 @@ class FlowFingerprint:
         
         # If other object is a FlowFingerprint, compare attributes:
         are_flow_matching = (
+            # Network protocol
+            self.network_protocol == other.network_protocol and
             # Hosts (in any direction)
             self.match_host(other) and
             # Fixed port
@@ -283,32 +285,59 @@ class FlowFingerprint:
         Returns:
             Iterable: Iterator over the packet fingerprint attributes.
         """
-        fixed_ports = self.get_fixed_ports()
+
+        ### NETWORK LAYER ###
+
+        # Protocol
+        yield "network_protocol", self.network_protocol
 
         ## Hosts
         # Source
         yield "src", self.src
+        # Destination
+        yield "dst", self.dst
+
+
+        ### TRANSPORT LAYER ###
+
+        # Transport-layer protocol
+        yield "transport_protocol", self.transport_protocol
+
+        ## Ports
+        fixed_ports = self.get_fixed_ports()
+
+        # Source port
         for host, port in fixed_ports:
             if host == self.src:
                 yield "sport", port
         else:
             yield "sport", None
-        # Destination
-        yield "dst", self.dst
+        
+        # Destination port
         for host, port in fixed_ports:
             if host == self.dst:
                 yield "dport", port
         else:
             yield "dport", None
 
-        ## Protocol(s)
-        # Transport layer
-        yield "transport_protocol", self.transport_protocol
-        # Application layer
+
+        ### APPLICATION LAYER ###
+        # Application-layer protocol
         if self.application_layer != self.transport_protocol:
-            yield "application_layer", self.application_layer
+            yield "application_layer", tuple(self.application_layer)
         else:
             yield "application_layer", None
+
+        
+    def __hash__(self) -> int:
+        """
+        Hash function for FlowFingerprint objects,
+        based on the attributes of the FlowFingerprint.
+
+        Returns:
+            int: Hash value of the FlowFingerprint object.
+        """
+        return hash(tuple(self))
 
 
     def get_id(self) -> str:
