@@ -17,7 +17,7 @@ class DNS(ApplicationLayer):
     """
     protocol_name = "DNS"
 
- 
+
     def __init__(self, pkt: Packet) -> None:
         """
         Constructor of the DNS class.

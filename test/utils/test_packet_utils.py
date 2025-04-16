@@ -143,6 +143,44 @@ dns_response_PTR = build_packet(dns_response_PTR)
 
 ##### TEST FUNCTIONS #####
 
+def test_is_ip_address() -> None:
+    """
+    Test the function `is_ip_address`.
+    """
+    # IPv4
+    ipv4 = "192.168.1.1"
+    assert packet_utils.is_ip_address(ipv4)
+
+    # IPv6
+    ipv6 = "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
+    assert packet_utils.is_ip_address(ipv6)
+    ipv6 = "2001:db8::ff00:42:8329"
+    assert packet_utils.is_ip_address(ipv6)
+    ipv6 = "::1"
+    assert packet_utils.is_ip_address(ipv6)
+
+    # Invalid IP
+    invalid_ip = "not_an_ip"
+    assert not packet_utils.is_ip_address(invalid_ip)
+
+
+def test_guess_network_protocol() -> None:
+    """
+    Test the function `guess_network_protocol`.
+    """
+    # IPv4
+    ipv4 = "192.168.1.1"
+    assert packet_utils.guess_network_protocol(ipv4) == "IPv4"
+
+    # IPv6
+    ipv6 = "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
+    assert packet_utils.guess_network_protocol(ipv6) == "IPv6"
+
+    # Unknown
+    with pytest.raises(ValueError):
+        packet_utils.guess_network_protocol("not_an_ip")
+
+
 def test_is_known_port() -> None:
     """
     Test the function `is_known_port`.

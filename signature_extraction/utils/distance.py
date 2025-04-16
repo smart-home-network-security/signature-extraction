@@ -1,7 +1,7 @@
 from typing import Any
 from fractions import Fraction
 import Levenshtein
-from packet_utils import is_ip_address
+from .packet_utils import is_ip_address
 
 
 def discrete_distance(a: Any, b: Any) -> Fraction:

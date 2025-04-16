@@ -1,6 +1,8 @@
 from .packet_utils import (
     DnsRtype, 
     DnsTableKeys,
+    is_ip_address,
+    guess_network_protocol,
     is_known_port,
     compare_domain_names,
     compare_hosts,

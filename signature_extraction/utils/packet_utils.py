@@ -71,6 +71,44 @@ skip_layers = [
 
 ### FUNCTIONS ###
 
+def is_ip_address(ip: str) -> bool:
+    """
+    Check if the given string is a valid IP (v4 or v6) address.
+
+    Args:
+        ip (str): given string
+    Returns:
+        bool: True if the string is a valid IP (v4 or v6) address, False otherwise
+    """
+    try:
+        ip_address(ip)
+        return True
+    except ValueError:
+        return False
+    
+
+def guess_network_protocol(ip: str) -> str:
+    """
+    Guess the network-layer protocol (IPv4 or IPv6) of the given IP address.
+
+    Args:
+        ip (str): given IP address
+    Returns:
+        str: "IPv4" or "IPv6"
+    Raises:
+        ValueError: if the given IP address is not valid
+    """
+    try:
+        ip = IPv4Address(ip)
+        return "IPv4"
+    except ValueError:
+        try:
+            ip = IPv6Address(ip)
+            return "IPv6"
+        except ValueError:
+            raise ValueError(f"Invalid IP address: {ip}")
+
+
 def is_known_port(port: int, protocol: str = "tcp") -> bool:
     """
     Check if the given port is a well-known transport layer port.
@@ -92,22 +130,6 @@ def is_known_port(port: int, protocol: str = "tcp") -> bool:
         getservbyport(port, protocol)
         return True
     except:
-        return False
-    
-
-def is_ip_address(ip: str) -> bool:
-    """
-    Check if the given string is a valid IP (v4 or v6) address.
-
-    Args:
-        ip (str): given string
-    Returns:
-        bool: True if the string is a valid IP (v4 or v6) address, False otherwise
-    """
-    try:
-        ip_address(ip)
-        return True
-    except ValueError:
         return False
     
 

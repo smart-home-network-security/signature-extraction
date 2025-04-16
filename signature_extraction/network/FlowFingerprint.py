@@ -6,9 +6,10 @@ import os
 import time
 from ipaddress import IPv4Address
 from fractions import Fraction
+from json import JSONEncoder
 # Package
 from .Packet import Packet
-from signature_extraction.utils import is_known_port, compare_hosts
+from signature_extraction.utils import guess_network_protocol, is_known_port, compare_hosts
 from signature_extraction.utils.distance import discrete_distance, distance_hosts
 from profile_translator_blocklist import translate_policy
 # Logging
@@ -50,10 +51,23 @@ class FlowFingerprint:
             else:
                 flow_data = first_item
 
-        # Set attributes
-        self.network_protocol   = flow_data["network_protocol"]
+        ## Set attributes
         self.src                = flow_data["src"]
         self.dst                = flow_data["dst"]
+
+        # Set network-layer protocol
+        self.network_protocol = "IPv4"  # Default: IPv4
+        if "network_protocol" in flow_data:
+            self.network_protocol = flow_data["network_protocol"]
+        else:
+            # Guess network protocol from hosts
+            for host in (self.src, self.dst):
+                try:
+                    self.network_protocol = guess_network_protocol(host)
+                    break
+                except ValueError:
+                    pass
+
         self.transport_protocol = flow_data["transport_protocol"]
         self.application_layer  = flow_data.get("application_layer", None)
         if not self.application_layer:
@@ -553,3 +567,38 @@ class FlowFingerprint:
         )
 
         return distance
+
+
+
+class FlowFingerprintJsonEncoder(JSONEncoder):
+    """
+    JSON encoder for FlowFingerprint objects.
+    Converts FlowFingerprint objects to JSON-serializable dictionaries,
+    i.e. its representative policy.
+    """
+
+    def __init__(self, ipv4: IPv4Address, *args, **kwargs) -> None:
+        """
+        Constructor.
+        Provides the IPv4 address of the device to the JSON encoder.
+        """
+        super().__init__(*args, **kwargs)
+        self.ipv4 = ipv4
+
+
+    def default(self, obj):
+        """
+        Default JSON encoder for FlowFingerprint objects.
+
+        Args:
+            obj: Object to encode.
+        Returns:
+            dict: JSON-serializable dictionary.
+        """
+        # If the object is not a FlowFingerprint, use the default encoder
+        if not isinstance(obj, FlowFingerprint):
+            return super().default(obj)
+        
+        # Extract the FlowFingerprint's policy,
+        # and use it as the JSON-serializable dictionary
+        return obj.extract_policy(self.ipv4)
