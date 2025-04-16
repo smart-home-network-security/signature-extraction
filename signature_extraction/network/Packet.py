@@ -2,10 +2,11 @@
 # Libraries
 from __future__ import annotations
 from typing import List, Iterator
+from ipaddress import IPv4Address, IPv6Address
 import scapy.all as scapy
 from scapy.all import IP, IPv6, TCP, UDP
 # Package
-from signature_extraction.utils import DnsTableKeys, get_domain_name_from_ip
+from signature_extraction.utils import DnsTableKeys, guess_network_protocol, get_domain_name_from_ip
 from signature_extraction.application_layer import ApplicationLayer
 
 
@@ -60,8 +61,23 @@ class Packet:
         """
         self.id = Packet.id
         Packet.id += 1
+
         self.src                  = pkt["src"]
         self.dst                  = pkt["dst"]
+
+        # Set network-layer protocol
+        self.network_protocol = "IPv4"  # Default: IPv4
+        if "network_protocol" in pkt:
+            self.network_protocol = pkt["network_protocol"]
+        else:
+            # Guess network protocol from hosts
+            for host in (self.src, self.dst):
+                try:
+                    self.network_protocol = guess_network_protocol(host)
+                    break
+                except ValueError:
+                    pass
+
         self.transport_protocol   = pkt.get("transport_protocol", None)
         self.sport                = pkt.get("sport", None)
         self.dport                = pkt.get("dport", None)
@@ -85,9 +101,11 @@ class Packet:
 
         # Network layer: hosts (src & dst)
         if pkt.haslayer(IP):
+            pkt_dict["network_protocol"] = "IPv4"
             pkt_dict["src"] = pkt.getlayer(IP).src
             pkt_dict["dst"] = pkt.getlayer(IP).dst
         elif pkt.haslayer(IPv6):
+            pkt_dict["network_protocol"] = "IPv6"
             pkt_dict["src"] = pkt.getlayer(IPv6).src
             pkt_dict["dst"] = pkt.getlayer(IPv6).dst
 
@@ -129,7 +147,8 @@ class Packet:
         
         # If other object is a Packet, compare attributes
         return (
-            self.src == other.src
+            self.network_protocol == other.network_protocol
+            and self.src == other.src
             and self.dst == other.dst
             and self.transport_protocol == other.transport_protocol
             and self.sport == other.sport
@@ -207,6 +226,7 @@ class Packet:
         """
         yield "id", self.id
         yield "timestamp", self.timestamp
+        yield "network_protocol", self.network_protocol
         yield "src", self.src
         yield "dst", self.dst
         yield "transport_protocol", self.transport_protocol

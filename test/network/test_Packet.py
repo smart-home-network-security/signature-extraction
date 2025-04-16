@@ -8,6 +8,7 @@ from signature_extraction.network import Packet
 
 ### VARIABLES ###
 pkt_dict_a = {
+    "network_protocol": "IPv4",
     "src": "192.168.1.1",
     "dst": "192.168.1.2",
     "transport_protocol": "TCP",
@@ -18,6 +19,7 @@ pkt_dict_a = {
     "length": 100
 }
 pkt_dict_b = {
+    "network_protocol": "IPv4",
     "src": "192.168.1.1",
     "dst": "192.168.1.2",
     "transport_protocol": "TCP",
@@ -28,6 +30,7 @@ pkt_dict_b = {
     "length": 200
 }
 pkt_dict_c = {
+    "network_protocol": "IPv4",
     "src": "192.168.1.1",
     "dst": "192.168.1.2",
     "transport_protocol": "TCP",
@@ -46,6 +49,7 @@ def test_constructor() -> None:
     Test the constructor of the class `Packet`.
     """
     pkt = Packet(pkt_dict_a)
+    assert pkt.network_protocol == pkt_dict_a["network_protocol"]
     assert pkt.src == pkt_dict_a["src"]
     assert pkt.dst == pkt_dict_a["dst"]
     assert pkt.transport_protocol == pkt_dict_a["transport_protocol"]
@@ -67,6 +71,7 @@ def test_build_from_packet() -> None:
     pkt_len = len(packet)
 
     pkt = Packet.build_from_pkt(packet)
+    assert pkt.network_protocol == "IPv4"
     assert pkt.src == "192.168.1.1"
     assert pkt.dst == "192.168.1.2"
     assert pkt.transport_protocol == "TCP"
@@ -88,6 +93,7 @@ def test_build_from_packet_error() -> None:
     pkt_len = len(packet)
 
     pkt = Packet.build_from_pkt(packet)
+    assert pkt.network_protocol == "IPv4"
     assert pkt.src == "192.168.1.1"
     assert pkt.dst == "192.168.1.2"
     assert pkt.transport_protocol == "TCP"

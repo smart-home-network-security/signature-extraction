@@ -71,6 +71,44 @@ skip_layers = [
 
 ### FUNCTIONS ###
 
+def is_ip_address(ip: str) -> bool:
+    """
+    Check if the given string is a valid IP (v4 or v6) address.
+
+    Args:
+        ip (str): given string
+    Returns:
+        bool: True if the string is a valid IP (v4 or v6) address, False otherwise
+    """
+    try:
+        ip_address(ip)
+        return True
+    except ValueError:
+        return False
+    
+
+def guess_network_protocol(ip: str) -> str:
+    """
+    Guess the network-layer protocol (IPv4 or IPv6) of the given IP address.
+
+    Args:
+        ip (str): given IP address
+    Returns:
+        str: "IPv4" or "IPv6"
+    Raises:
+        ValueError: if the given IP address is not valid
+    """
+    try:
+        ip = IPv4Address(ip)
+        return "IPv4"
+    except ValueError:
+        try:
+            ip = IPv6Address(ip)
+            return "IPv6"
+        except ValueError:
+            raise ValueError(f"Invalid IP address: {ip}")
+
+
 def is_known_port(port: int, protocol: str = "tcp") -> bool:
     """
     Check if the given port is a well-known transport layer port.
@@ -135,16 +173,8 @@ def compare_hosts(host_a: str, host_b: str) -> bool:
         return True
 
     # Try to convert to IP address
-    a_is_ip = True
-    b_is_ip = True
-    try:
-        host_a = ip_address(host_a)
-    except ValueError:
-        a_is_ip = False    
-    try:
-        host_b = ip_address(host_b)
-    except ValueError:
-        b_is_ip = False
+    a_is_ip = is_ip_address(host_a)
+    b_is_ip = is_ip_address(host_b)
 
     if a_is_ip and b_is_ip:
         # If both are IP addresses, compare them

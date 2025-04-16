@@ -5,9 +5,12 @@ from typing import Union, Iterator
 import os
 import time
 from ipaddress import IPv4Address
+from fractions import Fraction
+from json import JSONEncoder
 # Package
 from .Packet import Packet
-from signature_extraction.utils import is_known_port, compare_hosts
+from signature_extraction.utils import guess_network_protocol, is_known_port, compare_hosts
+from signature_extraction.utils.distance import discrete_distance, distance_hosts
 from profile_translator_blocklist import translate_policy
 # Logging
 import importlib
@@ -48,9 +51,23 @@ class FlowFingerprint:
             else:
                 flow_data = first_item
 
-        # Set attributes
-        self.src                = flow_data["src"]
-        self.dst                = flow_data["dst"]
+        ## Set attributes
+        self.src = flow_data["src"]
+        self.dst = flow_data["dst"]
+
+        # Set network-layer protocol
+        self.network_protocol = "IPv4"  # Default: IPv4
+        if "network_protocol" in flow_data:
+            self.network_protocol = flow_data["network_protocol"]
+        else:
+            # Guess network protocol from hosts
+            for host in (self.src, self.dst):
+                try:
+                    self.network_protocol = guess_network_protocol(host)
+                    break
+                except ValueError:
+                    pass
+
         self.transport_protocol = flow_data["transport_protocol"]
         self.application_layer  = flow_data.get("application_layer", None)
         if not self.application_layer:
@@ -63,10 +80,10 @@ class FlowFingerprint:
 
     def get_fixed_ports(self) -> set[(str, int)]:
         """
-        Compute the fixed port of the FlowFingerprint.
+        Compute the fixed ports of the FlowFingerprint.
 
         Returns:
-            Tuple[int, str]: Fixed port number and corresponding host.
+            set[(str, int)]: Set of hosts and their fixed ports.
         """
         # Initialize fixed_ports
         fixed_ports = set()
@@ -214,6 +231,8 @@ class FlowFingerprint:
         
         # If other object is a FlowFingerprint, compare attributes:
         are_flow_matching = (
+            # Network protocol
+            self.network_protocol == other.network_protocol and
             # Hosts (in any direction)
             self.match_host(other) and
             # Fixed port
@@ -266,32 +285,59 @@ class FlowFingerprint:
         Returns:
             Iterable: Iterator over the packet fingerprint attributes.
         """
-        fixed_ports = self.get_fixed_ports()
+
+        ### NETWORK LAYER ###
+
+        # Protocol
+        yield "network_protocol", self.network_protocol
 
         ## Hosts
         # Source
         yield "src", self.src
+        # Destination
+        yield "dst", self.dst
+
+
+        ### TRANSPORT LAYER ###
+
+        # Transport-layer protocol
+        yield "transport_protocol", self.transport_protocol
+
+        ## Ports
+        fixed_ports = self.get_fixed_ports()
+
+        # Source port
         for host, port in fixed_ports:
             if host == self.src:
                 yield "sport", port
         else:
             yield "sport", None
-        # Destination
-        yield "dst", self.dst
+        
+        # Destination port
         for host, port in fixed_ports:
             if host == self.dst:
                 yield "dport", port
         else:
             yield "dport", None
 
-        ## Protocol(s)
-        # Transport layer
-        yield "transport_protocol", self.transport_protocol
-        # Application layer
+
+        ### APPLICATION LAYER ###
+        # Application-layer protocol
         if self.application_layer != self.transport_protocol:
-            yield "application_layer", self.application_layer
+            yield "application_layer", tuple(self.application_layer)
         else:
             yield "application_layer", None
+
+        
+    def __hash__(self) -> int:
+        """
+        Hash function for FlowFingerprint objects,
+        based on the attributes of the FlowFingerprint.
+
+        Returns:
+            int: Hash value of the FlowFingerprint object.
+        """
+        return hash(tuple(self))
 
 
     def get_id(self) -> str:
@@ -409,3 +455,179 @@ class FlowFingerprint:
 
         policy = self.extract_policy(ipv4)
         translate_policy(device, policy, output_dir=output_dir)
+
+
+
+    ##### DISTANCE METRICS #####
+
+
+    def _distance_network_layer(self, other: FlowFingerprint) -> Fraction:
+        """
+        Compute distance between this and another FlowFingerprint's network layer attributes,
+        i.e. network protocol, source and destination hosts.
+
+        Args:
+            other (FlowFingerprint): Other FlowFingerprint object.
+        Returns:
+            Fraction: Distance between this and the other FlowFingerprint's network layer attributes.
+        """
+        # Weights
+        WEIGHT_PROTOCOL    = Fraction(1, 3)
+        WEIGHT_HOSTS       = Fraction(2, 3)
+        WEIGHT_SINGLE_HOST = Fraction(1, 2)
+
+        # Network protocol
+        distance_protocol = discrete_distance(self.network_protocol, other.network_protocol)
+
+
+        ### Hosts
+        
+        # Source
+        distance_src_src = distance_hosts(self.src, other.src)
+        distance_src_dst = distance_hosts(self.src, other.dst)
+        is_same_direction = False
+        if distance_src_src <= distance_src_dst:
+            distance_src = distance_src_src
+            is_same_direction = True
+        else:
+            distance_src = distance_src_dst
+        
+        # Destination
+        if is_same_direction:
+            distance_dst = distance_hosts(self.dst, other.dst)
+        else:
+            distance_dst = distance_hosts(self.dst, other.src)
+
+
+        # Return final result
+        return WEIGHT_PROTOCOL * distance_protocol + WEIGHT_HOSTS * WEIGHT_SINGLE_HOST * (distance_src + distance_dst)
+    
+
+    def _distance_ports(self, other: FlowFingerprint) -> Fraction:
+        """
+        Compute distance metric between this and another FlowFingerprint's fixed ports, defined as follows:
+        1 - (# identical ports / # max ports)
+
+        Args:
+            other (FlowFingerprint): Other FlowFingerprint object.
+        Returns:
+            Fraction: Distance between this and the other FlowFingerprint's fixed ports.
+        """
+        self_fixed_ports = self.get_fixed_ports()
+        other_fixed_ports = other.get_fixed_ports()
+
+        # Count identical ports
+        n_identical_ports = 0
+        for (host, port) in self_fixed_ports:
+            try:
+                next((h, p) for h, p in other_fixed_ports if port == p)
+            except StopIteration:
+                continue
+            else:
+                n_identical_ports += 1
+        
+        # Compute distance
+        n_max_ports = max(len(self_fixed_ports), len(other_fixed_ports))
+        distance = Fraction(1) - Fraction(n_identical_ports, n_max_ports)
+        return distance
+    
+
+    def _distance_transport_layer(self, other: FlowFingerprint) -> Fraction:
+        """
+        Compute distance between this and another FlowFingerprint's transport layer attributes,
+        i.e. transport protocol, source and destination ports.
+
+        Args:
+            other (FlowFingerprint): Other FlowFingerprint object.
+        Returns:
+            Fraction: Distance between this and the other FlowFingerprint's transport layer attributes.
+        """
+        # Weights
+        WEIGHT_PROTOCOL = Fraction(1, 3)
+        WEIGHT_PORTS    = Fraction(2, 3)
+
+        # Transport protocol
+        distance_protocol = discrete_distance(self.transport_protocol, other.transport_protocol)
+
+        # Fixed ports
+        distance_ports = self._distance_ports(other)
+
+        # Return final result
+        return WEIGHT_PROTOCOL * distance_protocol + WEIGHT_PORTS * distance_ports
+    
+
+    def _distance_application_layer(self, other: FlowFingerprint) -> Fraction:
+        """
+        Compute distance between this and another FlowFingerprint's application layer attributes
+        (application protocol dependent).
+
+        Args:
+            other (FlowFingerprint): Other FlowFingerprint object.
+        Returns:
+            Fraction: Distance between this and the other FlowFingerprint's application layer attributes.
+        """
+        # If one of the two objects does not have an application layer,
+        # return maximal distance (1)
+        if self.application_layer is None or other.application_layer is None:
+            return Fraction(1)
+
+        return self.application_layer.compute_distance(other.application_layer)
+
+
+    def compute_distance(self, other: FlowFingerprint) -> Fraction:
+        """
+        Compute distance metric between this and another FlowFingerprint object,
+        taking into account the network, transport and application layers.
+
+        Args:
+            other (FlowFingerprint): Other FlowFingerprint object.
+        Returns:
+            Fraction: Distance between this and the other FlowFingerprint object.
+        """
+        # Weights
+        WEIGHT_NETWORK     = Fraction(1, 3)
+        WEIGHT_TRANSPORT   = Fraction(1, 3)
+        WEIGHT_APPLICATION = Fraction(1, 3)
+
+        distance = (
+            WEIGHT_NETWORK * self._distance_network_layer(other) +
+            WEIGHT_TRANSPORT * self._distance_transport_layer(other) +
+            WEIGHT_APPLICATION * self._distance_application_layer(other)
+        )
+
+        return distance
+
+
+
+class FlowFingerprintJsonEncoder(JSONEncoder):
+    """
+    JSON encoder for FlowFingerprint objects.
+    Converts FlowFingerprint objects to JSON-serializable dictionaries,
+    i.e. its representative policy.
+    """
+
+    def __init__(self, ipv4: IPv4Address, *args, **kwargs) -> None:
+        """
+        Constructor.
+        Provides the IPv4 address of the device to the JSON encoder.
+        """
+        super().__init__(*args, **kwargs)
+        self.ipv4 = ipv4
+
+
+    def default(self, obj):
+        """
+        Default JSON encoder for FlowFingerprint objects.
+
+        Args:
+            obj: Object to encode.
+        Returns:
+            dict: JSON-serializable dictionary.
+        """
+        # If the object is not a FlowFingerprint, use the default encoder
+        if not isinstance(obj, FlowFingerprint):
+            return super().default(obj)
+        
+        # Extract the FlowFingerprint's policy,
+        # and use it as the JSON-serializable dictionary
+        return obj.extract_policy(self.ipv4)

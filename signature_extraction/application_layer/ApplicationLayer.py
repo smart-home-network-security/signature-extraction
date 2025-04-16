@@ -4,6 +4,7 @@ import importlib
 from scapy.all import Packet, Raw
 from scapy.layers import http, dns, dhcp
 from scapy.contrib.coap import CoAP
+from fractions import Fraction
 
 
 class ApplicationLayer:
@@ -116,3 +117,20 @@ class ApplicationLayer:
             int: hash value of the ApplicationLayer class.
         """
         return hash((self.protocol_name, tuple(dict(self).items())))
+    
+
+    def compute_distance(self, other: ApplicationLayer) -> Fraction:
+        """
+        Compute the distance between two application layer protocols.
+        This distance is generic and dummy, and should be overridden by subclasses.
+
+        Args:
+            other (ApplicationLayer): other application layer protocol.
+        Returns:
+            Fraction: distance between the two application layer protocols,
+                i.e. 0 if the are equivalent, 1 if they are different.
+        """
+        if hash(self) == hash(other):
+            return Fraction(0)
+        else:
+            return Fraction(1)

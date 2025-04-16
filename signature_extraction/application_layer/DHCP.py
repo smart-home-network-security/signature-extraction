@@ -1,10 +1,13 @@
 ## Imports
 # Libraries
+from __future__ import annotations
 from scapy.all import Packet
 from scapy.layers.dhcp import BOOTP
+from fractions import Fraction
 # Package
 from .ApplicationLayer import ApplicationLayer
 from signature_extraction.utils import get_last_layer
+from signature_extraction.utils.distance import discrete_distance
 
 
 class DHCP(ApplicationLayer):
@@ -52,7 +55,7 @@ class DHCP(ApplicationLayer):
         # Other object is a DHCP layer,
         # compare client_mac.
         return self.client_mac == other.client_mac
-    
+
 
     def __hash__(self) -> int:
         """
@@ -64,3 +67,31 @@ class DHCP(ApplicationLayer):
         """
         attrs = ("client_mac", self.client_mac)
         return hash((self.protocol_name, attrs))
+
+
+    def compute_distance(self, other: DHCP) -> Fraction:
+        """
+        Compute the distance between this and another DHCP layer.
+
+        Args:
+            other (DHCP): Other DHCP object
+        Returns:
+            Fraction: distance between this and another DHCP layer
+        """
+        # If other is not a DHCP layer, distance is maximal (1)
+        if not isinstance(other, DHCP):
+            return Fraction(1)
+        
+
+        WEIGHT_CLIENT = Fraction(1, 2)
+        WEIGHT_TYPE   = Fraction(1, 2)
+
+        # Client hardware address
+        # 0 if identical, 1 if different
+        distance_client_mac = discrete_distance(self.client_mac, other.client_mac)
+
+        # Message type
+        # 0 if identical, 1 if different
+        distance_type = discrete_distance(self.message_type, other.message_type)
+
+        return WEIGHT_CLIENT * distance_client_mac + WEIGHT_TYPE * distance_type

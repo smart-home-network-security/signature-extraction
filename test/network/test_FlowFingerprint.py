@@ -21,6 +21,7 @@ pkt_dns_request_a = (
     )
 )
 pkt_dict = {
+    "network_protocol": "IPv4",
     "src": "192.168.1.2",
     "dst": "192.168.1.1",
     "sport": 12345,
@@ -48,6 +49,7 @@ pkt_dns_request_c = (
 )
 
 pkt_dict_d = {
+    "network_protocol": "IPv4",
     "src": "192.168.1.1",
     "dst": "192.168.1.2",
     "sport": 53,
@@ -64,6 +66,7 @@ def test_constructor_dict() -> None:
     with a dictionary as input.
     """
     flow = FlowFingerprint(pkt_dict)
+    assert flow.network_protocol == "IPv4"
     assert flow.src == "192.168.1.2"
     assert flow.dst == "192.168.1.1"
     assert flow.transport_protocol == "UDP"
@@ -80,6 +83,7 @@ def test_constructor_pkt() -> None:
     """
     pkt = Packet.build_from_pkt(pkt_dns_request_a)
     flow = FlowFingerprint(pkt)
+    assert flow.network_protocol == "IPv4"
     assert flow.src == "192.168.1.2"
     assert flow.dst == "192.168.1.1"
     assert flow.transport_protocol == "UDP"
