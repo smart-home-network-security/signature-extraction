@@ -81,6 +81,22 @@ class ApplicationLayer:
         """
         for attr, value in self.__dict__.items():
             yield attr, value
+    
+
+    def __eq__(self, other: ApplicationLayer) -> bool:
+        """
+        Check if two application layer protocols are equivalent.
+        This method uses a dummy comparison, and should be overridden by subclasses.
+
+        Args:
+            other (ApplicationLayer): other application layer protocol.
+        Returns:
+            bool: True if the two application layer protocols are equivalent.
+        """
+        if not isinstance(other, ApplicationLayer):
+            return False
+        
+        return hash(self) == hash(other)
 
     
     def __str__(self) -> str:

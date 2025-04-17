@@ -165,7 +165,7 @@ class FlowFingerprint:
         self.add_ports(flow)
 
     
-    def match_host(self, other: FlowFingerprint) -> bool:
+    def match_hosts(self, other: FlowFingerprint) -> bool:
         """
         Match FlowFingerprint objects based on source and destination hosts,
         regardless of the direction.
@@ -184,6 +184,43 @@ class FlowFingerprint:
             compare_hosts(self.src, other.dst) and compare_hosts(self.dst, other.src)
         )
         return are_hosts_matching
+    
+
+    def get_different_hosts(self, other: FlowFingerprint) -> set[tuple[str, str]]:
+        """
+        Retrieve the other FlowFingerprint's hosts
+        which are different from this FlowFingerprint's hosts.
+
+        Args:
+            other (FlowFingerprint): FlowFingerprint to compare with.
+        Returns:
+            set[tuple[str, str]]: Set of pairs of different hosts.
+        Raises:
+            TypeError: If the other object is not a FlowFingerprint.
+        """
+        # If other object is not an FlowFingerprint, cannot compare
+        if not isinstance(other, FlowFingerprint):
+            raise TypeError(f"Cannot compare FlowFingerprint with {type(other)}")
+        
+        # Initialize hosts set
+        different_hosts = set()
+        
+        # If the two FlowFingerprints' hosts are equivalent, return None
+        if self.match_hosts(other):
+            return different_hosts
+        
+        ## Hosts are not equivalent
+        # Compare all pairs of hosts
+        if not compare_hosts(self.src, other.src):
+            different_hosts.add((self.src, other.src))
+        if not compare_hosts(self.src, other.dst):
+            different_hosts.add((self.src, other.dst))
+        if not compare_hosts(self.dst, other.src):
+            different_hosts.add((self.dst, other.src))
+        if not compare_hosts(self.dst, other.dst):
+            different_hosts.add((self.dst, other.dst))
+        
+        return different_hosts
     
 
     def match_ports(self, other: FlowFingerprint) -> bool:
@@ -234,7 +271,7 @@ class FlowFingerprint:
             # Network protocol
             self.network_protocol == other.network_protocol and
             # Hosts (in any direction)
-            self.match_host(other) and
+            self.match_hosts(other) and
             # Fixed port
             self.match_ports(other) and
             # Transport protocol
