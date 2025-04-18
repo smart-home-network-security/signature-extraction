@@ -35,6 +35,15 @@ def levenshtein_ratio(a: str, b: str) -> Fraction:
     Returns:
         Fraction: Levenshtein ratio between the two strings
     """
+    # Both strings are identical: distance is 0
+    if a == b:
+        return Fraction(0)
+    
+    # Both strings are empty: distance is 0
+    if len(a) + len(b) == 0:
+        return Fraction(0)
+    
+    # General case: compute Levenshtein ratio
     return Fraction(Levenshtein.distance(a, b), len(a) + len(b))
 
 
