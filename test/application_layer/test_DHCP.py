@@ -3,6 +3,7 @@
 from scapy.all import IP, UDP
 import scapy.layers.dhcp as dhcp
 # Package
+import signature_extraction.utils.distance as distance
 from signature_extraction.application_layer import DHCP
 
 
@@ -137,3 +138,20 @@ def test_hash() -> None:
     assert hash(dhcp_offer)    == hash(dhcp_request)
     assert hash(dhcp_offer)    == hash(dhcp_ack)
     assert hash(dhcp_request)  == hash(dhcp_ack)
+
+
+def test_compute_distance() -> None:
+    """
+    Test the distance function.
+    """
+    dhcp_discover = DHCP(dhcp_discover_layer)
+    dhcp_discover_2 = DHCP(dhcp_discover_layer_2)
+    dhcp_offer = DHCP(dhcp_offer_layer)
+    dhcp_request = DHCP(dhcp_request_layer)
+    dhcp_ack = DHCP(dhcp_ack_layer)
+
+    assert dhcp_discover.compute_distance(dhcp_discover) == 0
+    assert dhcp_discover.compute_distance(dhcp_discover_2) == DHCP.WEIGHT_CLIENT * distance.ONE + DHCP.WEIGHT_TYPE * distance.ZERO
+    assert dhcp_discover.compute_distance(dhcp_offer) == DHCP.WEIGHT_CLIENT * distance.ZERO + DHCP.WEIGHT_TYPE * distance.ONE
+    assert dhcp_discover.compute_distance(dhcp_request) == DHCP.WEIGHT_CLIENT * distance.ZERO + DHCP.WEIGHT_TYPE * distance.ONE
+    assert dhcp_discover.compute_distance(dhcp_ack) == DHCP.WEIGHT_CLIENT * distance.ZERO + DHCP.WEIGHT_TYPE * distance.ONE

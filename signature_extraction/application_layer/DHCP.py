@@ -26,6 +26,10 @@ class DHCP(ApplicationLayer):
         "inform":   8
     }
 
+    # Distance metrics weights
+    WEIGHT_CLIENT = Fraction(1, 2)
+    WEIGHT_TYPE   = Fraction(1, 2)
+
 
     def __init__(self, pkt: Packet) -> None:
         """
@@ -83,9 +87,6 @@ class DHCP(ApplicationLayer):
             return Fraction(1)
         
 
-        WEIGHT_CLIENT = Fraction(1, 2)
-        WEIGHT_TYPE   = Fraction(1, 2)
-
         # Client hardware address
         # 0 if identical, 1 if different
         distance_client_mac = discrete_distance(self.client_mac, other.client_mac)
@@ -94,4 +95,7 @@ class DHCP(ApplicationLayer):
         # 0 if identical, 1 if different
         distance_type = discrete_distance(self.message_type, other.message_type)
 
-        return WEIGHT_CLIENT * distance_client_mac + WEIGHT_TYPE * distance_type
+        return (
+            DHCP.WEIGHT_CLIENT * distance_client_mac +
+            DHCP.WEIGHT_TYPE * distance_type
+        )

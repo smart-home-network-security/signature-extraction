@@ -3,6 +3,10 @@ from fractions import Fraction
 import Levenshtein
 from .packet_utils import is_ip_address
 
+# Default fractions
+ZERO = Fraction(0)
+ONE  = Fraction(1)
+
 
 def discrete_distance(a: Any, b: Any) -> Fraction:
     """

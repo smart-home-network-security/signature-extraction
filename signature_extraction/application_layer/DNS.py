@@ -17,6 +17,10 @@ class DNS(ApplicationLayer):
     """
     protocol_name = "DNS"
 
+    # Distance metric weights
+    WEIGHT_QTYPE = Fraction(1, 3)
+    WEIGHT_QNAME = Fraction(2, 3)
+
 
     def __init__(self, pkt: Packet) -> None:
         """
@@ -118,11 +122,7 @@ class DNS(ApplicationLayer):
         # If other is not a DNS layer, distance is maximal (1)
         if not isinstance(other, DNS):
             return Fraction(1)
-        
 
-        # Weights
-        WEIGHT_QTYPE = Fraction(1, 3)
-        WEIGHT_QNAME = Fraction(2, 3)
         
         # qtype distance
         # 0 if qtypes are identical, 1 if they differ
@@ -132,4 +132,4 @@ class DNS(ApplicationLayer):
         distance_qname = levenshtein_ratio(self.qname, other.qname) if self.qname is not None and other.qname is not None else Fraction(1)
 
         # Return weighted distance
-        return WEIGHT_QTYPE * distance_qtype + WEIGHT_QNAME * distance_qname 
+        return DNS.WEIGHT_QTYPE * distance_qtype + DNS.WEIGHT_QNAME * distance_qname 

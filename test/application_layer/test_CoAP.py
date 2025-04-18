@@ -3,6 +3,7 @@
 from scapy.all import IP, UDP, Raw
 import scapy.contrib.coap as coap
 # Package
+import signature_extraction.utils.distance as distance
 from signature_extraction.application_layer import CoAP
 
 
@@ -88,3 +89,30 @@ def test_hash() -> None:
     assert hash(coap_resp)  == hash(coap_resp2)
     assert hash(coap_resp)  == hash(coap_resp3)
     assert hash(coap_resp2) == hash(coap_resp3)
+
+
+def test_compute_distance() -> None:
+    """
+    Test the distance function.
+    """
+    # CoAP requests
+    coap_get  = CoAP(layer_coap_get)
+    coap_get2 = CoAP(layer_coap_get_2)
+    coap_get3 = CoAP(layer_coap_get_3)
+    coap_get4 = CoAP(layer_coap_get_4)
+    # CoAP responses
+    coap_resp = CoAP(layer_coap_resp)
+    coap_resp2 = CoAP(layer_coap_resp_2)
+    coap_resp3 = CoAP(layer_coap_resp_3)
+
+    # Assertions
+    assert coap_get.compute_distance(coap_get) == 0
+    assert coap_get.compute_distance(coap_get2) == CoAP.WEIGHT_CODE * distance.ZERO + CoAP.WEIGHT_URI * distance.ZERO
+    assert coap_get.compute_distance(coap_get3) == CoAP.WEIGHT_CODE * distance.ONE + CoAP.WEIGHT_URI * distance.ZERO
+    assert coap_get.compute_distance(coap_get4) == CoAP.WEIGHT_CODE * distance.ZERO + CoAP.WEIGHT_URI * distance.levenshtein_ratio(coap_get.uri_path, coap_get4.uri_path)
+    assert coap_get.compute_distance(coap_resp) == CoAP.WEIGHT_CODE * distance.ONE + CoAP.WEIGHT_URI * distance.ONE
+    assert coap_get.compute_distance(coap_resp2) == CoAP.WEIGHT_CODE * distance.ONE + CoAP.WEIGHT_URI * distance.ONE
+    assert coap_get.compute_distance(coap_resp3) == CoAP.WEIGHT_CODE * distance.ONE + CoAP.WEIGHT_URI * distance.ONE
+    assert coap_resp.compute_distance(coap_resp) == 0
+    assert coap_resp.compute_distance(coap_resp2) == 0
+    assert coap_resp.compute_distance(coap_resp3) == 0

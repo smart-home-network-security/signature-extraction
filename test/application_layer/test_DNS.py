@@ -3,6 +3,7 @@
 from scapy.all import IP, UDP
 import scapy.layers.dns as dns
 # Package
+import signature_extraction.utils.distance as distance
 from signature_extraction.application_layer import DNS
 
 
@@ -94,3 +95,18 @@ def test_hash() -> None:
     assert hash(dns_request) != hash(dns_request_aaaa)
     assert hash(dns_request) != hash(dns_request_other)
     assert hash(dns_request) == hash(dns_response)
+
+
+def test_compute_distance() -> None:
+    """
+    Test the distance function.
+    """
+    dns_request = DNS(dns_request_layer)
+    dns_request_aaaa = DNS(dns_request_layer_aaaa)
+    dns_request_other = DNS(dns_request_layer_other)
+    dns_response = DNS(dns_response_layer)
+
+    assert dns_request.compute_distance(dns_request) == distance.ZERO
+    assert dns_request.compute_distance(dns_request_aaaa) == DNS.WEIGHT_QTYPE * distance.ONE + DNS.WEIGHT_QNAME * distance.ZERO
+    assert dns_request.compute_distance(dns_request_other) == DNS.WEIGHT_QTYPE * distance.ZERO + DNS.WEIGHT_QNAME * distance.levenshtein_ratio(dns_request.qname, dns_request_other.qname)
+    assert dns_request.compute_distance(dns_response) == 0

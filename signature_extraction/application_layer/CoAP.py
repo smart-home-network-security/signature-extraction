@@ -17,6 +17,10 @@ class CoAP(ApplicationLayer):
     """
     protocol_name = "CoAP"
 
+    # Distance metrics weights
+    WEIGHT_CODE = Fraction(1, 2)
+    WEIGHT_URI  = Fraction(1, 2)
+
 
     class CoAPType(IntEnum):
         """
@@ -131,24 +135,37 @@ class CoAP(ApplicationLayer):
         if not isinstance(other, CoAP):
             return Fraction(1)
         
+        # If both objects are responses,
+        # distance is 0 (identical)
+        if not self.is_request and not other.is_request:
+            return Fraction(0)
 
-        WEIGHT_CODE = Fraction(1, 2)
-        WEIGHT_URI  = Fraction(1, 2)
 
         # CoAP code
-        # 0 if identical, 1 if different
         distance_code = Fraction(1)
-        try:
-            distance_code = discrete_distance(self.code, other.code)
-        except AttributeError:
-            pass
+        if not hasattr(self, "code") and not hasattr(other, "code"):
+            # Neither of the two objects provide a CoAP code
+            distance_uri = Fraction(0)
+        else:
+            # General case: discrete distance
+            try:
+                distance_code = discrete_distance(self.code, other.code)
+            except AttributeError:
+                pass
 
         # URI path
-        # Levenshtein distance
         distance_uri = Fraction(1)
-        try:
-            distance_uri = levenshtein_ratio(self.uri_path, other.uri_path)
-        except AttributeError:
-            pass
+        if not hasattr(self, "uri_path") and not hasattr(other, "uri_path"):
+            # Neither of the two objects provide a URI path
+            distance_uri = Fraction(0)
+        else:
+            # General case: Levenshtein distance
+            try:
+                distance_uri = levenshtein_ratio(self.uri_path, other.uri_path)
+            except AttributeError:
+                pass
         
-        return WEIGHT_CODE * distance_code + WEIGHT_URI * distance_uri
+        return (
+            CoAP.WEIGHT_CODE * distance_code +
+            CoAP.WEIGHT_URI * distance_uri
+        )

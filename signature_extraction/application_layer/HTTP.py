@@ -17,6 +17,11 @@ class HTTP(ApplicationLayer):
     """
     protocol_name = "HTTP"
 
+    # Distance metric weights
+    WEIGHT_METHOD = Fraction(1, 2)
+    WEIGHT_URI    = Fraction(1, 2)
+
+
     @staticmethod
     def is_response(pkt: Packet) -> bool:
         """
@@ -114,10 +119,9 @@ class HTTP(ApplicationLayer):
         if not isinstance(other, HTTP):
             return Fraction(1)
         
-
-        # Weights
-        WEIGHT_METHOD = Fraction(1, 2)
-        WEIGHT_URI    = Fraction(1, 2)
+        # If both objects are responses, distance is 0
+        if self.response and other.response:
+            return Fraction(0)
 
         # Method
         # 0 if identical, 1 if different
@@ -127,4 +131,7 @@ class HTTP(ApplicationLayer):
         # Levenshtein distance
         distance_uri = levenshtein_ratio(self.uri, other.uri) if self.uri is not None and other.uri is not None else Fraction(1)
 
-        return WEIGHT_METHOD * distance_method + WEIGHT_URI * distance_uri
+        return (
+            HTTP.WEIGHT_METHOD * distance_method +
+            HTTP.WEIGHT_URI    * distance_uri
+        )

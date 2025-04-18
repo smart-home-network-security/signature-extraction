@@ -4,6 +4,7 @@ import pytest
 from scapy.all import IP, TCP
 import scapy.layers.http as http
 # Package
+import signature_extraction.utils.distance as distance
 from signature_extraction.application_layer import HTTP
 
 
@@ -85,6 +86,15 @@ http_resp_layer_error = (
     )
 )
 
+# HTTP requests
+http_get   = HTTP(http_get_layer)
+http_get_2 = HTTP(http_get_layer_2)
+http_get_3 = HTTP(http_get_layer_3)
+http_post  = HTTP(http_post_layer)
+# HTTP responses
+http_resp = HTTP(http_resp_layer)
+http_resp_error = HTTP(http_resp_layer_error)
+
 
 ### TEST FUNCTIONS ###
 
@@ -145,18 +155,21 @@ def test_hash() -> None:
     """
     Test the hash function.
     """
-    # HTTP requests
-    http_get  = HTTP(http_get_layer)
-    http_get_2 = HTTP(http_get_layer_2)
-    http_get_3 = HTTP(http_get_layer_3)
-    http_post = HTTP(http_post_layer)
-    # HTTP responses
-    http_resp = HTTP(http_resp_layer)
-    http_resp_error = HTTP(http_resp_layer_error)
-    # Assertions
     assert hash(http_get)  == hash(http_get_2)
     assert hash(http_get)  == hash(http_get_3)
     assert hash(http_get)  == hash(http_post)
     assert hash(http_post) == hash(http_resp)
     assert hash(http_get)  == hash(http_resp)
     assert hash(http_resp) == hash(http_resp_error)
+
+
+def test_compute_distance() -> None:
+    """
+    Test the distance function.
+    """
+    assert http_get.compute_distance(http_get_2) == distance.ZERO
+    assert http_get.compute_distance(http_get_3) == HTTP.WEIGHT_METHOD * distance.ZERO + HTTP.WEIGHT_URI * distance.levenshtein_ratio(http_get.uri, http_get_3.uri)
+    assert http_get.compute_distance(http_post) == HTTP.WEIGHT_METHOD * distance.ONE + HTTP.WEIGHT_URI * distance.ZERO
+    assert http_get.compute_distance(http_resp) == distance.ONE
+    assert http_get.compute_distance(http_resp_error) == distance.ONE
+    assert http_resp.compute_distance(http_resp_error) == distance.ZERO
