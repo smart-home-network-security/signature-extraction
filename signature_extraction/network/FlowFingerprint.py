@@ -205,21 +205,32 @@ class FlowFingerprint:
         # Initialize hosts set
         different_hosts = set()
         
-        # If the two FlowFingerprints' hosts are equivalent, return None
+        # If the two FlowFingerprints' hosts are equivalent, return empty set
         if self.match_hosts(other):
             return different_hosts
         
         ## Hosts are not equivalent
-        # Compare all pairs of hosts
-        if not compare_hosts(self.src, other.src):
-            different_hosts.add((self.src, other.src))
-        if not compare_hosts(self.src, other.dst):
-            different_hosts.add((self.src, other.dst))
-        if not compare_hosts(self.dst, other.src):
-            different_hosts.add((self.dst, other.src))
-        if not compare_hosts(self.dst, other.dst):
-            different_hosts.add((self.dst, other.dst))
         
+        this_src_equals_other_src = compare_hosts(self.src, other.src)
+        this_src_equals_other_dst = compare_hosts(self.src, other.dst)
+        this_dst_equals_other_src = compare_hosts(self.dst, other.src)
+        this_dst_equals_other_dst = compare_hosts(self.dst, other.dst)
+
+        # Compare all pairs of hosts
+        if this_src_equals_other_src and not this_dst_equals_other_dst:
+            different_hosts.add((self.dst, other.dst))
+        elif this_src_equals_other_dst and not this_dst_equals_other_src:
+            different_hosts.add((self.dst, other.src))
+        elif this_dst_equals_other_src and not this_src_equals_other_dst:
+            different_hosts.add((self.src, other.dst))
+        elif this_dst_equals_other_dst and not this_src_equals_other_src:
+            different_hosts.add((self.src, other.src))
+        else:
+            # General case if both hosts are different
+            different_hosts.add((self.src, other.src))
+            different_hosts.add((self.dst, other.dst))
+
+
         return different_hosts
     
 
