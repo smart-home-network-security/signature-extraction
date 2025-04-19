@@ -5,6 +5,7 @@ from pathlib import Path
 from scapy.all import IP, UDP
 from scapy.layers.dns import DNS, DNSQR
 # Package
+import signature_extraction.utils.distance as distance
 import signature_extraction.application_layer as app_layer
 from signature_extraction.network import Packet, FlowFingerprint
 
@@ -150,6 +151,63 @@ def test_add_flow_fingerprint() -> None:
     assert ("192.168.1.1", 53) in flow.ports
     assert flow.ports[("192.168.1.1", 53)] == 2
     assert ("192.168.1.1", 53) in flow.get_fixed_ports()
+
+
+def test_match_hosts() -> None:
+    """
+    Test the method `match_hosts`,
+    which compares the hosts of two FlowFingerprints.
+    """
+    # Initialize FlowFingerprints
+    f_1 = FlowFingerprint(pkt_dict)
+    pkt_b = Packet.build_from_pkt(pkt_dns_request_b)
+    f_2 = FlowFingerprint(pkt_b)
+    pkt_c = Packet.build_from_pkt(pkt_dns_request_c)
+    f_3 = FlowFingerprint(pkt_c)
+    f_4 = FlowFingerprint(pkt_dict_d)
+
+    # Verify host matching
+    assert not f_1.match_hosts(f_2)
+    assert f_1.match_hosts(f_3)
+    assert f_1.match_hosts(f_4)
+
+
+def test_get_different_hosts() -> None:
+    """
+    Test the method `get_different_hosts`,
+    which extracts the hosts different between both FlowFingerprints.
+    """
+    # Initialize FlowFingerprints
+    f_1 = FlowFingerprint(pkt_dict)
+    pkt_b = Packet.build_from_pkt(pkt_dns_request_b)
+    f_2 = FlowFingerprint(pkt_b)
+    pkt_c = Packet.build_from_pkt(pkt_dns_request_c)
+    f_3 = FlowFingerprint(pkt_c)
+    f_4 = FlowFingerprint(pkt_dict_d)
+    
+    # Verify different hosts
+    assert f_1.get_different_hosts(f_2) == set([("192.168.1.2", "192.168.1.3")])
+    assert f_1.get_different_hosts(f_3) == set()
+    assert f_1.get_different_hosts(f_4) == set()
+
+
+def test_match_ports() -> None:
+    """
+    Test the method `match_ports`,
+    which compares the fixed ports of two FlowFingerprints.
+    """
+    # Initialize FlowFingerprints
+    f_1 = FlowFingerprint(pkt_dict)
+    pkt_b = Packet.build_from_pkt(pkt_dns_request_b)
+    f_2 = FlowFingerprint(pkt_b)
+    pkt_c = Packet.build_from_pkt(pkt_dns_request_c)
+    f_3 = FlowFingerprint(pkt_c)
+    f_4 = FlowFingerprint(pkt_dict_d)
+
+    # Verify port matching
+    assert not f_1.match_ports(f_2)
+    assert f_1.match_ports(f_3)
+    assert f_1.match_ports(f_4)
 
 
 def test_match_flow() -> None:
