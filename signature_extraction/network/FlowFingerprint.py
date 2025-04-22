@@ -271,6 +271,66 @@ class FlowFingerprint:
                 return False
         
         return True
+    
+
+    def get_different_ports(self, other: FlowFingerprint) -> set[tuple[str, int, str, int]]:
+        """
+        Compute the pairs of hosts and ports which are different
+        between this and the other FlowFingerprint objects.
+        The return value is defined as follows:
+            {
+              (host1, port1, host2, port2),
+              (host2, port2, host1, port1),
+              ...
+            }
+
+        Args:
+            other (FlowFingerprint): FlowFingerprint to compare with.
+        Returns:
+            set[tuple[str, int, str, int]]: Set of pairs of different hosts and ports.
+        Raises:
+            TypeError: If the other object is not a FlowFingerprint.
+        """
+        # If other object is not an FlowFingerprint, cannot compare
+        if not isinstance(other, FlowFingerprint):
+            raise TypeError(f"Cannot compare FlowFingerprint with {type(other)}")
+        
+        # Initialize ports set
+        different_ports = set()
+
+        # If the two FlowFingerprints' ports are equivalent, return empty set
+        if self.match_ports(other):
+            return different_ports
+
+        ## Ports are not equivalent
+
+        this_fixed_ports  = self.get_fixed_ports()
+        other_fixed_ports = other.get_fixed_ports()
+        ports_both = this_fixed_ports.intersection(other_fixed_ports)
+        ports_this_only = this_fixed_ports - ports_both
+        ports_other_only = other_fixed_ports - ports_both
+
+        # First pass
+        # Find different ports which pertain to the same host
+        ports_this_remaining = set()
+        ports_other_remaining = set()
+        for (this_host, this_port) in ports_this_only:
+            try:
+                other_host, other_port = next((h, p) for h, p in ports_other_only if compare_hosts(h, this_host) and p != this_port)
+                different_ports.add((this_host, this_port, other_host, other_port))
+            except StopIteration:
+                ports_this_remaining.add((this_host, this_port))
+                ports_other_remaining.add((other_host, other_port))
+
+
+        # Second pass
+        # Extract remaining ports, which do not pertain to the same host
+        for (this_host, this_port) in ports_this_remaining:
+            try:
+                other_host, other_port = next((h, p) for h, p in ports_other_remaining if p != this_port)
+                different_ports.add((this_host, this_port, other_host, other_port))
+            except StopIteration:
+                continue
 
     
     def match_flow(self, other: FlowFingerprint) -> bool:
