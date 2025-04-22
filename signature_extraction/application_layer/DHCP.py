@@ -1,6 +1,8 @@
 ## Imports
 # Libraries
 from __future__ import annotations
+from typing import Any
+from enum import StrEnum
 from scapy.all import Packet
 from scapy.layers.dhcp import BOOTP
 from fractions import Fraction
@@ -29,6 +31,13 @@ class DHCP(ApplicationLayer):
     # Distance metrics weights
     WEIGHT_CLIENT = Fraction(1, 2)
     WEIGHT_TYPE   = Fraction(1, 2)
+
+    class DhcpFields(StrEnum):
+        """
+        DHCP Fields.
+        """
+        CLIENT_MAC   = "client_mac"
+        MESSAGE_TYPE = "message_type"
 
 
     def __init__(self, pkt: Packet) -> None:
@@ -71,6 +80,36 @@ class DHCP(ApplicationLayer):
         """
         attrs = ("client_mac", self.client_mac)
         return hash((self.protocol_name, attrs))
+    
+
+    def diff(self, other: DHCP) -> dict[str, tuple[Any, Any]]:
+        """
+        Compute the difference between this and another DHCP layer object.
+        The difference is defined as a dictionary,
+        with keys being the protocol field names,
+        and the values being a tuple of the two different values.
+
+        Args:
+            other (DHCP): Other DHCP object
+        Returns:
+            dict[str, tuple[Any, Any]]: difference between this and another DHCP layer
+        """
+        # Initialize the difference dictionary
+        diff = {}
+
+        # If other is not a CoAP layer, return empty dictionary
+        if not isinstance(other, DHCP):
+            return diff
+        
+        # Client hardware address
+        if self.client_mac != other.client_mac:
+            diff[DHCP.DhcpFields.CLIENT_MAC.value] = (self.client_mac, other.client_mac)
+        
+        # Message type
+        if self.message_type != other.message_type:
+            diff[DHCP.DhcpFields.MESSAGE_TYPE.value] = (self.message_type, other.message_type)
+        
+        return diff
 
 
     def compute_distance(self, other: DHCP) -> Fraction:

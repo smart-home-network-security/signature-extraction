@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Iterator
+from typing import Iterator, Any
 import importlib
 from scapy.all import Packet, Raw
 from scapy.layers import http, dns, dhcp
@@ -133,7 +133,21 @@ class ApplicationLayer:
             int: hash value of the ApplicationLayer class.
         """
         return hash((self.protocol_name, tuple(dict(self).items())))
-    
+
+
+    def diff(self, other: ApplicationLayer) -> dict[str, tuple[Any, Any]]:
+        """
+        Dummy implementation for the diff() method.
+        This method should be overridden by subclasses.
+
+        Args:
+            other (ApplicationLayer): other application layer protocol.
+        Returns:
+            dict[str, tuple[Any, Any]]: dictionary with the differences between
+                the two application layer protocols.
+        """
+        return {}
+
 
     def compute_distance(self, other: ApplicationLayer) -> Fraction:
         """

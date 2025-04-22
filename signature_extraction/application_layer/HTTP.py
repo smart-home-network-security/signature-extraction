@@ -1,7 +1,8 @@
 ## Imports
 # Libraries
 from __future__ import annotations
-from typing import Iterator
+from typing import Iterator, Any
+from enum import StrEnum
 from scapy.all import Packet, Raw
 import scapy.layers as scapy
 from fractions import Fraction
@@ -20,6 +21,13 @@ class HTTP(ApplicationLayer):
     # Distance metric weights
     WEIGHT_METHOD = Fraction(1, 2)
     WEIGHT_URI    = Fraction(1, 2)
+
+    class HttpFields(StrEnum):
+        """
+        HTTP Fields.
+        """
+        METHOD = "method"
+        URI    = "uri"
 
 
     @staticmethod
@@ -104,6 +112,36 @@ class HTTP(ApplicationLayer):
             int: hash value of the HTTP object
         """
         return hash(self.protocol_name)
+    
+
+    def diff(self, other: HTTP) -> dict[str, tuple[Any, Any]]:
+        """
+        Compute the difference between this and another HTTP layer object.
+        The difference is defined as a dictionary,
+        with keys being the protocol field names,
+        and the values being a tuple of the two different values.
+
+        Args:
+            other (HTTP): Other HTTP object
+        Returns:
+            dict[str, tuple[Any, Any]]: difference between this and another HTTP layer
+        """
+        # Initialize the difference dictionary
+        diff = {}
+
+        # If other is not a HTTP layer, return empty dictionary
+        if not isinstance(other, HTTP):
+            return diff
+        
+        ## HTTP attributes
+        # Method
+        if self.method != other.method:
+            diff[HTTP.HttpFields.METHOD.value] = (self.method, other.method)
+        # URI
+        if self.uri != other.uri:
+            diff[HTTP.HttpFields.URI.value] = (self.uri, other.uri)
+        
+        return diff
     
 
     def compute_distance(self, other: HTTP) -> Fraction:

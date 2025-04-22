@@ -1,8 +1,8 @@
 ## Imports
 # Libraries
 from __future__ import annotations
-from typing import Union, Iterator
-from enum import IntEnum
+from typing import Union, Iterator, Any
+from enum import IntEnum, StrEnum
 from scapy.all import Packet
 from scapy.contrib.coap import CoAP, coap_codes
 from fractions import Fraction
@@ -21,6 +21,12 @@ class CoAP(ApplicationLayer):
     WEIGHT_CODE = Fraction(1, 2)
     WEIGHT_URI  = Fraction(1, 2)
 
+    class CoAPFields(StrEnum):
+        """
+        CoAP Fields.
+        """
+        CODE = "code"
+        URI  = "uri"
 
     class CoAPType(IntEnum):
         """
@@ -120,6 +126,51 @@ class CoAP(ApplicationLayer):
             int: hash value of the CoAP object
         """
         return hash(self.protocol_name)
+    
+
+    def diff(self, other: CoAP) -> dict[str, tuple[Any, Any]]:
+        """
+        Compute the difference between this and another CoAP layer object.
+        The difference is defined as a dictionary,
+        with keys being the protocol field names,
+        and the values being a tuple of the two different values.
+
+        Args:
+            other (CoAP): Other CoAP object
+        Returns:
+            dict[str, tuple[Any, Any]]: difference between this and another CoAP layer
+        """
+        # Initialize the difference dictionary
+        diff = {}
+
+        # If other is not a CoAP layer, return empty dictionary
+        if not isinstance(other, CoAP):
+            return diff
+
+        # If both objects are responses,
+        # return empty dictionary
+        if not self.is_request and not other.is_request:
+            return diff
+
+        # CoAP code
+        if hasattr(self, "code") and not hasattr(other, "code"):
+            diff[CoAP.CoAPFields.CODE.value] = (self.code, None)
+        elif not hasattr(self, "code") and hasattr(other, "code"):
+            diff[CoAP.CoAPFields.CODE.value] = (None, other.code)
+        elif (hasattr(self, "code") and hasattr(other, "code") and
+              self.code != other.code):
+            diff[CoAP.CoAPFields.CODE.value] = (self.code, other.code)
+
+        # URI path
+        if hasattr(self, "uri_path") and not hasattr(other, "uri_path"):
+            diff[CoAP.CoAPFields.URI.value] = (self.uri_path, None)
+        elif not hasattr(self, "uri_path") and hasattr(other, "uri_path"):
+            diff[CoAP.CoAPFields.URI.value] = (None, other.uri_path)
+        elif (hasattr(self, "uri_path") and hasattr(other, "uri_path") and
+              self.uri_path != other.uri_path):
+            diff[CoAP.CoAPFields.URI.value] = (self.uri_path, other.uri_path)
+
+        return diff
     
 
     def compute_distance(self, other: CoAP) -> Fraction:

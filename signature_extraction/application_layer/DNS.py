@@ -1,7 +1,8 @@
 ## Imports
 # Libraries
 from __future__ import annotations
-from typing import Iterator
+from typing import Iterator, Any
+from enum import StrEnum
 from scapy.all import Packet
 from scapy.layers.dns import dnstypes
 from fractions import Fraction
@@ -20,6 +21,13 @@ class DNS(ApplicationLayer):
     # Distance metric weights
     WEIGHT_QTYPE = Fraction(1, 3)
     WEIGHT_QNAME = Fraction(2, 3)
+
+    class DnsFields(StrEnum):
+        """
+        DNS Fields.
+        """
+        QTYPE = "qtype"
+        QNAME = "qname"
 
 
     def __init__(self, pkt: Packet) -> None:
@@ -108,6 +116,41 @@ class DNS(ApplicationLayer):
         """
         attrs = tuple(attr for attr in dict(self).items() if attr[0] != "response")
         return hash((self.protocol_name, attrs))
+    
+
+    def diff(self, other: DNS) -> dict[str, tuple[Any, Any]]:
+        """
+        Compute the difference between this and another DNS layer object.
+        The difference is defined as a dictionary,
+        with keys being the protocol field names,
+        and the values being a tuple of the two different values.
+
+        Args:
+            other (DNS): Other DNS object
+        Returns:
+            dict[str, tuple[Any, Any]]: difference between this and another DNS layer
+        """
+        # Initialize the difference dictionary
+        diff = {}
+
+        # If other is not a CoAP layer, return empty dictionary
+        if not isinstance(other, DNS):
+            return diff
+        
+        ## DNS attributes
+        # qtype
+        if self.qtype != other.qtype:
+            diff[DNS.DnsFields.QTYPE.value] = (self.qtype, other.qtype)
+        # qname
+        are_domain_names_equal = (
+            self.qname is not None and
+            other.qname is not None and
+            compare_domain_names(self.qname, other.qname)
+        )
+        if not are_domain_names_equal:
+            diff[DNS.DnsFields.QNAME.value] = (self.qname, other.qname)
+        
+        return diff
     
 
     def compute_distance(self, other: DNS) -> Fraction:
