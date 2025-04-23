@@ -163,6 +163,25 @@ def test_hash() -> None:
     assert hash(http_resp) == hash(http_resp_error)
 
 
+def test_diff() -> None:
+    """
+    Test the diff function,
+    which extracts the difference between two HTTP objects.
+    """
+    assert http_get.diff(http_get)   == {}
+    assert http_get.diff(http_get_2) == {}
+    assert http_get.diff(http_get_3) == {
+        "uri": (http_get.uri, http_get_3.uri)
+    }
+    assert http_get.diff(http_post)  == {
+        "method": (http_get.method, http_post.method)
+    }
+    assert http_get.diff(http_resp) == {
+        "method": (http_get.method, None),
+        "uri": (http_get.uri, None)
+    }
+
+
 def test_compute_distance() -> None:
     """
     Test the distance function.

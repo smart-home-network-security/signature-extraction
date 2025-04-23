@@ -35,6 +35,16 @@ pkt_coap_resp = (
 layer_coap_resp_2 = coap.CoAP(type=3, code=69, msg_id=0x1234, token=b"token")
 layer_coap_resp_3 = coap.CoAP(type=2, code=68, msg_id=0x1234, token=b"token")
 
+# CoAP requests
+coap_get  = CoAP(layer_coap_get)
+coap_get2 = CoAP(layer_coap_get_2)
+coap_get3 = CoAP(layer_coap_get_3)
+coap_get4 = CoAP(layer_coap_get_4)
+# CoAP responses
+coap_resp  = CoAP(layer_coap_resp)
+coap_resp2 = CoAP(layer_coap_resp_2)
+coap_resp3 = CoAP(layer_coap_resp_3)
+
 
 ### TEST FUNCTIONS ###
 
@@ -72,16 +82,6 @@ def test_hash() -> None:
     """
     Test the hash function.
     """
-    # CoAP requests
-    coap_get  = CoAP(layer_coap_get)
-    coap_get2 = CoAP(layer_coap_get_2)
-    coap_get3 = CoAP(layer_coap_get_3)
-    coap_get4 = CoAP(layer_coap_get_4)
-    # CoAP responses
-    coap_resp = CoAP(layer_coap_resp)
-    coap_resp2 = CoAP(layer_coap_resp_2)
-    coap_resp3 = CoAP(layer_coap_resp_3)
-    # Assertions
     assert hash(coap_get)   == hash(coap_get2)
     assert hash(coap_get)   == hash(coap_get3)
     assert hash(coap_get)   == hash(coap_get4)
@@ -89,6 +89,30 @@ def test_hash() -> None:
     assert hash(coap_resp)  == hash(coap_resp2)
     assert hash(coap_resp)  == hash(coap_resp3)
     assert hash(coap_resp2) == hash(coap_resp3)
+
+
+def test_diff() -> None:
+    """
+    Test the diff function,
+    which extracts the difference between two CoAP objects.
+    """
+    # CoAP requests
+    assert coap_get.diff(coap_get)  == {}
+    assert coap_get.diff(coap_get2) == {}
+    assert coap_get.diff(coap_get3) == {
+        CoAP.CoAPFields.CODE.value: (coap_get.code, coap_get3.code)
+    }
+    assert coap_get.diff(coap_get4) == {
+        CoAP.CoAPFields.URI.value: (coap_get.uri_path, coap_get4.uri_path)
+    }
+
+    # CoAP responses
+    diff_response = {
+        CoAP.CoAPFields.CODE.value: (coap_get.code, None),
+        CoAP.CoAPFields.URI.value:  (coap_get.uri_path, None)
+    }
+    assert coap_get.diff(coap_resp)  == diff_response
+    assert coap_get.diff(coap_resp2) == diff_response
 
 
 def test_compute_distance() -> None:

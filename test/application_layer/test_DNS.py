@@ -44,6 +44,12 @@ pkt_dns_response = (
     dns_response_layer
 )
 
+# Concrete objects
+dns_request = DNS(dns_request_layer)
+dns_request_aaaa = DNS(dns_request_layer_aaaa)
+dns_request_other = DNS(dns_request_layer_other)
+dns_response = DNS(dns_response_layer)
+
 
 ### TEST FUNCTIONS ###
 
@@ -87,25 +93,30 @@ def test_hash() -> None:
     """
     Test the hash function.
     """
-    dns_request = DNS(dns_request_layer)
-    dns_request_aaaa = DNS(dns_request_layer_aaaa)
-    dns_request_other = DNS(dns_request_layer_other)
-    dns_response = DNS(dns_response_layer)
-
     assert hash(dns_request) != hash(dns_request_aaaa)
     assert hash(dns_request) != hash(dns_request_other)
     assert hash(dns_request) == hash(dns_response)
+
+
+def test_diff() -> None:
+    """
+    Test the diff function,
+    which extracts the difference between two DNS objects.
+    """
+    assert dns_request.diff(dns_request) == {}
+    assert dns_request.diff(dns_request_aaaa) == {
+        "qtype": (dns_request.qtype, dns_request_aaaa.qtype)
+    }
+    assert dns_request.diff(dns_request_other) == {
+        "qname": (dns_request.qname, dns_request_other.qname)
+    }
+    assert dns_request.diff(dns_response) == {}
 
 
 def test_compute_distance() -> None:
     """
     Test the distance function.
     """
-    dns_request = DNS(dns_request_layer)
-    dns_request_aaaa = DNS(dns_request_layer_aaaa)
-    dns_request_other = DNS(dns_request_layer_other)
-    dns_response = DNS(dns_response_layer)
-
     assert dns_request.compute_distance(dns_request) == distance.ZERO
     assert dns_request.compute_distance(dns_request_aaaa) == DNS.WEIGHT_QTYPE * distance.ONE + DNS.WEIGHT_QNAME * distance.ZERO
     assert dns_request.compute_distance(dns_request_other) == DNS.WEIGHT_QTYPE * distance.ZERO + DNS.WEIGHT_QNAME * distance.levenshtein_ratio(dns_request.qname, dns_request_other.qname)

@@ -58,6 +58,13 @@ dhcp_ack_pkt = (
     dhcp_ack_layer
 )
 
+# Concrete objects
+dhcp_discover = DHCP(dhcp_discover_layer)
+dhc_discover_layer_2 = DHCP(dhcp_discover_layer_2)
+dhcp_offer = DHCP(dhcp_offer_layer)
+dhcp_request = DHCP(dhcp_request_layer)
+dhcp_ack = DHCP(dhcp_ack_layer)
+
 
 ### TEST FUNCTIONS ###
 
@@ -125,12 +132,6 @@ def test_hash() -> None:
     """
     Test the hash function.
     """
-    dhcp_discover = DHCP(dhcp_discover_layer)
-    dhc_discover_layer_2 = DHCP(dhcp_discover_layer_2)
-    dhcp_offer = DHCP(dhcp_offer_layer)
-    dhcp_request = DHCP(dhcp_request_layer)
-    dhcp_ack = DHCP(dhcp_ack_layer)
-
     assert hash(dhcp_discover) == hash(dhcp_offer)
     assert hash(dhcp_discover) != hash(dhc_discover_layer_2)
     assert hash(dhcp_discover) == hash(dhcp_request)
@@ -138,6 +139,26 @@ def test_hash() -> None:
     assert hash(dhcp_offer)    == hash(dhcp_request)
     assert hash(dhcp_offer)    == hash(dhcp_ack)
     assert hash(dhcp_request)  == hash(dhcp_ack)
+
+
+def test_diff() -> None:
+    """
+    Test the diff function,
+    which extracts the difference between two DHCP objects.
+    """
+    assert dhcp_discover.diff(dhcp_discover) == {}
+    assert dhcp_discover.diff(dhc_discover_layer_2) == {
+        DHCP.DhcpFields.CLIENT_MAC.value: (dhcp_discover.client_mac, dhc_discover_layer_2.client_mac)
+    }
+    assert dhcp_discover.diff(dhcp_offer) == {
+        DHCP.DhcpFields.MESSAGE_TYPE.value: (dhcp_discover.message_type, dhcp_offer.message_type)
+    }
+    assert dhcp_discover.diff(dhcp_request) == {
+        DHCP.DhcpFields.MESSAGE_TYPE.value: (dhcp_discover.message_type, dhcp_request.message_type)
+    }
+    assert dhcp_discover.diff(dhcp_ack) == {
+        DHCP.DhcpFields.MESSAGE_TYPE.value: (dhcp_discover.message_type, dhcp_ack.message_type)
+    }
 
 
 def test_compute_distance() -> None:
