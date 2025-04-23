@@ -332,6 +332,8 @@ class FlowFingerprint:
             except StopIteration:
                 continue
 
+        return different_ports
+
     
     def match_flow(self, other: FlowFingerprint) -> bool:
         """
