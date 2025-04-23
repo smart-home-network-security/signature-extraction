@@ -501,6 +501,23 @@ class FlowFingerprint:
             str: Unique identifier for this FlowFingerprint.
         """
         return f"{self.get_id()}_{int(time.time())}"
+    
+
+    def is_in_list(self, flows: list[FlowFingerprint]) -> bool:
+        """
+        Check if this FlowFingerprint is in a list of FlowFingerprint objects.
+
+        Args:
+            flows (list[FlowFingerprint]): List of FlowFingerprint objects.
+        Returns:
+            bool: True if this FlowFingerprint is in the list, False otherwise.
+        """
+        # Iterate over the list of FlowFingerprint objects
+        for flow in flows:
+            if self.match_flow(flow):
+                return True
+        
+        return False
 
 
     def extract_policy(self, ipv4: IPv4Address) -> dict:
