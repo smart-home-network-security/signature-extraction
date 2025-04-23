@@ -111,7 +111,6 @@ class NetworkPattern:
                 return i, flow
         
         raise ValueError("No matching flow found in the pattern.")
-
     
 
     def to_df(self) -> pd.DataFrame:

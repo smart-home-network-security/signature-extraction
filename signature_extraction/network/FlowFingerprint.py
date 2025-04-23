@@ -9,6 +9,7 @@ from fractions import Fraction
 from json import JSONEncoder
 # Package
 from .Packet import Packet
+from signature_extraction.application_layer import ApplicationLayer
 from signature_extraction.utils import guess_network_protocol, is_known_port, compare_hosts
 from signature_extraction.utils.distance import discrete_distance, distance_hosts
 from profile_translator_blocklist import translate_policy
@@ -404,7 +405,7 @@ class FlowFingerprint:
     
     def __iter__(self) -> Iterator:
         """
-        Iterate over the packet fingerprint attributes.
+        Iterate over the FlowFingerprint attributes.
 
         Returns:
             Iterable: Iterator over the packet fingerprint attributes.
@@ -447,7 +448,7 @@ class FlowFingerprint:
 
         ### APPLICATION LAYER ###
         # Application-layer protocol
-        if self.application_layer != self.transport_protocol:
+        if isinstance(self.application_layer, ApplicationLayer):
             yield "application_layer", tuple(self.application_layer)
         else:
             yield "application_layer", None
