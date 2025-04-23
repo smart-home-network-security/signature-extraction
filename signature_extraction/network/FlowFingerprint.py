@@ -704,6 +704,34 @@ class FlowFingerprint:
         )
 
         return distance
+    
+
+    def find_closest_flow(self, flows_other: list[FlowFingerprint]) -> FlowFingerprint:
+        """
+        Search a list of FlowFingerprint objects for the one minimizing the distance metric
+        compared to this FlowFingerprint object.
+
+        Args:
+            flows_other (list[FlowFingerprint]): List of FlowFingerprint objects to compare with.
+        Returns:
+            FlowFingerprint: Closest FlowFingerprint object.
+        """
+        # Given list is empty, raise ValueError
+        if not flows_other:
+            raise ValueError("Given list is empty.")
+        
+        # Initialize closest flow
+        flow_closest = flows_other[0]
+        distance_min = self.compute_distance(flow_closest)
+
+        # Iterate over the list of FlowFingerprint objects
+        for flow_other in flows_other:
+            distance = self.compute_distance(flow_other)
+            if distance < distance_min:
+                distance_min = distance
+                flow_closest = flow_other
+        
+        return flow_closest
 
 
 
