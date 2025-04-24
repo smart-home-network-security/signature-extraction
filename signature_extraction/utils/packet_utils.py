@@ -1,3 +1,4 @@
+from typing import Any
 import re
 from ipaddress import ip_address, IPv4Address, IPv6Address
 from scapy.all import Packet as ScapyPacket
@@ -70,6 +71,23 @@ skip_layers = [
 
 
 ### FUNCTIONS ###
+
+def if_correct_type(value: Any, expected_type: type, default_value: Any = None) -> Any:
+    """
+    Check if the given value is of the expected type.
+    Returns the value if it is;
+    otherwise, returns the given default value, which defaults to None.
+
+    Args:
+        value (Any): given value
+        expected_type (type): expected type
+        default_value (Any): default value to return if the value is not of the expected type.
+            Optional, default is None.
+    Returns:
+        Any: the given value if it is of the expected type, otherwise the default value
+    """
+    return value if isinstance(value, expected_type) else default_value
+
 
 def is_ip_address(ip: str) -> bool:
     """

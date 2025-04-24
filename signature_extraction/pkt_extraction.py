@@ -151,7 +151,7 @@ def pcap_to_csv(pcap_file: str, output_file: str, dns_table_arg: dict = {}, time
         output_file (str): Output file.
         dns_table_arg (dict): Dictionary mapping IP addresses to domain names. Optional, default is empty.
         timeout_arg (int): Iteration is stopped if current packet's timestamp exceeds the previous one by this value [seconds].
-                           Optional, default is 20 seconds.
+            Optional, default is 20 seconds.
     """
     pkts = pcap_to_pkts(pcap_file, dns_table_arg, timeout_arg)
     pkts_to_csv(pkts, output_file)

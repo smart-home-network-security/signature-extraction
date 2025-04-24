@@ -2,11 +2,10 @@
 # Libraries
 from __future__ import annotations
 from typing import List, Iterator
-from ipaddress import IPv4Address, IPv6Address
 import scapy.all as scapy
 from scapy.all import IP, IPv6, TCP, UDP
 # Package
-from signature_extraction.utils import DnsTableKeys, guess_network_protocol, get_domain_name_from_ip
+from signature_extraction.utils import DnsTableKeys, if_correct_type, guess_network_protocol, get_domain_name_from_ip
 from signature_extraction.application_layer import ApplicationLayer
 
 
@@ -62,13 +61,13 @@ class Packet:
         self.id = Packet.id
         Packet.id += 1
 
-        self.src                  = pkt["src"]
-        self.dst                  = pkt["dst"]
+        self.src = if_correct_type(pkt["src"], str)
+        self.dst = if_correct_type(pkt["dst"], str)
 
         # Set network-layer protocol
         self.network_protocol = "IPv4"  # Default: IPv4
         if "network_protocol" in pkt:
-            self.network_protocol = pkt["network_protocol"]
+            self.network_protocol = if_correct_type(pkt["network_protocol"], str, "IPv4")
         else:
             # Guess network protocol from hosts
             for host in (self.src, self.dst):
@@ -78,9 +77,9 @@ class Packet:
                 except ValueError:
                     pass
 
-        self.transport_protocol   = pkt.get("transport_protocol", None)
-        self.sport                = pkt.get("sport", None)
-        self.dport                = pkt.get("dport", None)
+        self.transport_protocol   = if_correct_type(pkt.get("transport_protocol", None), str)
+        self.sport                = if_correct_type(pkt.get("sport", None), int)
+        self.dport                = if_correct_type(pkt.get("dport", None), int)
         self.application_layer    = pkt.get("application_layer", None)
         self.timestamp            = pkt["timestamp"]
         self.length               = pkt["length"]

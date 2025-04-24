@@ -74,8 +74,9 @@ def pkts_csv_to_pattern_csv(pkts_file: str, pattern_file: str) -> None:
         flows_file (str): Output CSV file containing flow fingerprints.
     """
     # Read packet fingerprints
-    pkts_df = pd.read_csv(pkts_file)
-    pkts = [Packet(dict(row)) for _, row in pkts_df.iterrows()]
+    df_pkts = pd.read_csv(pkts_file)
+    df_pkts.where(df_pkts.notnull(), None, inplace=True)  # Replace NaN with None
+    pkts = [Packet(dict(row)) for _, row in df_pkts.iterrows()]
     # Convert packet fingerprints to flow fingerprints
     pattern = group_pkts_per_flow(pkts)
     # Save flow fingerprints to CSV

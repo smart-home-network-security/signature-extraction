@@ -10,7 +10,7 @@ from json import JSONEncoder
 # Package
 from .Packet import Packet
 from signature_extraction.application_layer import ApplicationLayer
-from signature_extraction.utils import guess_network_protocol, is_known_port, compare_hosts
+from signature_extraction.utils import if_correct_type, guess_network_protocol, is_known_port, compare_hosts
 from signature_extraction.utils.distance import discrete_distance, distance_hosts
 from profile_translator_blocklist import translate_policy
 # Logging
@@ -67,13 +67,13 @@ class FlowFingerprint:
                 flow_data = first_item
 
         ## Set attributes
-        self.src = flow_data["src"]
-        self.dst = flow_data["dst"]
+        self.src = if_correct_type(flow_data["src"], str)
+        self.dst = if_correct_type(flow_data["dst"], str)
 
         # Set network-layer protocol
         self.network_protocol = "IPv4"  # Default: IPv4
         if "network_protocol" in flow_data:
-            self.network_protocol = flow_data["network_protocol"]
+            self.network_protocol = if_correct_type(flow_data["network_protocol"], str, "IPv4")
         else:
             # Guess network protocol from hosts
             for host in (self.src, self.dst):
@@ -83,14 +83,14 @@ class FlowFingerprint:
                 except ValueError:
                     pass
 
-        self.transport_protocol = flow_data["transport_protocol"]
+        self.transport_protocol = if_correct_type(flow_data["transport_protocol"], str)
         self.application_layer  = flow_data.get("application_layer", None)
         if not self.application_layer:
             self.application_layer = None
  
         # Initialize ports (to be computed)
         self.ports = {}
-        self._add_ports(flow_data)
+        self._add_ports_from_dict(flow_data)
     
 
     def get_fixed_ports(self) -> set[(str, int)]:
@@ -117,7 +117,7 @@ class FlowFingerprint:
         return fixed_ports
 
 
-    def _add_ports(self, flow_dict: dict = {}) -> dict:
+    def _add_ports_from_dict(self, flow_dict: dict = {}) -> dict:
         """
         Add ports' data from a dictionary.
 
@@ -129,14 +129,16 @@ class FlowFingerprint:
         # Source host & port
         src = flow_dict["src"]
         sport = flow_dict["sport"]
-        src_sport = (src, sport)
-        self.ports[src_sport] = self.ports.get(src_sport, 0) + 1
+        if isinstance(src, str) and isinstance(sport, int):
+            src_sport = (src, sport)
+            self.ports[src_sport] = self.ports.get(src_sport, 0) + 1
         
         # Destination host & port
         dst = flow_dict["dst"]
         dport = flow_dict["dport"]
-        dst_dport = (dst, dport)
-        self.ports[dst_dport] = self.ports.get(dst_dport, 0) + 1
+        if isinstance(dst, str) and isinstance(dport, int):
+            dst_dport = (dst, dport)
+            self.ports[dst_dport] = self.ports.get(dst_dport, 0) + 1
 
         return self.ports
     
