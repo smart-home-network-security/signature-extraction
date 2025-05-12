@@ -51,7 +51,7 @@ dependencies = [
   "scapy==2.6.0",
   "pandas==2.2.3",
   # Custom
-  "dns-unbound-cache-reader==0.2.0",
+  "dns-unbound-cache-reader==0.3.0",
   "profile-translator-blocklist==0.5.0"
 ]
 
