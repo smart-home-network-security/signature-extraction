@@ -19,6 +19,7 @@ from dns_unbound_cache_reader import DnsRtype, DnsTableKeys
 application_protocols = {
     "tcp": {
         20:   "ftp",
+        53:   "dns",
         80:   "http",
         443:  "https",
         3478: "stun",
@@ -44,7 +45,7 @@ known_ports = {
     ],
     "udp": [
         9999,  # TP-Link Smart Home protocol port
-        20002  # Tapo camera UDP port
+        20002  # Tapo UDP port
     ]
 }
 
@@ -146,9 +147,10 @@ def is_known_port(port: int, protocol: str = "tcp") -> bool:
     # Check if port is well-known by the OS
     try:
         getservbyport(port, protocol)
-        return True
-    except:
+    except OSError:
         return False
+    else:
+        return True
     
 
 def compare_domain_names(domain_a: str, domain_b: str) -> bool:

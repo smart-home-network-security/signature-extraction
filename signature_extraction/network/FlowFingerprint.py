@@ -93,10 +93,13 @@ class FlowFingerprint:
         self._add_ports_from_dict(flow_data)
     
 
-    def get_fixed_ports(self) -> set[(str, int)]:
+    def get_fixed_ports(self, match_random_ports: bool = False) -> set[(str, int)]:
         """
         Compute the fixed ports of the FlowFingerprint.
 
+        Args:
+            match_random_ports (bool): Whether to consider random ports as fixed.
+                                       Optional, default is False.
         Returns:
             set[(str, int)]: Set of hosts and their fixed ports.
         """
@@ -108,8 +111,8 @@ class FlowFingerprint:
 
             # Current port number is considered as fixed if ...
             if (
-                is_known_port(port, self.transport_protocol) or  # ... it is a well-known port
-                (count > 1 and count == self.count)              # ... it was used for all flows
+                is_known_port(port, self.transport_protocol) or             # ... it is a well-known port
+                (match_random_ports and count > 1 and count == self.count)  # ... it was used for all flows
             ):
                 fixed_ports.add((host, port))
 
@@ -251,13 +254,15 @@ class FlowFingerprint:
         return different_hosts
     
 
-    def match_ports(self, other: FlowFingerprint) -> bool:
+    def match_ports(self, other: FlowFingerprint, match_random_ports: bool = False) -> bool:
         """
         Check if the ports of given FlowFingerprint object,
         match the ports of this FlowFingerprint object.
 
         Args:
             other (FlowFingerprint): FlowFingerprint to match with.
+            match_random_ports (bool): Whether to consider random ports as matching.
+                                       Optional, default is False.
         Returns:
             bool: True if the given FlowFingerprints' ports match, False otherwise.
         """
@@ -268,7 +273,7 @@ class FlowFingerprint:
         for (host, port) in other.ports.keys():
             try:
                 h, p = next((h, p) for h, p in self.ports if compare_hosts(h, host))
-                if (h, p) in self.get_fixed_ports() and port != p:
+                if (h, p) in self.get_fixed_ports(match_random_ports) and port != p:
                     return False
             except StopIteration:
                 return False
@@ -338,7 +343,7 @@ class FlowFingerprint:
         return different_ports
 
     
-    def match_flow(self, other: FlowFingerprint) -> bool:
+    def match_flow(self, other: FlowFingerprint, match_random_ports: bool = False) -> bool:
         """
         Compare the given FlowFingerprint with this FlowFingerprint,
         based on the following attributes:
@@ -349,6 +354,8 @@ class FlowFingerprint:
 
         Args:
             other (FlowFingerprint): FlowFingerprint to match with.
+            match_random_ports (bool): Whether to consider random ports in flow matching.
+                                       Optional, default is False.
         Returns:
             bool: True if the given FlowFingerprint matches, False otherwise.
         """
@@ -363,7 +370,7 @@ class FlowFingerprint:
             # Hosts (in any direction)
             self.match_hosts(other) and
             # Fixed port
-            self.match_ports(other) and
+            self.match_ports(other, match_random_ports) and
             # Transport protocol
             self.transport_protocol == other.transport_protocol and
             # Application layer protocol

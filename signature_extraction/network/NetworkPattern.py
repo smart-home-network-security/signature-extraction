@@ -93,7 +93,7 @@ class NetworkPattern:
         self.flows.append(flow)
 
     
-    def find_matching_flow(self, reference_flow: FlowFingerprint) -> Tuple[int, FlowFingerprint]:
+    def find_matching_flow(self, reference_flow: FlowFingerprint, match_random_ports: bool = False) -> Tuple[int, FlowFingerprint]:
         """
         Find a flow in the list which matches the basic attributes,
         i.e. the hosts, fixed port and transport protocol,
@@ -101,13 +101,15 @@ class NetworkPattern:
 
         Args:
             reference_flow (FlowFingerprint): flow to search for.
+            match_random_ports (bool): Whether to consider random ports in flow matching.
+                                       Optional, default is False.
         Returns:
             Tuple[int, FlowFingerprint]: associated index, and matching flow
         Raises:
             ValueError: If no matching flow has been found in the pattern.
         """
         for i, flow in enumerate(self.flows):
-            if reference_flow.match_flow(flow):
+            if reference_flow.match_flow(flow, match_random_ports):
                 return i, flow
         
         raise ValueError("No matching flow found in the pattern.")

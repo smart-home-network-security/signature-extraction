@@ -8,12 +8,14 @@ from .pkt_extraction import pcap_to_pkts
 from .flow_grouping import group_pkts_per_flow
 
 
-def patterns_to_signature(patterns: List[NetworkPattern]) -> NetworkPattern:
+def patterns_to_signature(patterns: List[NetworkPattern], match_random_ports: bool = False) -> NetworkPattern:
     """
     Extract an event signature from a list of NetworkPatterns.
 
     Args:
         patterns (List[NetworkPattern]): List of NetworkPatterns.
+        match_random_ports (bool): Whether to consider random ports in flow matching.
+                                   Optional, default is False.
     Returns:
         NetworkPattern: Event signature extracted from the flows.
     Raises:
@@ -44,7 +46,7 @@ def patterns_to_signature(patterns: List[NetworkPattern]) -> NetworkPattern:
         skip = False  # Skip current reference flow if True
         for j, pattern in enumerate(patterns_sorted):
             try:
-                index, matching_flow = pattern.find_matching_flow(potential_flow)
+                index, matching_flow = pattern.find_matching_flow(potential_flow, match_random_ports)
             except ValueError:
                 # No matching flow found for the current reference flow
                 # ==> Reference flow is not part of signature
@@ -72,7 +74,8 @@ def patterns_to_signature(patterns: List[NetworkPattern]) -> NetworkPattern:
 def pcaps_to_signature_pattern(
         pcap_files: Union[str, List[str]],
         dns_table: dict = {},
-        timeout: int = 20
+        timeout: int = 20,
+        match_random_ports: bool = False
     ) -> NetworkPattern:
     """
     Extract an event signature from a list of network traces.
@@ -82,6 +85,8 @@ def pcaps_to_signature_pattern(
         dns_table (dict): DNS table to use for IP-to-domain resolution. Optional, default is empty.
         timeout (int): Iteration is stopped if current packet's timestamp exceeds the previous one by this value [seconds].
                        Optional, default is 20 seconds.
+        match_random_ports (bool): Whether to consider random ports in flow matching.
+                                   Optional, default is False.
     Returns:
         NetworkPattern: Event signature extracted from the flows.
     """
@@ -95,18 +100,19 @@ def pcaps_to_signature_pattern(
         pkts = pcap_to_pkts(pcap, dns_table, timeout)
         pkts = Packet.replace_ips_with_domains(pkts, dns_table)
         if len(pkts) > 0:
-            pattern = group_pkts_per_flow(pkts)
+            pattern = group_pkts_per_flow(pkts, match_random_ports)
             patterns.append(pattern)
 
     # Extract event signature from the flows
-    return patterns_to_signature(patterns)
+    return patterns_to_signature(patterns, match_random_ports)
 
 
 def pcaps_to_signature_csv(
         pcap_files: Union[str, List[str]],
         output_file: str,
         dns_table: dict = {},
-        timeout: int = 20
+        timeout: int = 20,
+        match_random_ports: bool = False
     ) -> None:
     """
     Extract an event signature from a list of network traces,
@@ -118,9 +124,11 @@ def pcaps_to_signature_csv(
         dns_table (dict): DNS table to use for IP-to-domain resolution. Optional, default is empty.
         timeout (int): Iteration is stopped if current packet's timestamp exceeds the previous one by this value [seconds].
                        Optional, default is 20 seconds.
+        match_random_ports (bool): Whether to consider random ports in flow matching.
+                                   Optional, default is False.
     """
     # Extract event signature from the flows
-    signature = pcaps_to_signature_pattern(pcap_files, dns_table, timeout)
+    signature = pcaps_to_signature_pattern(pcap_files, dns_table, timeout, match_random_ports)
 
     # Save event signature to CSV
     signature.to_csv(output_file)

@@ -7,7 +7,7 @@ from .network import Packet, FlowFingerprint, NetworkPattern
 from .pkt_extraction import pkts_to_df
 
 
-def group_pkts_per_flow(pkts: List[Packet]) -> NetworkPattern:
+def group_pkts_per_flow(pkts: List[Packet], match_random_ports: bool = False) -> NetworkPattern:
     """
     Group packets per flow, along the following attributes:
         - IP addresses
@@ -17,6 +17,8 @@ def group_pkts_per_flow(pkts: List[Packet]) -> NetworkPattern:
 
     Args:
         pkts (List[Packet]): List of packets.
+        match_random_ports (bool): Whether to consider random ports in flow matching.
+                                   Optional, default is False.
     Returns:
         NetworkPattern: pattern composed of the list of Flows.
     """
@@ -53,7 +55,7 @@ def group_pkts_per_flow(pkts: List[Packet]) -> NetworkPattern:
         # Check if an equivalent flow is already in the list
         found_matching_flow = False
         for flow in list_flows:
-            if flow.match_flow(new_flow):
+            if flow.match_flow(new_flow, match_random_ports):
                 flow.add_flow(new_flow)
                 found_matching_flow = True
 
@@ -63,7 +65,7 @@ def group_pkts_per_flow(pkts: List[Packet]) -> NetworkPattern:
     return NetworkPattern(list_flows)
 
 
-def pkts_csv_to_pattern_csv(pkts_file: str, pattern_file: str) -> None:
+def pkts_csv_to_pattern_csv(pkts_file: str, pattern_file: str, match_random_ports: bool = False) -> None:
     """
     Read a CSV file containing packet fingerprints,
     group packets per flow,
@@ -72,12 +74,14 @@ def pkts_csv_to_pattern_csv(pkts_file: str, pattern_file: str) -> None:
     Args:
         pkts_file (str): CSV file containing packet fingerprints.
         flows_file (str): Output CSV file containing flow fingerprints.
+        match_random_ports (bool): Whether to consider random ports in flow matching.
+                                   Optional, default is False.
     """
     # Read packet fingerprints
     df_pkts = pd.read_csv(pkts_file)
     df_pkts.where(df_pkts.notnull(), None, inplace=True)  # Replace NaN with None
     pkts = [Packet(dict(row)) for _, row in df_pkts.iterrows()]
     # Convert packet fingerprints to flow fingerprints
-    pattern = group_pkts_per_flow(pkts)
+    pattern = group_pkts_per_flow(pkts, match_random_ports)
     # Save flow fingerprints to CSV
     pattern.to_csv(pattern_file)
