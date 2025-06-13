@@ -40,16 +40,26 @@ class DHCP(ApplicationLayer):
         MESSAGE_TYPE = "message_type"
 
 
-    def __init__(self, pkt: Packet) -> None:
+    def __init__(self, data: dict | Packet) -> None:
         """
         Constructor of the DHCP class.
+
+        Args:
+            data (dict | Packet): DHCP data, either from a policy's protocol dictionary or a scapy packet.
         """
-        # Client MAC address
-        bootp_layer = pkt.getlayer(BOOTP)
-        self.client_mac = bootp_layer.chaddr.decode()
-        # DHCP message type
-        dhcp_options_layer = get_last_layer(pkt)
-        self.message_type = dhcp_options_layer.options[0][1]
+        # Given data is the policy's protocol dictionary
+        if isinstance(data, dict):
+            self.set_attr_from_dict("client_mac", data, "client-mac")
+            self.set_attr_from_dict("message_type", data, "type")
+
+        # Given data is a scapy packet
+        elif isinstance(data, Packet):
+            # Client MAC address
+            bootp_layer = data.getlayer(BOOTP)
+            self.client_mac = bootp_layer.chaddr.decode()
+            # DHCP message type
+            dhcp_options_layer = get_last_layer(data)
+            self.message_type = dhcp_options_layer.options[0][1]
     
 
     def __eq__(self, other: ApplicationLayer) -> bool:

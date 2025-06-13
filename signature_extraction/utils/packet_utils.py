@@ -90,6 +90,22 @@ def if_correct_type(value: Any, expected_type: type, default_value: Any = None) 
     return value if isinstance(value, expected_type) else default_value
 
 
+def policy_dict_to_other(policy_dict: dict, policy_field: str, other_dict: dict, flow_field: str) -> None:
+    """
+    Get a field from the policy dictionary and set it to another dictionary under a given field.
+
+    Args:
+        policy_dict (dict): Policy dictionary to get the field from.
+        policy_field (str): Field name in the policy dictionary.
+        flow_dict (dict): Other dictionary to set the field in.
+        flow_field (str): Field name in the other dictionary.
+    """
+    try:
+        other_dict[flow_field] = policy_dict[policy_field]
+    except KeyError:
+        pass
+
+
 def is_ip_address(ip: str) -> bool:
     """
     Check if the given string is a valid IP (v4 or v6) address.

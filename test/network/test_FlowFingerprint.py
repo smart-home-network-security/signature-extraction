@@ -5,7 +5,6 @@ from pathlib import Path
 from scapy.all import IP, UDP
 from scapy.layers.dns import DNS, DNSQR
 # Package
-import signature_extraction.utils.distance as distance
 import signature_extraction.application_layer as app_layer
 from signature_extraction.network import Packet, FlowFingerprint
 
@@ -140,7 +139,7 @@ def test_add_flow() -> None:
     assert ("192.168.1.1", 53) in flow.get_fixed_ports()
     assert ("192.168.1.2", 12345) in flow.ports
     assert flow.ports[("192.168.1.2", 12345)] == 2
-    assert ("192.168.1.2", 12345) in flow.get_fixed_ports()
+    assert ("192.168.1.2", 12345) not in flow.get_fixed_ports()
 
 
 def test_add_flow_fingerprint() -> None:

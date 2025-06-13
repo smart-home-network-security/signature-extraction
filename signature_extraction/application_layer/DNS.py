@@ -30,34 +30,45 @@ class DNS(ApplicationLayer):
         QNAME = "qname"
 
 
-    def __init__(self, pkt: Packet) -> None:
+    def __init__(self, data: dict | Packet) -> None:
         """
         Constructor of the DNS class.
-        """
-        application_layer = pkt.getlayer("DNS")
-        self.response = application_layer.qr == 1 if application_layer.qr else False
 
-        # Query type and name
-        try:
-            first_query = application_layer.qd[0]
-        except IndexError:
+        Args:
+            data (dict | Packet): DNS data, either from a policy's protocol dictionary or a scapy packet.
+        """
+        # Given data is the policy's protocol dictionary
+        if isinstance(data, dict):
+            self.set_attr_from_dict("qtype", data, "qtype")
+            self.set_attr_from_dict("qname", data, "domain-name")
+            self.response = data.get("response", False)
+
+        # Given data is a scapy packet
+        elif isinstance(data, Packet):
+            application_layer = data.getlayer("DNS")
+            self.response = application_layer.qr == 1 if application_layer.qr else False
+
+            # Query type and name
             try:
-                first_answer = application_layer.an[0]
+                first_query = application_layer.qd[0]
             except IndexError:
-                self.qtype = None
-                self.qname = None
-            else:
-                self.qtype = dnstypes.get(first_answer.type, None)
                 try:
-                    self.qname = first_answer.rrname.decode()[:-1]
+                    first_answer = application_layer.an[0]
+                except IndexError:
+                    self.qtype = None
+                    self.qname = None
+                else:
+                    self.qtype = dnstypes.get(first_answer.type, None)
+                    try:
+                        self.qname = first_answer.rrname.decode()[:-1]
+                    except AttributeError:
+                        self.qname = None
+            else:
+                self.qtype = dnstypes.get(first_query.qtype, None)
+                try:
+                    self.qname = first_query.qname.decode()[:-1]
                 except AttributeError:
                     self.qname = None
-        else:
-            self.qtype = dnstypes.get(first_query.qtype, None)
-            try:
-                self.qname = first_query.qname.decode()[:-1]
-            except AttributeError:
-                self.qname = None
 
     
     def __iter__(self) -> Iterator:

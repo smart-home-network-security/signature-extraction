@@ -10,7 +10,7 @@ from json import JSONEncoder
 # Package
 from .Packet import Packet
 from signature_extraction.application_layer import ApplicationLayer
-from signature_extraction.utils import if_correct_type, guess_network_protocol, is_known_port, compare_hosts
+from signature_extraction.utils import if_correct_type, policy_dict_to_other, guess_network_protocol, is_known_port, compare_hosts
 from signature_extraction.utils.distance import discrete_distance, distance_hosts
 from profile_translator_blocklist import translate_policy
 # Logging
@@ -42,6 +42,55 @@ class FlowFingerprint:
     # Transport layer
     WEIGHT_TRANSPORT_PROTOCOL = Fraction(1, 3)
     WEIGHT_PORTS              = Fraction(2, 3)
+
+    ## Policy protocols
+    PROTOCOL_LAYERS = {
+        "datalink":    ["arp"],
+        "network":     ["ipv4", "ipv6"],
+        "transport":   ["tcp", "udp", "icmp", "icmpv6"],
+        "application": ["dns", "http", "dhcp", "ssdp", "coap"]
+    }
+
+
+    @staticmethod
+    def from_policy(policy: dict) -> FlowFingerprint:
+        """
+        Create a FlowFingerprint object from a policy dictionary.
+
+        Args:
+            policy (dict): Policy dictionary to create the FlowFingerprint from.
+        Returns:
+            FlowFingerprint: FlowFingerprint object created from the policy.
+        """
+        dict_data = {}
+
+        # Iterate over the policy's protocols
+        data_protocols = policy["protocols"]
+        for protocol, attrs in data_protocols.items():
+
+            ## Network-layer protocol
+            if protocol in FlowFingerprint.PROTOCOL_LAYERS["network"]:
+                # Network protocol
+                dict_data["network_protocol"] = protocol
+                # Source host
+                policy_dict_to_other(attrs, "src", dict_data, "src")
+                # Destination host
+                policy_dict_to_other(attrs, "dst", dict_data, "dst")
+
+            ## Transport-layer protocol
+            elif protocol in FlowFingerprint.PROTOCOL_LAYERS["transport"]:
+                # Transport protocol
+                dict_data["transport_protocol"] = protocol.upper()
+                # Source port
+                policy_dict_to_other(attrs, "src-port", dict_data, "sport")
+                # Destination port
+                policy_dict_to_other(attrs, "dst-port", dict_data, "dport")
+
+            elif protocol in FlowFingerprint.PROTOCOL_LAYERS["application"]:
+                dict_data["application_layer"] = ApplicationLayer.init_protocol(attrs, protocol)
+
+
+        return FlowFingerprint(dict_data)
 
 
     def __init__(self, flow_data: Union[dict, Packet, list]) -> None:
@@ -417,7 +466,7 @@ class FlowFingerprint:
         Iterate over the FlowFingerprint attributes.
 
         Returns:
-            Iterable: Iterator over the packet fingerprint attributes.
+            Iterator: Iterator over the packet fingerprint attributes.
         """
 
         ### NETWORK LAYER ###

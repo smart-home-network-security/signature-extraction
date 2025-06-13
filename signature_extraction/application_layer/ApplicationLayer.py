@@ -45,22 +45,42 @@ class ApplicationLayer:
         raise ValueError("Unknown application layer protocol.")
     
     
-    @classmethod
-    def init_protocol(c, pkt: Packet) -> ApplicationLayer:
+    @staticmethod
+    def init_protocol(data_protocol: dict | Packet, name_protocol: str = None) -> ApplicationLayer:
         """
-        Initialize an application layer protocol.
+        Initialize an application-layer protocol object,
+        from either a policy's protocol dictionary or a scapy packet.
 
         Args:
-            protocol_name (str): name of the application layer protocol.
+            data (dict | scapy.Packet): application-layer protocol data.
         Returns:
-            ApplicationLayer: application layer protocol.
+            ApplicationLayer: application layer protocol object.
         """
-        protocol_name = ApplicationLayer.get_protocol(pkt)
+        # If the given data is a scapy packet, extract the protocol name
+        if isinstance(data_protocol, Packet):
+            name_protocol = ApplicationLayer.get_protocol(data_protocol)
+        
+        # Instantiate the concrete protocol object
         package = importlib.import_module(__name__).__name__.rpartition(".")[0]
-        protocol_module = importlib.import_module(f"{package}.{protocol_name}")
-        cls = getattr(protocol_module, protocol_name)
-        return cls(pkt)
+        protocol_module = importlib.import_module(f"{package}.{name_protocol}")
+        cls = getattr(protocol_module, name_protocol)
+        return cls(data_protocol)
     
+
+    def set_attr_from_dict(self, attr: str, data: dict, field: str) -> None:
+        """
+        Set an attribute of this object from a dictionary.
+
+        Args:
+            attr (str): name of the attribute to set.
+            data (dict): dictionary containing the data.
+            field (str): key in the dictionary to retrieve the value from.
+        """
+        try:
+            setattr(self, attr, data[field])
+        except KeyError:
+            pass
+
 
     def get_protocol_name(self) -> str:
         """

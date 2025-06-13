@@ -51,28 +51,37 @@ class CoAP(ApplicationLayer):
         return coap_option_key == 11 or coap_option_key == "Uri-Path"
 
 
-    def __init__(self, pkt: Packet) -> None:
+    def __init__(self, data: dict | Packet) -> None:
         """
         Constructor of the CoAP class.
 
         Args:
-            pkt (Packet): CoAP packet.
+            data (dict | Packet): CoAP data, either from a policy's protocol dictionary or a scapy packet.
         """
-        coap_layer = pkt.getlayer(CoAP.protocol_name)
+        # Given data is the policy's protocol dictionary
+        if isinstance(data, dict):
+            self.set_attr_from_dict("type", data, "type")
+            self.set_attr_from_dict("code", data, "method")
+            self.set_attr_from_dict("uri_path", data, "uri")
+            self.is_request = data.get("response", False)
 
-        # Request or response
-        type = CoAP.CoAPType(coap_layer.type)
-        self.is_request = type == CoAP.CoAPType.CON or type == CoAP.CoAPType.NON
+        # Given data is a scapy packet
+        elif isinstance(data, Packet):
+            coap_layer = data.getlayer(CoAP.protocol_name)
 
-        # Code and URI path are only considered for requests
-        if self.is_request:
-            # CoAP code
-            self.code = coap_codes[coap_layer.code]
-            # URI path
-            self.uri_path = None
-            for key, value in coap_layer.options:
-                if CoAP.is_uri_path(key):
-                    self.uri_path = self.uri_path + f"/{value}" if self.uri_path is not None else f"/{value}"
+            # Request or response
+            type = CoAP.CoAPType(coap_layer.type)
+            self.is_request = type == CoAP.CoAPType.CON or type == CoAP.CoAPType.NON
+
+            # Code and URI path are only considered for requests
+            if self.is_request:
+                # CoAP code
+                self.code = coap_codes[coap_layer.code]
+                # URI path
+                self.uri_path = None
+                for key, value in coap_layer.options:
+                    if CoAP.is_uri_path(key):
+                        self.uri_path = self.uri_path + f"/{value}" if self.uri_path is not None else f"/{value}"
 
     
     def __eq__(self, other: ApplicationLayer) -> bool:

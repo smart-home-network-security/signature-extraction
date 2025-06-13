@@ -2,6 +2,7 @@ from .packet_utils import (
     DnsRtype, 
     DnsTableKeys,
     if_correct_type,
+    policy_dict_to_other,
     is_ip_address,
     guess_network_protocol,
     is_known_port,

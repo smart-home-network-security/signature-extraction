@@ -38,27 +38,35 @@ class HTTP(ApplicationLayer):
         return isinstance(get_last_layer(pkt), scapy.http.HTTPResponse)
 
 
-    def __init__(self, pkt: Packet) -> None:
+    def __init__(self, data: dict | Packet) -> None:
         """
         Constructor of the HTTP class.
 
         Args:
-            pkt (Packet): HTTP packet.
+            data (dict | Packet): HTTP data, either from a policy's protocol dictionary or a scapy packet.
         """
-        if pkt.haslayer(scapy.http.HTTP):
-            application_layer = pkt.getlayer(scapy.http.HTTP)
-        else:
-            application_layer = scapy.http.HTTP(pkt.getlayer(Raw).getfieldval("load"))
+        # Given data is the policy's protocol dictionary
+        if isinstance(data, dict):
+            self.set_attr_from_dict("method", data, "method")
+            self.set_attr_from_dict("uri", data, "uri")
+            self.response = data.get("response", False)
 
-        self.response = HTTP.is_response(application_layer)
-        self.method = application_layer.Method.decode() if not self.response else None
+        # Given data is a scapy packet
+        elif isinstance(data, Packet):
+            if data.haslayer(scapy.http.HTTP):
+                application_layer = data.getlayer(scapy.http.HTTP)
+            else:
+                application_layer = scapy.http.HTTP(data.getlayer(Raw).getfieldval("load"))
 
-        # URI
-        uri = application_layer.Path.decode() if not self.response else None
-        if uri is not None and "?" in uri:
-            uri = uri.split("?")[0]
-            uri += "*" if not uri.endswith("*") else ""
-        self.uri = uri
+            self.response = HTTP.is_response(application_layer)
+            self.method = application_layer.Method.decode() if not self.response else None
+
+            # URI
+            uri = application_layer.Path.decode() if not self.response else None
+            if uri is not None and "?" in uri:
+                uri = uri.split("?")[0]
+                uri += "*" if not uri.endswith("*") else ""
+            self.uri = uri
 
     
     def __eq__(self, other: ApplicationLayer) -> bool:
