@@ -47,8 +47,8 @@ class HTTP(ApplicationLayer):
         """
         # Given data is the policy's protocol dictionary
         if isinstance(data, dict):
-            self.set_attr_from_dict("method", data, "method")
-            self.set_attr_from_dict("uri", data, "uri")
+            self.method = data.get("method", None)
+            self.uri = data.get("uri", None)
             self.response = data.get("response", False)
 
         # Given data is a scapy packet

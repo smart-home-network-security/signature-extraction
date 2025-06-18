@@ -63,7 +63,7 @@ class CoAP(ApplicationLayer):
             self.set_attr_from_dict("type", data, "type")
             self.set_attr_from_dict("code", data, "method")
             self.set_attr_from_dict("uri_path", data, "uri")
-            self.is_request = data.get("response", False)
+            self.is_request = data.get("response", True)
 
         # Given data is a scapy packet
         elif isinstance(data, Packet):

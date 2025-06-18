@@ -122,8 +122,6 @@ class NetworkPattern:
         Returns:
             pd.DataFrame: DataFrame of flow fingerprints.
         """
-        # for flow in self.flows:
-        #     print(flow)
         return pd.DataFrame([dict(flow) for flow in self.flows])
     
 

@@ -9,7 +9,9 @@ from signature_extraction.application_layer import CoAP
 
 ### VARIABLES ###
 
-## CoAP GET requests
+## From scapy Packets
+
+# CoAP GET requests
 options = [('Uri-Path', 'sensors'), ('Uri-Path', 'temperature')]
 layer_coap_get = coap.CoAP(type=0, code=1, msg_id=0x1234, token=b"token", options=options)
 pkt_coap_get = (
@@ -23,7 +25,7 @@ layer_coap_get_3 = coap.CoAP(type=0, code=2, msg_id=0x1234, token=b"token", opti
 options_4 = [('Uri-Path', 'sensors'), ('Uri-Path', 'pressure')]
 layer_coap_get_4 = coap.CoAP(type=0, code=1, msg_id=0x1234, token=b"token", options=options_4)
 
-## CoAP responses
+# CoAP responses
 layer_coap_resp = coap.CoAP(type=2, code=69, msg_id=0x1234, token=b"token")
 pkt_coap_resp = (
     IP(src="192.168.1.200", dst="192.168.1.100") /
@@ -44,6 +46,19 @@ coap_get4 = CoAP(layer_coap_get_4)
 coap_resp  = CoAP(layer_coap_resp)
 coap_resp2 = CoAP(layer_coap_resp_2)
 coap_resp3 = CoAP(layer_coap_resp_3)
+
+
+## From policy's protocol dictionary
+
+# Protocol dictionary
+dict_policy = {
+    "type": CoAP.CoAPType.CON,     # CoAP Confirmable
+    "method": coap.coap_codes[1],  # CoAP GET
+    "uri": "/sensors/temperature"
+}
+
+# CoAP object
+coap_from_policy = CoAP(dict_policy)
 
 
 ### TEST FUNCTIONS ###
@@ -76,6 +91,18 @@ def test_coap_resp() -> None:
 
     coap_dict = dict(coap_pkt)
     assert coap_dict["response"]
+
+
+def test_coap_from_policy() -> None:
+    """
+    Test the constructor with a policy's protocol dictionary.
+    """
+    assert coap_from_policy.protocol_name == "CoAP"
+    assert coap_from_policy.get_protocol_name() == "CoAP"
+    assert coap_from_policy.is_request
+    assert coap_from_policy.type == CoAP.CoAPType.CON
+    assert coap_from_policy.code == coap.coap_codes[1]
+    assert coap_from_policy.uri_path == "/sensors/temperature"
 
 
 def test_hash() -> None:

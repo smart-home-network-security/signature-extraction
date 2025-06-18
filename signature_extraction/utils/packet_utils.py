@@ -163,7 +163,7 @@ def is_known_port(port: int, protocol: str = "tcp") -> bool:
     # Check if port is well-known by the OS
     try:
         getservbyport(port, protocol)
-    except OSError:
+    except (OSError, OverflowError):
         return False
     else:
         return True

@@ -51,7 +51,27 @@ dns_request_other = DNS(dns_request_layer_other)
 dns_response = DNS(dns_response_layer)
 
 
+## From policy's protocol dictionary
+
+# DNS A request
+dns_request_policy_dict = {
+    "qtype": "A",
+    "domain-name": "www.example.com"
+}
+dns_request_from_policy = DNS(dns_request_policy_dict)
+
+# DNS A response
+dns_response_policy_dict = {
+    "response": True,
+    "qtype": "A",
+    "domain-name": "www.example.com"
+}
+dns_response_from_policy = DNS(dns_response_policy_dict)
+
+
+
 ### TEST FUNCTIONS ###
+
 
 def test_dns_request() -> None:
     """
@@ -87,6 +107,28 @@ def test_dns_response() -> None:
     assert dns["response"]
     assert dns["qtype"] == "A"
     assert dns["domain-name"] == "www.example.com"
+
+
+def test_dns_request_from_policy() -> None:
+    """
+    Test the constructor with a policy's protocol dictionary
+    describing a DNS A request.
+    """
+    assert dns_request_from_policy.protocol_name == "DNS"
+    assert not dns_request_from_policy.response
+    assert dns_request_from_policy.qtype == "A"
+    assert dns_request_from_policy.qname == "www.example.com"
+
+
+def test_dns_response_from_policy() -> None:
+    """
+    Test the constructor with a policy's protocol dictionary
+    describing a DNS A response.
+    """
+    assert dns_response_from_policy.protocol_name == "DNS"
+    assert dns_response_from_policy.response
+    assert dns_response_from_policy.qtype == "A"
+    assert dns_response_from_policy.qname == "www.example.com"
 
 
 def test_hash() -> None:

@@ -10,6 +10,8 @@ from signature_extraction.application_layer import HTTP
 
 ### VARIABLES ###
 
+## From scapy Packets
+
 ## HTTP GET requests
 http_get_layer = (
     http.HTTP() /
@@ -96,6 +98,22 @@ http_resp = HTTP(http_resp_layer)
 http_resp_error = HTTP(http_resp_layer_error)
 
 
+## From policy's protocol dictionary
+
+# GET request
+dict_get = {
+    "method": "GET",
+    "uri": "/test/stuff"
+}
+http_get_from_policy = HTTP(dict_get)
+
+# Response
+dict_resp = {
+    "response": True
+}
+http_resp_from_policy = HTTP(dict_resp)
+
+
 ### TEST FUNCTIONS ###
 
 def test_http_get() -> None:
@@ -149,6 +167,28 @@ def test_http_resp() -> None:
         assert http_dict["method"] is None
     with pytest.raises(KeyError):
         assert http_dict["uri"] is None
+
+
+def test_http_get_from_policy() -> None:
+    """
+    Test the constructor with a policy's protocol dictionary
+    describing an HTTP GET request.
+    """
+    assert http_get_from_policy.protocol_name == "HTTP"
+    assert not http_get_from_policy.response
+    assert http_get_from_policy.method == "GET"
+    assert http_get_from_policy.uri == "/test/stuff"
+
+
+def test_http_response_from_policy() -> None:
+    """
+    Test the constructor with a policy's protocol dictionary
+    describing an HTTP response.
+    """
+    assert http_resp_from_policy.protocol_name == "HTTP"
+    assert http_resp_from_policy.response
+    assert http_resp_from_policy.method is None
+    assert http_resp_from_policy.uri is None
 
 
 def test_hash() -> None:

@@ -57,6 +57,24 @@ pkt_dict_d = {
     "transport_protocol": "TCP"
 }
 
+policy = {
+    "protocols": {
+        "ipv4": {
+            "src": "192.168.1.2",
+            "dst": "192.168.1.1"
+        },
+        "udp": {
+            "src-port": 12345,
+            "dst-port": 53
+        },
+        "dns": {
+            "qtype": "A",
+            "domain-name": "www.example.com"
+        }
+    },
+    "bidirectional": True
+}
+
 
 # Initialize FlowFingerprints
 f_1 = FlowFingerprint(pkt_dict)
@@ -100,6 +118,19 @@ def test_constructor_pkt() -> None:
     # Ports
     assert ("192.168.1.1", 53) in flow.ports
     assert flow.ports[("192.168.1.1", 53)] == 1
+
+
+def test_from_policy() -> None:
+    """
+    Test the method `from_policy`,
+    which creates a FlowFingerprint from a policy.
+    """
+    flow = FlowFingerprint.from_policy(policy)
+    assert flow.network_protocol == "IPv4"
+    assert flow.src == "192.168.1.2"
+    assert flow.dst == "192.168.1.1"
+    assert flow.transport_protocol == "UDP"
+    assert isinstance(flow.application_layer, app_layer.DNS)
 
 
 def test_add_ports() -> None:

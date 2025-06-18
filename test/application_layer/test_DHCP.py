@@ -66,6 +66,23 @@ dhcp_request = DHCP(dhcp_request_layer)
 dhcp_ack = DHCP(dhcp_ack_layer)
 
 
+## From policy's protocol dictionary
+
+# DHCP discover
+dhcp_discover_policy_dict = {
+    "client-mac": "00:11:22:33:44:55",
+    "type": "discover"
+}
+dhcp_discover_from_policy = DHCP(dhcp_discover_policy_dict)
+
+# DHCP offer
+dhcp_offer_policy_dict = {
+    "client-mac": "00:11:22:33:44:55",
+    "type": "offer"
+}
+dhcp_offer_from_policy = DHCP(dhcp_offer_policy_dict)
+
+
 ### TEST FUNCTIONS ###
 
 def test_dhcp_discover() -> None:
@@ -126,6 +143,28 @@ def test_dhcp_ack() -> None:
     dhcp_dict = dict(dhcp_pkt)
     assert dhcp_dict["client_mac"] == "00:11:22:33:44:55"
     assert dhcp_dict["message_type"] == "ack"
+
+
+def test_dhcp_discover_from_policy() -> None:
+    """
+    Test the constructor with a policy's protocol dictionary,
+    which describes a DHCP Discover message.
+    """
+    assert dhcp_discover_from_policy.protocol_name == "DHCP"
+    assert dhcp_discover_from_policy.get_protocol_name() == "DHCP"
+    assert dhcp_discover_from_policy.client_mac == "00:11:22:33:44:55"
+    assert dhcp_discover_from_policy.message_type == "discover"
+
+
+def test_dhcp_offer_from_policy() -> None:
+    """
+    Test the constructor with a policy's protocol dictionary,
+    which describes a DHCP Offer message.
+    """
+    assert dhcp_offer_from_policy.protocol_name == "DHCP"
+    assert dhcp_offer_from_policy.get_protocol_name() == "DHCP"
+    assert dhcp_offer_from_policy.client_mac == "00:11:22:33:44:55"
+    assert dhcp_offer_from_policy.message_type == "offer"
 
 
 def test_hash() -> None:

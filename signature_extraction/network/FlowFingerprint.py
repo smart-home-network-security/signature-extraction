@@ -44,11 +44,21 @@ class FlowFingerprint:
     WEIGHT_PORTS              = Fraction(2, 3)
 
     ## Policy protocols
+
+    # Protocol names with specific cases
+    PROTOCOL_NAMES = {
+        "ipv4":   "IPv4",
+        "ipv6":   "IPv6",
+        "icmpv6": "ICMPv6",
+        "coap":   "CoAP"
+    }
+
+    # Protocols grouped by layer
     PROTOCOL_LAYERS = {
-        "datalink":    ["arp"],
-        "network":     ["ipv4", "ipv6"],
-        "transport":   ["tcp", "udp", "icmp", "icmpv6"],
-        "application": ["dns", "http", "dhcp", "ssdp", "coap"]
+        "datalink":    ["ARP"],
+        "network":     ["IPv4", "IPv6"],
+        "transport":   ["TCP", "UDP", "ICMP", "ICMPv6"],
+        "application": ["DNS", "HTTP", "DHCP", "SSDP", "CoAP"]
     }
 
 
@@ -68,6 +78,9 @@ class FlowFingerprint:
         data_protocols = policy["protocols"]
         for protocol, attrs in data_protocols.items():
 
+            # Convert protocol name case
+            protocol = FlowFingerprint.PROTOCOL_NAMES.get(protocol.lower(), protocol.upper())
+
             ## Network-layer protocol
             if protocol in FlowFingerprint.PROTOCOL_LAYERS["network"]:
                 # Network protocol
@@ -80,15 +93,15 @@ class FlowFingerprint:
             ## Transport-layer protocol
             elif protocol in FlowFingerprint.PROTOCOL_LAYERS["transport"]:
                 # Transport protocol
-                dict_data["transport_protocol"] = protocol.upper()
+                dict_data["transport_protocol"] = protocol
                 # Source port
                 policy_dict_to_other(attrs, "src-port", dict_data, "sport")
                 # Destination port
                 policy_dict_to_other(attrs, "dst-port", dict_data, "dport")
 
+            ## Application-layer protocol
             elif protocol in FlowFingerprint.PROTOCOL_LAYERS["application"]:
                 dict_data["application_layer"] = ApplicationLayer.init_protocol(attrs, protocol)
-
 
         return FlowFingerprint(dict_data)
 
@@ -179,15 +192,15 @@ class FlowFingerprint:
             dict: Updated ports dictionary.
         """
         # Source host & port
-        src = flow_dict["src"]
-        sport = flow_dict["sport"]
+        src = flow_dict.get("src", None)
+        sport = flow_dict.get("sport", None)
         if isinstance(src, str) and isinstance(sport, int):
             src_sport = (src, sport)
             self.ports[src_sport] = self.ports.get(src_sport, 0) + 1
         
         # Destination host & port
-        dst = flow_dict["dst"]
-        dport = flow_dict["dport"]
+        dst = flow_dict.get("dst", None)
+        dport = flow_dict.get("dport", None)
         if isinstance(dst, str) and isinstance(dport, int):
             dst_dport = (dst, dport)
             self.ports[dst_dport] = self.ports.get(dst_dport, 0) + 1
@@ -510,6 +523,18 @@ class FlowFingerprint:
             yield "application_layer", tuple(self.application_layer)
         else:
             yield "application_layer", None
+
+
+    def __eq__(self, other: FlowFingerprint) -> bool:
+        """
+        Check if two FlowFingerprint objects are equivalent.
+
+        Args:
+            other (FlowFingerprint): Other FlowFingerprint object.
+        Returns:
+            bool: True if the two FlowFingerprints are equivalent, False otherwise.
+        """
+        return self.match_flow(other, match_random_ports=False)
 
         
     def __hash__(self) -> int:
