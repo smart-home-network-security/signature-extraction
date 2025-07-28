@@ -47,9 +47,10 @@ classifiers = [
 
 dependencies = [
   # Libraries
-  "cryptography==43.0.1",
+  "cryptography==44.0.2",
   "scapy==2.6.0",
   "pandas==2.2.3",
+  "Levenshtein==0.27.1",
   # Custom
   "dns-unbound-cache-reader",
   "profile-translator-blocklist"
