@@ -99,12 +99,12 @@ class CoAP(ApplicationLayer):
         
         ## Other object is a CoAP layer.
         
-        if self.is_request and other.is_request:
+        if self.compare_attrs(other, "is_request"):
             # Both objects are requests
             # ==> Compare code and URI path
             return (
-                self.code == other.code and
-                self.uri_path == other.uri_path
+                self.compare_attrs(other, "code") and
+                self.compare_attrs(other, "uri_path")
             )
         
         # One of the two objects is a response.

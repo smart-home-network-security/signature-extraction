@@ -80,6 +80,31 @@ class ApplicationLayer:
             setattr(self, attr, data[field])
         except KeyError:
             pass
+    
+
+    def compare_attrs(self, other: ApplicationLayer, attr: str) -> bool:
+        """
+        Compare an attribute of this object with the same attribute of another object.
+
+        Args:
+            other (ApplicationLayer): other application layer protocol.
+            attr (str): name of the attribute to compare.
+        Returns:
+            bool: True if the two attributes are equal, False otherwise.
+        """
+        # Other object is not an ApplicationLayer, return False
+        if not isinstance(other, ApplicationLayer):
+            return False
+        
+        # If the attribute is not present in both objects, return True
+        if not hasattr(self, attr) and not hasattr(other, attr):
+            return True
+        
+        # Try comparing the attributes
+        try:
+            return getattr(self, attr) == getattr(other, attr)
+        except AttributeError:
+            return False
 
 
     def get_protocol_name(self) -> str:

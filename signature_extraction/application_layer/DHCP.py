@@ -77,7 +77,7 @@ class DHCP(ApplicationLayer):
         
         # Other object is a DHCP layer,
         # compare client_mac.
-        return self.client_mac == other.client_mac
+        return self.compare_attrs(other, "client_mac")
 
 
     def __hash__(self) -> int:

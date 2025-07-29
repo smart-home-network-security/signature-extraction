@@ -103,17 +103,21 @@ class DNS(ApplicationLayer):
         ## Other object is a DNS layer
 
         # Compare qtype
-        if self.qtype != other.qtype:
+        if not self.compare_attrs(other, "qtype"):
             return False
         
         ## Compare qname
         # qnames are identical
-        if self.qname == other.qname:
+        if self.compare_attrs(other, "qname"):
             return True
         
         # If qnames differ only by the first subdomain, consider them equal
-        if self.qname is not None and other.qname is not None:
-            return compare_domain_names(self.qname, other.qname)
+        try:
+            if self.qname is not None and other.qname is not None:
+                return compare_domain_names(self.qname, other.qname)
+        except AttributeError:
+            # One of the qnames is not defined
+            return False
 
         return False
 

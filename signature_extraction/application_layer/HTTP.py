@@ -89,7 +89,7 @@ class HTTP(ApplicationLayer):
             # compare method & URI
             self_uri = self.uri[:-1] if self.uri.endswith(("*", "?")) else self.uri
             other_uri = other.uri[:-1] if other.uri.endswith(("*", "?")) else other.uri
-            return self.method == other.method and self_uri == other_uri
+            return self.compare_attrs(other, "method") and self.compare_attrs(other, "uri")
     
         # If one of the two objects is a response,
         # we cannot compare the fields.
