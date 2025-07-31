@@ -5,17 +5,17 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "signature-extraction"
-version = "0.11.0"
+version = "1.0.0"
 description = "Extract signatures from IoT event network traffic"
 readme = "README.md"
 requires-python = ">=3.8"
 license = "GPL-3.0-or-later"
 keywords = ["network", "traffic", "fingerprinting", "firewall"]
 authors = [
-  {name = "François De Keersmaeker", email = "francois.dekeersmaeker@uclouvain.be" }
+  {name = "François De Keersmaeker", email = "francois.dekeersmaeker+github@proton.me" }
 ]
 maintainers = [
-  {name = "François De Keersmaeker", email = "francois.dekeersmaeker@uclouvain.be" }
+  {name = "François De Keersmaeker", email = "francois.dekeersmaeker+github@proton.me" }
 ]
 
 # Classifiers help users find your project by categorizing it.
@@ -57,5 +57,5 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://forge.uclouvain.be/smart-home-network-security/signature-extraction"
-"Source" = "https://forge.uclouvain.be/smart-home-network-security/signature-extraction"
+"Homepage" = "https://github.com/smart-home-network-security/signature-extraction"
+"Source" = "https://github.com/smart-home-network-security/signature-extraction"

@@ -87,9 +87,23 @@ class HTTP(ApplicationLayer):
         if not self.response and not other.response:        
             # Both objects are requests,
             # compare method & URI
-            self_uri = self.uri[:-1] if self.uri.endswith(("*", "?")) else self.uri
-            other_uri = other.uri[:-1] if other.uri.endswith(("*", "?")) else other.uri
-            return self.compare_attrs(other, "method") and self.compare_attrs(other, "uri")
+
+            # Method
+            is_same_method = self.compare_attrs(other, "method")
+
+            # URI
+            is_same_uri = False
+            if not hasattr(self, "uri") and not hasattr(other, "uri"):
+                is_same_uri = True
+            else:
+                try:
+                    self_uri = self.uri[:-1] if self.uri.endswith(("*", "?")) else self.uri
+                    other_uri = other.uri[:-1] if other.uri.endswith(("*", "?")) else other.uri
+                    is_same_uri = self_uri == other_uri
+                except AttributeError:
+                    is_same_uri = False
+            
+            return is_same_method and is_same_uri
     
         # If one of the two objects is a response,
         # we cannot compare the fields.
