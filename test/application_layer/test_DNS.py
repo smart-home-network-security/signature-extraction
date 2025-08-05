@@ -32,7 +32,7 @@ dns_request_layer_other = (
         qd=dns.DNSQR(qtype="A", qname="www.example.org")
     ))
 
-## DNS responses
+## DNS response
 dns_response_layer = (
     dns.DNS(id=0xAAAA, qr=1, aa=1, rd=1, ra=1,
             qd=dns.DNSQR(qtype="A", qname="www.example.com"),
@@ -129,6 +129,18 @@ def test_dns_response_from_policy() -> None:
     assert dns_response_from_policy.response
     assert dns_response_from_policy.qtype == "A"
     assert dns_response_from_policy.qname == "www.example.com"
+
+
+def test_eq() -> None:
+    """
+    Test the equality operator.
+    """
+    assert dns_request == dns_request
+    assert dns_request != dns_request_aaaa
+    assert dns_request != dns_request_other
+    assert dns_request == dns_response
+    assert dns_request == dns_request_from_policy
+    assert dns_response == dns_response_from_policy
 
 
 def test_hash() -> None:

@@ -107,6 +107,12 @@ dict_get = {
 }
 http_get_from_policy = HTTP(dict_get)
 
+# Request without URI
+dict_get_no_uri = {
+    "method": "GET"
+}
+http_get_no_uri_from_policy = HTTP(dict_get_no_uri)
+
 # Response
 dict_resp = {
     "response": True
@@ -189,6 +195,21 @@ def test_http_response_from_policy() -> None:
     assert http_resp_from_policy.response
     assert http_resp_from_policy.method is None
     assert http_resp_from_policy.uri is None
+
+
+def test_eq() -> None:
+    """
+    Test the equality operator.
+    """
+    assert http_get == http_get
+    assert http_get == http_get_2
+    assert http_get != http_get_3
+    assert http_get != http_post
+    assert http_get == http_resp
+    assert http_resp == http_resp_error
+    assert http_get == http_get_from_policy
+    assert http_get != http_get_no_uri_from_policy
+    assert http_get_no_uri_from_policy == http_get_no_uri_from_policy
 
 
 def test_hash() -> None:

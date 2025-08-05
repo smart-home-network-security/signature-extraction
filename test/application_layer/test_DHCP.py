@@ -60,7 +60,7 @@ dhcp_ack_pkt = (
 
 # Concrete objects
 dhcp_discover = DHCP(dhcp_discover_layer)
-dhc_discover_layer_2 = DHCP(dhcp_discover_layer_2)
+dhcp_discover_2 = DHCP(dhcp_discover_layer_2)
 dhcp_offer = DHCP(dhcp_offer_layer)
 dhcp_request = DHCP(dhcp_request_layer)
 dhcp_ack = DHCP(dhcp_ack_layer)
@@ -167,12 +167,28 @@ def test_dhcp_offer_from_policy() -> None:
     assert dhcp_offer_from_policy.message_type == "offer"
 
 
+def test_eq() -> None:
+    """
+    Test the equality operator.
+    """
+    assert dhcp_discover == dhcp_discover
+    assert dhcp_discover != dhcp_discover_2
+    assert dhcp_discover == dhcp_offer
+    assert dhcp_discover == dhcp_request
+    assert dhcp_discover == dhcp_ack
+    assert dhcp_offer    == dhcp_request
+    assert dhcp_offer    == dhcp_ack
+    assert dhcp_request  == dhcp_ack
+    assert dhcp_discover == dhcp_discover_from_policy
+    assert dhcp_discover == dhcp_offer_from_policy
+
+
 def test_hash() -> None:
     """
     Test the hash function.
     """
     assert hash(dhcp_discover) == hash(dhcp_offer)
-    assert hash(dhcp_discover) != hash(dhc_discover_layer_2)
+    assert hash(dhcp_discover) != hash(dhcp_discover_2)
     assert hash(dhcp_discover) == hash(dhcp_request)
     assert hash(dhcp_discover) == hash(dhcp_ack)
     assert hash(dhcp_offer)    == hash(dhcp_request)
@@ -186,8 +202,8 @@ def test_diff() -> None:
     which extracts the difference between two DHCP objects.
     """
     assert dhcp_discover.diff(dhcp_discover) == {}
-    assert dhcp_discover.diff(dhc_discover_layer_2) == {
-        DHCP.DhcpFields.CLIENT_MAC.value: (dhcp_discover.client_mac, dhc_discover_layer_2.client_mac)
+    assert dhcp_discover.diff(dhcp_discover_2) == {
+        DHCP.DhcpFields.CLIENT_MAC.value: (dhcp_discover.client_mac, dhcp_discover_2.client_mac)
     }
     assert dhcp_discover.diff(dhcp_offer) == {
         DHCP.DhcpFields.MESSAGE_TYPE.value: (dhcp_discover.message_type, dhcp_offer.message_type)

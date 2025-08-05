@@ -84,7 +84,7 @@ class HTTP(ApplicationLayer):
         
         ## Other object is an HTTP layer
 
-        if not self.response and not other.response:        
+        if not self.response and not other.response:
             # Both objects are requests,
             # compare method & URI
 
@@ -97,11 +97,13 @@ class HTTP(ApplicationLayer):
                 is_same_uri = True
             else:
                 try:
-                    self_uri = self.uri[:-1] if self.uri.endswith(("*", "?")) else self.uri
-                    other_uri = other.uri[:-1] if other.uri.endswith(("*", "?")) else other.uri
-                    is_same_uri = self_uri == other_uri
+                    self_uri = self.uri[:-1] if self.uri and self.uri.endswith(("*", "?")) else self.uri
+                    other_uri = other.uri[:-1] if other.uri and other.uri.endswith(("*", "?")) else other.uri
                 except AttributeError:
+                    # One of the two objects does not have a URI
                     is_same_uri = False
+                else:
+                    is_same_uri = self_uri == other_uri
             
             return is_same_method and is_same_uri
     

@@ -105,6 +105,18 @@ def test_coap_from_policy() -> None:
     assert coap_from_policy.uri_path == "/sensors/temperature"
 
 
+def test_eq() -> None:
+    """
+    Test the equality operator.
+    """
+    assert coap_get  == coap_get2
+    assert coap_get  != coap_get3
+    assert coap_get  != coap_get4
+    assert coap_get  == coap_resp
+    assert coap_get  == coap_resp2
+    assert coap_resp == coap_resp2
+
+
 def test_hash() -> None:
     """
     Test the hash function.
