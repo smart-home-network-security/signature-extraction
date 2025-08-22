@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "signature-extraction"
-version = "1.0.3"
+version = "1.0.4"
 description = "Extract signatures from IoT event network traffic"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -49,7 +49,7 @@ dependencies = [
   # Libraries
   "cryptography==44.0.2",
   "scapy==2.6.1",
-  "pandas==2.2.3",
+  "pandas==2.3.2",
   "Levenshtein==0.27.1",
   # Custom
   "dns-unbound-cache-reader",
