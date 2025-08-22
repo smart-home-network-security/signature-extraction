@@ -620,7 +620,7 @@ class FlowFingerprint:
         dst_ip = "self" if self.dst == str(ipv4) else self.dst.replace("*","$")
         policy = {
             "protocols": {
-                "ipv4": {"src": src_ip, "dst": dst_ip}
+                self.network_protocol.lower(): {"src": src_ip, "dst": dst_ip}
             }
         }
 
