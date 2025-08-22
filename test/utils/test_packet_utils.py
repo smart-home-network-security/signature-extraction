@@ -6,6 +6,7 @@ from scapy.layers.http import HTTP, HTTPRequest, HTTPResponse
 from scapy.layers.dns import DNS, DNSQR, DNSRR
 from scapy.layers.tls.all import TLS, TLSClientHello, TLSServerHello, TLS_Ext_ServerName, ServerName
 from scapy.layers.inet6 import IPv6, ICMPv6ND_RS, ICMPv6MLQuery, ICMPv6MLReport, ICMPv6ND_INDAdv, ICMPv6NDOptSrcLLAddr
+from scapy.layers.dhcp6 import DHCP6_Solicit, DHCP6_Advertise, DHCP6_Request, DHCP6_Reply
 # Package
 import signature_extraction.utils.packet_utils as packet_utils
 from signature_extraction.utils import DnsRtype, DnsTableKeys
@@ -140,6 +141,12 @@ dns_response_PTR = (
 )
 dns_response_PTR = build_packet(dns_response_PTR)
 
+# DHCPv6
+dhcpv6_solicit = Ether() / IPv6() / DHCP6_Solicit()
+dhcpv6_advertise = Ether() / IPv6() / DHCP6_Advertise()
+dhcpv6_request = Ether() / IPv6() / DHCP6_Request()
+dhcpv6_reply = Ether() / IPv6() / DHCP6_Reply()
+
 
 ##### TEST FUNCTIONS #####
 
@@ -251,6 +258,12 @@ def test_should_skip_pkt() -> None:
     # TLS
     assert packet_utils.should_skip_pkt(tls_raw)
     assert packet_utils.should_skip_pkt(tls_server_hello)
+
+    # DHCPv6
+    assert packet_utils.should_skip_pkt(dhcpv6_solicit)
+    assert packet_utils.should_skip_pkt(dhcpv6_advertise)
+    assert packet_utils.should_skip_pkt(dhcpv6_request)
+    assert packet_utils.should_skip_pkt(dhcpv6_reply)
 
 
     ### Non-signalling packets ###

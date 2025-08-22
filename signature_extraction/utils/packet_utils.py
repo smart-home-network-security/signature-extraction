@@ -62,13 +62,16 @@ skip_layers = [
     ARP,
     BOOTP,
     DHCP,
+    # ICMPv6
     ICMPv6ND_RS,
     ICMPv6MLQuery,
     ICMPv6MLReport,
     ICMPv6ND_INDAdv,
     ICMPv6NDOptSrcLLAddr,
-    "IP Option Router Alert",
+    "IP Option Router Alert"
 ]
+# DHCPv6
+DHCP6 = "DHCP6"
 
 
 ### FUNCTIONS ###
@@ -259,6 +262,10 @@ def should_skip_pkt(pkt: ScapyPacket) -> bool:
     """
     # Packet does not have a transport layer, skip it
     if not pkt.haslayer(TCP) and not pkt.haslayer(UDP):
+        return True
+    
+    # DHCPv6 packet
+    if DHCP6 in pkt.summary():
         return True
 
     # TLS packet
