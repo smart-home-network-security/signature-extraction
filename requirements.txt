@@ -1,5 +1,5 @@
 # Libraries
-cryptography==44.0.2
+cryptography==45.0.6
 scapy==2.6.1
 pandas==2.3.2
 Levenshtein==0.27.1
