@@ -170,7 +170,20 @@ def is_known_port(port: int, protocol: str = "tcp") -> bool:
         return False
     else:
         return True
-    
+
+
+def is_domain_name(name: str) -> bool:
+    """
+    Check whether a given name is a valid name.
+
+    Args:
+        name (str): given name
+    Returns:
+        bool: True if the name is a valid domain name, False otherwise
+    """
+    pattern = "^((?!-)[A-Za-z0-9-]{1, 63}(?<!-)\\.)+[A-Za-z]{2, 6}$"
+    return bool(re.match(pattern, name))
+
 
 def compare_domain_names(domain_a: str, domain_b: str) -> bool:
     """
@@ -227,6 +240,11 @@ def compare_hosts(host_a: str, host_b: str) -> bool:
         return False
 
     # Both are different hostnames
+    # Check if they are valid domain names
+    if not is_domain_name(host_a) or not is_domain_name(host_b):
+        return False
+
+    # Both are valid domain names
     # If they differ only by the first subdomain, consider them equal
     return compare_domain_names(host_a, host_b)
 
