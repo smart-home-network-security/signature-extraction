@@ -181,7 +181,7 @@ def is_domain_name(name: str) -> bool:
     Returns:
         bool: True if the name is a valid domain name, False otherwise
     """
-    pattern = "^((?!-)[A-Za-z0-9-]{1, 63}(?<!-)\\.)+[A-Za-z]{2, 6}$"
+    pattern = r"^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$"
     return bool(re.match(pattern, name))
 
 

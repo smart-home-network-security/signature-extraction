@@ -217,6 +217,27 @@ def test_is_known_port() -> None:
     assert packet_utils.is_known_port(65536, "tcp") == False
 
 
+def test_is_domain_name() -> None:
+    """
+    Test the function `is_domain_name`,
+    which checks if a given string is a valid domain name.
+    """
+    # Valid domain names
+    assert packet_utils.is_domain_name("www.example.com")
+    assert packet_utils.is_domain_name("subdomain.example.com")
+    assert packet_utils.is_domain_name("example.co.uk")
+    assert packet_utils.is_domain_name("euw1-device-telemetry-gw.iot.i.tplinknbu.com")
+
+    # Invalid domain names
+    assert not packet_utils.is_domain_name("192.168.1.1")
+    assert not packet_utils.is_domain_name("1111:2222:3333:4444:5555:6666:7777:8888")
+    assert not packet_utils.is_domain_name("fe80::1")
+    assert not packet_utils.is_domain_name("not_a_domain")
+    assert not packet_utils.is_domain_name("www..com")
+    assert not packet_utils.is_domain_name("-invalid.com")
+    assert not packet_utils.is_domain_name("invalid-.com")
+
+
 def test_should_skip_pkt() -> None:
     """
     Test the function `should_skip_pkt`.
