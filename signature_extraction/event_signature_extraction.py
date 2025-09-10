@@ -89,6 +89,8 @@ def pcaps_to_signature_pattern(
                                    Optional, default is False.
     Returns:
         NetworkPattern: Event signature extracted from the flows.
+    Raises:
+        ValueError: If no valid NetworkPatterns are extracted from the PCAP files.
     """
     # Convert input PCAP file(s) to list if necessary
     if isinstance(pcap_files, str):
