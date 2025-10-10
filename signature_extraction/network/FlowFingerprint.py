@@ -1,6 +1,7 @@
 ## Imports
 # Libraries
 from __future__ import annotations
+import re
 from typing import Union, Iterator
 import os
 import time
@@ -60,6 +61,24 @@ class FlowFingerprint:
         "transport":   ["TCP", "UDP", "ICMP", "ICMPv6"],
         "application": ["DNS", "HTTP", "DHCP", "SSDP", "CoAP"]
     }
+
+
+    @staticmethod
+    def slugify(name: str) -> str:
+        """
+        Slugify a given name (e.g. a host address),
+        by replacing unsupported characters with dashes.
+
+        Args:
+            name (str): Name to slugify.
+        Returns:
+            str: Slugified name.
+        """
+        pattern = r"[^a-zA-Z0-9_.-]"
+        special_chars = re.findall(pattern, name)
+        for char in special_chars:
+            name = name.replace(char, "-")
+        return name
 
 
     @staticmethod
@@ -555,7 +574,12 @@ class FlowFingerprint:
         Returns:
             str: Identifier for this FlowFingerprint.
         """
-        id = f"{self.src}-{self.dst}_{self.transport_protocol}"
+        # Slugify host's addresses
+        src = FlowFingerprint.slugify(self.src)
+        dst = FlowFingerprint.slugify(self.dst)
+
+        # Initialize identifier
+        id = f"{src}-{dst}_{self.transport_protocol}"
         fixed_ports = self.get_fixed_ports()
 
         # Hosts & ports

@@ -87,6 +87,16 @@ f_4 = FlowFingerprint(pkt_dict_d)
 
 ### TEST FUNCTIONS ###
 
+def test_slugify() -> None:
+    """
+    Test the static method `slugify`,
+    which returns a slugified version of a given string.
+    """
+    assert FlowFingerprint.slugify("example.com") == "example.com"
+    assert FlowFingerprint.slugify("192.168.1.1") == "192.168.1.1"
+    assert FlowFingerprint.slugify("fe80::1") == "fe80--1"
+
+
 def test_constructor_dict() -> None:
     """
     Test the constructor of the class `FlowFingerprint`,
