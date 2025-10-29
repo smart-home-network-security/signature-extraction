@@ -144,6 +144,50 @@ def test_from_policy() -> None:
     assert isinstance(flow.application_layer, app_layer.DNS)
 
 
+def test_iter() -> None:
+    """
+    Test the method `__iter__`,
+    which yields the fields of the FlowFingerprint.
+    """
+    flow = FlowFingerprint(pkt_dict)
+    for key, value in flow:
+        if key == "network_protocol":
+            assert value == "IPv4"
+        elif key == "src":
+            assert value == "192.168.1.1"
+        elif key == "dst":
+            assert value == "192.168.1.2"
+        elif key == "transport_protocol":
+            assert value == "UDP"
+        elif key == "application_layer":
+            for key_app, value_app in value:
+                if key_app == "response":
+                    assert not value_app
+                elif key_app == "qtype":
+                    assert value_app == "A"
+                elif key_app == "domain-name":
+                    assert value_app == "www.example.com"
+
+
+def test_hash() -> None:
+    """
+    Test if equivalent FlowFingerprints have the same hash value.
+    """
+    # Compute hash values
+    h_1 = hash(f_1)
+    h_2 = hash(f_2)
+    h_3 = hash(f_3)
+    h_4 = hash(f_4)
+
+    # Verify hash values
+    h_1 != h_2
+    h_1 == h_3
+    h_1 != h_4
+    h_2 != h_3
+    h_2 != h_4
+    h_3 != h_4
+
+
 def test_add_ports() -> None:
     """
     Test the method `add_ports`.

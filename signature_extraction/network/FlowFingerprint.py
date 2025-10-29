@@ -527,10 +527,15 @@ class FlowFingerprint:
         yield "network_protocol", self.network_protocol
 
         ## Hosts
+        # As a FlowFingerprint is bidirectional,
+        # sort the hosts to have a consistent order
+        hosts = sorted([self.src, self.dst])
+        src = hosts[0]
+        dst = hosts[1]
         # Source
-        yield "src", self.src
+        yield "src", src
         # Destination
-        yield "dst", self.dst
+        yield "dst", dst
 
 
         ### TRANSPORT LAYER ###
@@ -543,14 +548,14 @@ class FlowFingerprint:
 
         # Source port
         for host, port in fixed_ports:
-            if host == self.src:
+            if host == src:
                 yield "sport", port
         else:
             yield "sport", None
         
         # Destination port
         for host, port in fixed_ports:
-            if host == self.dst:
+            if host == dst:
                 yield "dport", port
         else:
             yield "dport", None
