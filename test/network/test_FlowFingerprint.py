@@ -1,5 +1,6 @@
 ## Imports
 # Libraries
+import pytest
 import os
 from pathlib import Path
 from scapy.all import IP, UDP
@@ -229,6 +230,38 @@ def test_get_different_hosts() -> None:
     assert f_1.get_different_hosts(f_2) == set([("192.168.1.2", "192.168.1.3")])
     assert f_1.get_different_hosts(f_3) == set()
     assert f_1.get_different_hosts(f_4) == set()
+
+
+def test_contains_port() -> None:
+    """
+    Test the method `contains_port`,
+    which checks if a given port is contained in the FlowFingerprint.
+    """
+    # f_1
+    assert f_1.contains_port(53)
+    assert not f_1.contains_port(12345)
+    assert not f_1.contains_port(80)
+
+    # f_2
+    assert f_2.contains_port(53)
+    assert not f_2.contains_port(6666)
+    assert not f_2.contains_port(12345)
+
+    # f_3
+    assert f_3.contains_port(53)
+    assert not f_3.contains_port(12345)
+    assert not f_3.contains_port(80)
+
+    # f_4
+    assert f_4.contains_port(53)
+    assert not f_4.contains_port(12345)
+    assert not f_4.contains_port(80)
+
+    # Exception (given port is not an int)
+    with pytest.raises(TypeError):
+        f_1.contains_port("53")
+    with pytest.raises(TypeError):
+        f_1.contains_port(None)
 
 
 def test_match_ports() -> None:

@@ -335,9 +335,29 @@ class FlowFingerprint:
         return different_hosts
     
 
+    def contains_port(self, port: int) -> bool:
+        """
+        Check if this FlowFingerprint object contains the given port.
+
+        Args:
+            port (int): Port number to check.
+        Returns:
+            bool: True if the FlowFingerprint contains the port, False otherwise.
+        Raises:
+            TypeError: If the port is not an integer.
+        """
+        if not isinstance(port, int):
+            raise TypeError(f"Port must be an integer, got {type(port)}")
+
+        for _, p in self.get_fixed_ports():
+            if p == port:
+                return True
+        return False
+    
+
     def match_ports(self, other: FlowFingerprint, match_random_ports: bool = False) -> bool:
         """
-        Check if the ports of given FlowFingerprint object,
+        Check if the ports of the given FlowFingerprint object,
         match the ports of this FlowFingerprint object.
 
         Args:
