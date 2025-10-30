@@ -266,13 +266,14 @@ class FlowFingerprint:
         self.add_ports(flow)
 
     
-    def match_hosts(self, other: FlowFingerprint) -> bool:
+    def match_hosts(self, other: FlowFingerprint, hosts_equal: dict = {}) -> bool:
         """
         Match FlowFingerprint objects based on source and destination hosts,
         regardless of the direction.
 
         Args:
             other (FlowFingerprint): FlowFingerprint to match with.
+            hosts_equal (dict): dictionary of known equivalent hosts. Optional, default is empty dict.
         Returns:
             bool: True if the FlowFingerprints' hosts match, False otherwise.
         """
@@ -281,8 +282,8 @@ class FlowFingerprint:
             return False
         
         are_hosts_matching = (
-            compare_hosts(self.src, other.src) and compare_hosts(self.dst, other.dst) or
-            compare_hosts(self.src, other.dst) and compare_hosts(self.dst, other.src)
+            compare_hosts(self.src, other.src, hosts_equal) and compare_hosts(self.dst, other.dst, hosts_equal) or
+            compare_hosts(self.src, other.dst, hosts_equal) and compare_hosts(self.dst, other.src, hosts_equal)
         )
         return are_hosts_matching
     
@@ -355,7 +356,7 @@ class FlowFingerprint:
         return False
     
 
-    def match_ports(self, other: FlowFingerprint, match_random_ports: bool = False) -> bool:
+    def match_ports(self, other: FlowFingerprint, match_random_ports: bool = False, hosts_equal: dict = {}) -> bool:
         """
         Check if the ports of the given FlowFingerprint object,
         match the ports of this FlowFingerprint object.
@@ -364,6 +365,8 @@ class FlowFingerprint:
             other (FlowFingerprint): FlowFingerprint to match with.
             match_random_ports (bool): Whether to consider random ports as matching.
                                        Optional, default is False.
+            hosts_equal (dict): dictionary mapping known equivalent hosts.
+                                Optional, default is empty dict.
         Returns:
             bool: True if the given FlowFingerprints' ports match, False otherwise.
         """
@@ -373,7 +376,7 @@ class FlowFingerprint:
         
         for (host, port) in other.ports.keys():
             try:
-                h, p = next((h, p) for h, p in self.ports if compare_hosts(h, host))
+                h, p = next((h, p) for h, p in self.ports if compare_hosts(h, host, hosts_equal))
                 if (h, p) in self.get_fixed_ports(match_random_ports) and port != p:
                     return False
             except StopIteration:
@@ -444,7 +447,7 @@ class FlowFingerprint:
         return different_ports
 
     
-    def match_flow(self, other: FlowFingerprint, match_random_ports: bool = False) -> bool:
+    def match_flow(self, other: FlowFingerprint, match_random_ports: bool = False, hosts_equal: dict = {}) -> bool:
         """
         Compare the given FlowFingerprint with this FlowFingerprint,
         based on the following attributes:
@@ -457,6 +460,8 @@ class FlowFingerprint:
             other (FlowFingerprint): FlowFingerprint to match with.
             match_random_ports (bool): Whether to consider random ports in flow matching.
                                        Optional, default is False.
+            hosts_equal (dict): dictionary mapping known equivalent hosts.
+                                Optional, default is empty dict.
         Returns:
             bool: True if the given FlowFingerprint matches, False otherwise.
         """
@@ -464,20 +469,20 @@ class FlowFingerprint:
         if not isinstance(other, FlowFingerprint):
             return False
         
-        # If other object is a FlowFingerprint, compare attributes:
-        are_flow_matching = (
-            # Network protocol
-            self.network_protocol == other.network_protocol and
-            # Hosts (in any direction)
-            self.match_hosts(other) and
-            # Fixed port
-            self.match_ports(other, match_random_ports) and
-            # Transport protocol
-            self.transport_protocol == other.transport_protocol and
-            # Application layer protocol
-            self.application_layer == other.application_layer
+        # If other object is a FlowFingerprint, compare attributes
+        is_same_network_protocol = self.network_protocol == other.network_protocol  # Network protocol
+        are_hosts_matching = self.match_hosts(other, hosts_equal)  # Hosts (in any direction)
+        are_ports_matching = self.match_ports(other, match_random_ports, hosts_equal)  # Fixed port(s)
+        is_same_transport_protocol = self.transport_protocol == other.transport_protocol  # Transport protocol
+        is_same_application_layer = self.application_layer == other.application_layer  # Application layer protocol
+        are_flows_matching = (
+            is_same_network_protocol and
+            are_hosts_matching and
+            are_ports_matching and
+            is_same_transport_protocol and
+            is_same_application_layer
         )
-        return are_flow_matching
+        return are_flows_matching
 
 
     def __repr__(self) -> str:

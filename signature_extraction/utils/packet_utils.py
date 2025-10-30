@@ -208,9 +208,9 @@ def compare_domain_names(domain_a: str, domain_b: str) -> bool:
         return True
 
     return False
-    
 
-def compare_hosts(host_a: str, host_b: str) -> bool:
+
+def _compare_hosts(host_a: str, host_b: str) -> bool:
     """
     Compare two hostnames or IP addresses.
 
@@ -247,6 +247,30 @@ def compare_hosts(host_a: str, host_b: str) -> bool:
     # Both are valid domain names
     # If they differ only by the first subdomain, consider them equal
     return compare_domain_names(host_a, host_b)
+
+
+def compare_hosts(host_a: str, host_b: str, hosts_equal: dict = {}) -> bool:
+    """
+    Compare two hostnames or IP addresses,
+    considering known equivalent hosts.
+
+    Args:
+        host_a (str): first hostname or IP address
+        host_b (str): second hostname or IP address
+        hosts_equal (dict): dictionary of known equivalent hosts.
+                            Optional, default is empty dict.
+    Returns:
+        bool: True if the two hosts are (considered) equal, False otherwise
+    """
+    compare_host_a = _compare_hosts(host_a, host_b)
+
+    try:
+        host_a_eq = hosts_equal[host_a]
+    except KeyError:
+        return compare_host_a
+    else:
+        compare_host_a_eq = _compare_hosts(host_a_eq, host_b)
+        return compare_host_a or compare_host_a_eq
 
 
 def get_wildcard_subdomain(domain_a: str, domain_b: str) -> str:
