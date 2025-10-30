@@ -373,7 +373,7 @@ class FlowFingerprint:
         # If other object is not an FlowFingerprint, return False
         if not isinstance(other, FlowFingerprint):
             return False
-        
+
         for (host, port) in other.ports.keys():
             try:
                 h, p = next((h, p) for h, p in self.ports if compare_hosts(h, host, hosts_equal))

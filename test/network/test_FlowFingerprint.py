@@ -86,6 +86,25 @@ f_3 = FlowFingerprint(pkt_c)
 f_4 = FlowFingerprint(pkt_dict_d)
 
 
+### Mapping of equivalent hosts
+
+hosts_equal = {
+    "192.168.1.1": "device.local"
+}
+
+pkt_dict_eq = {
+    "network_protocol": "IPv4",
+    "src": "192.168.1.2",
+    "dst": "device.local",
+    "sport": 12345,
+    "dport": 53,
+    "transport_protocol": "UDP",
+    "application_layer": app_layer.DNS(pkt_dns_request_a)
+}
+
+f_eq = FlowFingerprint(pkt_dict_eq)
+
+
 ### TEST FUNCTIONS ###
 
 def test_slugify() -> None:
@@ -252,18 +271,15 @@ def test_match_hosts() -> None:
     Test the method `match_hosts`,
     which compares the hosts of two FlowFingerprints.
     """
-    # Initialize FlowFingerprints
-    f_1 = FlowFingerprint(pkt_dict)
-    pkt_b = Packet.build_from_pkt(pkt_dns_request_b)
-    f_2 = FlowFingerprint(pkt_b)
-    pkt_c = Packet.build_from_pkt(pkt_dns_request_c)
-    f_3 = FlowFingerprint(pkt_c)
-    f_4 = FlowFingerprint(pkt_dict_d)
-
-    # Verify host matching
+    # Basic matching
     assert not f_1.match_hosts(f_2)
     assert f_1.match_hosts(f_3)
     assert f_1.match_hosts(f_4)
+    assert not f_1.match_hosts(f_eq)
+
+    # Matching involving equivalent hosts
+    assert f_1.match_hosts(f_eq, hosts_equal)
+    assert f_eq.match_hosts(f_1, hosts_equal)
 
 
 def test_get_different_hosts() -> None:
@@ -313,9 +329,15 @@ def test_match_ports() -> None:
     Test the method `match_ports`,
     which compares the fixed ports of two FlowFingerprints.
     """
+    # Basic matching
     assert not f_1.match_ports(f_2)
     assert f_1.match_ports(f_3)
     assert f_1.match_ports(f_4)
+    assert not f_1.match_ports(f_eq)
+
+    # Matching involving equivalent hosts
+    assert f_1.match_ports(f_eq, hosts_equal=hosts_equal)
+    assert f_eq.match_ports(f_1, hosts_equal=hosts_equal)
 
 
 def test_get_different_ports() -> None:
@@ -333,18 +355,15 @@ def test_match_flow() -> None:
     Test the method `match_flow`,
     which compares two FlowFingerprints.
     """
-    # Initialize FlowFingerprint
-    flow_fingerprint = FlowFingerprint(pkt_dict)
+    # Basic matching
+    assert not f_1.match_flow(f_2)
+    assert f_1.match_flow(f_3)
+    assert not f_1.match_flow(f_4)
+    assert not f_1.match_flow(f_eq)
 
-    # Verify match with other flows
-    pkt_b = Packet.build_from_pkt(pkt_dns_request_b)
-    f_2 = FlowFingerprint(pkt_b)
-    assert not flow_fingerprint.match_flow(f_2)
-    pkt_c = Packet.build_from_pkt(pkt_dns_request_c)
-    f_3 = FlowFingerprint(pkt_c)
-    assert flow_fingerprint.match_flow(f_3)
-    f_4 = FlowFingerprint(pkt_dict_d)
-    assert not flow_fingerprint.match_flow(f_4)
+    # Matching involving equivalent hosts
+    assert f_1.match_flow(f_eq, hosts_equal=hosts_equal)
+    assert f_eq.match_flow(f_1, hosts_equal=hosts_equal)
 
 
 def test_extract_policy() -> None:

@@ -148,6 +148,13 @@ dhcpv6_request = Ether() / IPv6() / DHCP6_Request()
 dhcpv6_reply = Ether() / IPv6() / DHCP6_Reply()
 
 
+### Mapping of equivalent hosts
+hosts_equal = {
+    "192.168.1.1": "device.local",
+    "192.168.1.10": "192.168.1.20"
+}
+
+
 ##### TEST FUNCTIONS #####
 
 def test_is_ip_address() -> None:
@@ -236,6 +243,41 @@ def test_is_domain_name() -> None:
     assert not packet_utils.is_domain_name("www..com")
     assert not packet_utils.is_domain_name("-invalid.com")
     assert not packet_utils.is_domain_name("invalid-.com")
+
+
+def test_compare_domain_names() -> None:
+    """
+    Test the function `compare_domain_names`,
+    which checks if two domain names are considered equivalent.
+    """
+    # Full-name comparison
+    assert packet_utils.compare_domain_names("www.example.com", "www.example.com")
+    assert not packet_utils.compare_domain_names("www.example.com", "www.example.org")
+
+    # Subdomain comparison
+    assert packet_utils.compare_domain_names("a.example.com", "example.com")
+    assert not packet_utils.compare_domain_names("a.example.com", "example.org")
+    assert packet_utils.compare_domain_names("a.example.com", "b.example.com")
+
+
+def test_compare_hosts() -> None:
+    """
+    Test the function `compare_hosts`,
+    which checks if two hosts are considered equivalent.
+    """
+    # Simple comparison
+    assert packet_utils.compare_hosts("1.1.1.1", "1.1.1.1")
+    assert not packet_utils.compare_hosts("1.1.1.1", "2.2.2.2")
+    assert not packet_utils.compare_hosts("2.2.2.2", "1.1.1.1")
+    assert packet_utils.compare_hosts("www.example.com", "www.example.com")
+    assert not packet_utils.compare_hosts("www.example.com", "www.example.org")
+    assert not packet_utils.compare_hosts("www.example.org", "www.example.com")
+
+    # Comparison involving equivalent hosts
+    assert packet_utils.compare_hosts("192.168.1.10", "192.168.1.20", hosts_equal)
+    assert packet_utils.compare_hosts("192.168.1.20", "192.168.1.10", hosts_equal)
+    assert packet_utils.compare_hosts("192.168.1.1", "device.local", hosts_equal)
+    assert packet_utils.compare_hosts("device.local", "192.168.1.1", hosts_equal)
 
 
 def test_should_skip_pkt() -> None:

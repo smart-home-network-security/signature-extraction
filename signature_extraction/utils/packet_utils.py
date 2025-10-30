@@ -262,15 +262,21 @@ def compare_hosts(host_a: str, host_b: str, hosts_equal: dict = {}) -> bool:
     Returns:
         bool: True if the two hosts are (considered) equal, False otherwise
     """
-    compare_host_a = _compare_hosts(host_a, host_b)
+    compare_base = _compare_hosts(host_a, host_b)
 
-    try:
-        host_a_eq = hosts_equal[host_a]
-    except KeyError:
-        return compare_host_a
-    else:
-        compare_host_a_eq = _compare_hosts(host_a_eq, host_b)
-        return compare_host_a or compare_host_a_eq
+    host_a_eq = hosts_equal.get(host_a, host_a)
+    host_b_eq = hosts_equal.get(host_b, host_b)
+
+    compare_host_a_eq = _compare_hosts(host_a_eq, host_b)
+    compare_host_b_eq = _compare_hosts(host_a, host_b_eq)
+    compare_both_eq   = _compare_hosts(host_a_eq, host_b_eq)
+    
+    return (
+        compare_base or
+        compare_host_a_eq or
+        compare_host_b_eq or
+        compare_both_eq
+    )
 
 
 def get_wildcard_subdomain(domain_a: str, domain_b: str) -> str:
